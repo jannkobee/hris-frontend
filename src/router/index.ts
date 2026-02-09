@@ -1,21 +1,30 @@
-// Composables
-import { createRouter, createWebHistory } from "vue-router";
+import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: "/login",
     name: "login",
     component: () => import("@/views/Login.vue"),
+    meta: { requiresAuth: false },
   },
+
+  // Authenticated Shell
   {
     path: "/",
     component: () => import("@/components/layouts/BaseContainer.vue"),
+    meta: { requiresAuth: true },
     children: [
+      // Default
+      { path: "", redirect: { name: "dashboard" } },
+
+      // Core
       {
         path: "dashboard",
         name: "dashboard",
         component: () => import("@/views/Modules/Dashboard.vue"),
       },
+
+      // Management
       {
         path: "user-management",
         name: "user-management",
@@ -28,17 +37,52 @@ const routes = [
         component: () =>
           import("@/views/Modules/RoleManagement/RoleManagement.vue"),
       },
+      {
+        path: "employee-management",
+        name: "employee-management",
+        component: () =>
+          import("@/views/Modules/EmployeeManagement/EmployeeManagement.vue"),
+      },
+
+      // ✅ SubModules (Employee Setup)
+      {
+        path: "employee-setup/employment-statuses",
+        name: "employment-status-management",
+        component: () =>
+          import(
+            "@/views/Modules/SubModules/EmploymentStatusManagement/EmploymentStatusManagement.vue"
+          ),
+      },
+      {
+        path: "employee-setup/positions",
+        name: "position-management",
+        component: () =>
+          import(
+            "@/views/Modules/SubModules/PositionManagement/PositionManagement.vue"
+          ),
+      },
+      {
+        path: "employee-setup/departments",
+        name: "department-management",
+        component: () =>
+          import(
+            "@/views/Modules/SubModules/DepartmentManagement/DepartmentManagement.vue"
+          ),
+      },
     ],
   },
+
+  // Errors
   {
     path: "/page-not-found",
     name: "page-not-found",
     component: () => import("@/views/PageNotFound.vue"),
+    meta: { requiresAuth: false },
   },
   {
     path: "/:pathMatch(.*)*",
-    name: "not-found",
     redirect: { name: "page-not-found" },
+    meta: { requiresAuth: false },
   },
 ];
 
@@ -47,22 +91,19 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, from, next) => {
+router.beforeEach((to, _from, next) => {
   const isAuthenticated = !!window.localStorage.getItem("APP_TOKEN");
+  const requiresAuth = to.matched.some((record) => record.meta?.requiresAuth);
 
-  if (isAuthenticated) {
-    if (to.name === "login") {
-      next({ name: "dashboard" });
-    } else {
-      next();
-    }
-  } else {
-    if (to.name !== "login") {
-      next({ name: "login" });
-    } else {
-      next();
-    }
+  if (requiresAuth && !isAuthenticated) {
+    return next({ name: "login" });
   }
+
+  if (to.name === "login" && isAuthenticated) {
+    return next({ name: "dashboard" });
+  }
+
+  return next();
 });
 
 export default router;

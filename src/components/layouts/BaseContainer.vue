@@ -50,6 +50,7 @@
           value="dashboard"
           @click="$router.push({ name: 'dashboard' })"
         />
+
         <v-list-item
           v-if="checkPermissions('view-users')"
           prepend-icon="mdi-account-cog-outline"
@@ -57,6 +58,7 @@
           value="user-management"
           @click="$router.push({ name: 'user-management' })"
         />
+
         <v-list-item
           v-if="checkPermissions('view-roles')"
           prepend-icon="mdi-head-cog-outline"
@@ -64,6 +66,55 @@
           value="role-management"
           @click="$router.push({ name: 'role-management' })"
         />
+
+        <v-list-item
+          v-if="checkPermissions('view-employees')"
+          prepend-icon="mdi-account-group-outline"
+          title="Employee Management"
+          value="employee-management"
+          @click="$router.push({ name: 'employee-management' })"
+        />
+
+        <v-list-group
+          v-if="
+            checkPermissions('view-employment-statuses') ||
+            checkPermissions('view-positions') ||
+            checkPermissions('view-departments')
+          "
+          value="employee-setup"
+        >
+          <template #activator="{ props }">
+            <v-list-item
+              v-bind="props"
+              prepend-icon="mdi-cog-outline"
+              title="Configuration"
+            />
+          </template>
+
+          <v-list-item
+            v-if="checkPermissions('view-employment-statuses')"
+            prepend-icon="mdi-list-status"
+            title="Employment Statuses"
+            value="employment-statuses"
+            @click="$router.push({ name: 'employment-status-management' })"
+          />
+
+          <v-list-item
+            v-if="checkPermissions('view-positions')"
+            prepend-icon="mdi-briefcase-outline"
+            title="Positions"
+            value="positions"
+            @click="$router.push({ name: 'position-management' })"
+          />
+
+          <v-list-item
+            v-if="checkPermissions('view-departments')"
+            prepend-icon="mdi-domain"
+            title="Departments"
+            value="departments"
+            @click="$router.push({ name: 'department-management' })"
+          />
+        </v-list-group>
       </v-list>
 
       <v-divider></v-divider>
@@ -117,3 +168,17 @@ onMounted(async () => {
   console.log(authUser.value);
 });
 </script>
+
+<style lang="css" scoped>
+:deep(.v-list-group__items) {
+  padding-left: 0 !important;
+}
+
+:deep(.v-list-group--sub .v-list-item) {
+  padding-inline-start: 12px !important;
+}
+
+:deep(.v-list-item--nav) {
+  padding-inline-start: 12px !important;
+}
+</style>
