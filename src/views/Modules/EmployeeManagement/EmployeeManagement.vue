@@ -107,6 +107,30 @@ const form = ref<EmployeeForm>(initializeForm());
 
 const readOnly = () => action.value === "View";
 
+// Helper to format date for form input (converts to YYYY-MM-DD)
+const formatDateForInput = (date: any): string => {
+  if (!date) return "";
+
+  // If it's already a string in YYYY-MM-DD format, return as is
+  if (typeof date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+    return date;
+  }
+
+  // Try to parse and format
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const day = String(d.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+  } catch {
+    return "";
+  }
+};
+
 const getEmployeeNumber = async () => {
   try {
     const res = await axios.get("/employees/generate-employee-number");
@@ -202,6 +226,7 @@ const edit = (dataParam: any) => {
 
   data.value = {
     ...dataParam,
+    hire_date: formatDateForInput(dataParam.hire_date), // Format date for input
     user: dataParam.user_id
       ? {
           id: dataParam.user_id,
