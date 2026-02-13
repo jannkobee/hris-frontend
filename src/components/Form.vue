@@ -1,6 +1,6 @@
 <template>
   <v-dialog v-model="props.visible" max-width="1000" persistent>
-    <v-card :title="`${props.action} ${props.entity}`">
+    <v-card :title="`${props.action} ${displayEntity}`">
       <template v-slot:text>
         <template v-if="props.action === 'Remove'">
           Are you sure you want to delete this item?
@@ -11,23 +11,23 @@
             v-if="field.inputField === 'text'"
             :required="field.nullable"
             v-model="form[field.key]"
-            :readonly="props.readOnly"
+            :readonly="isFieldReadOnly(field)"
           />
           <v-text-field
             v-else-if="field.inputField === 'date'"
             type="date"
             v-model="form[field.key]"
-            :readonly="props.readOnly"
+            :readonly="isFieldReadOnly(field)"
           />
           <v-checkbox
             v-else-if="field.inputField === 'checkbox'"
             v-model="form[field.key]"
-            :readonly="props.readOnly"
+            :readonly="isFieldReadOnly(field)"
           />
           <v-radio-group
             v-else-if="field.inputField === 'radio'"
             v-model="form[field.key]"
-            :readonly="props.readOnly"
+            :readonly="isFieldReadOnly(field)"
           >
             <v-radio
               v-for="option in field.inputOptions"
@@ -38,11 +38,11 @@
           </v-radio-group>
           <v-select
             v-else-if="field.inputField === 'select'"
-            v-model="form[field.selectKey]"
+            v-model="form[field.selectKey!]"
             item-title="label"
             item-value="value"
             :items="field.inputOptions"
-            :readonly="props.readOnly"
+            :readonly="isFieldReadOnly(field)"
           />
         </template>
         <v-btn
@@ -64,7 +64,7 @@
           :disabled="props.readOnly"
           @click="execute"
         >
-          Create {{ props.entity }}
+          Create {{ displayEntity }}
         </v-btn>
         <v-btn
           v-if="props.action === 'Edit'"
@@ -74,7 +74,7 @@
           :disabled="props.readOnly"
           @click="execute"
         >
-          Save {{ props.entity }}
+          Save {{ displayEntity }}
         </v-btn>
         <v-btn
           v-if="props.action === 'Remove'"
@@ -84,14 +84,15 @@
           :disabled="props.readOnly"
           @click="execute"
         >
-          Delete {{ props.entity }}
+          Delete {{ displayEntity }}
         </v-btn>
       </template>
     </v-card>
   </v-dialog>
 </template>
 <script lang="ts" setup>
-import { ref, watch } from "vue";
+import { computed, ref, watch } from "vue";
+import { ColumnConfig } from "@/types/types";
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
@@ -101,12 +102,54 @@ const props = defineProps({
   visible: { type: Boolean, default: false },
   form: { type: Object, default: () => {} },
   data: { type: Object, default: () => {} },
-  fields: { type: Object, default: () => {} },
+  fields: { type: Array as () => ColumnConfig[], default: () => [] },
 });
 
-const form = ref();
+const form = ref<Record<string, any>>({});
 
 const emit = defineEmits(["permission", "close", "execute"]);
+
+// Helper to determine if a field should be read-only
+const isFieldReadOnly = (field: ColumnConfig): boolean => {
+  // If globally read-only, always true
+  if (props.readOnly) return true;
+
+  // If field has readOnly flag, always true
+  if (field.readOnly) return true;
+
+  // If field has readOnlyOnEdit and action is Edit, true
+  if (field.readOnlyOnEdit && props.action === "Edit") return true;
+
+  return false;
+};
+
+const displayEntity = computed(() => {
+  const raw = (props.entity ?? "").toString().trim();
+  if (!raw) return "";
+
+  let formatted = raw
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/\s+/g, " ")
+    .toLowerCase()
+    .trim();
+
+  const words = formatted.split(" ");
+  const lastWord = words.pop() as string;
+
+  let singularLastWord = lastWord;
+  if (lastWord.endsWith("ies")) {
+    singularLastWord = lastWord.slice(0, -3) + "y";
+  } else if (lastWord.endsWith("ses")) {
+    singularLastWord = lastWord.slice(0, -2);
+  } else if (lastWord.endsWith("s")) {
+    singularLastWord = lastWord.slice(0, -1);
+  }
+
+  words.push(singularLastWord);
+
+  return words.map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+});
 
 const execute = async () => {
   emit("execute", form.value);

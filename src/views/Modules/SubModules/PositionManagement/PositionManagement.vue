@@ -43,8 +43,8 @@ const {
   destroy,
 } = useApi("/positions");
 
-const title = ref("Positions");
-const entity = ref("positions");
+const title = ref("Position Management");
+const entity = ref("Position");
 const action = ref("");
 const data = ref();
 const isFormVisible = ref(false);

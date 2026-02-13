@@ -2,9 +2,7 @@
   <h1>{{ title }}</h1>
   <v-container class="container">
     <v-btn
-      v-if="
-        showCreateAction && checkPermissions(`create-${entity.toLowerCase()}s`)
-      "
+      v-if="showCreateAction && checkPermissions(`create-${permissionEntity}`)"
       class="button"
       prepend-icon="mdi-plus"
       elevation="4"
@@ -36,12 +34,33 @@
     @update:options="handleTableChange"
   >
     <template #top> </template>
+
+    <!-- Dynamic slots for columns with chips -->
+    <template
+      v-for="header in props.headers.filter((h) => h.displayAs === 'chip')"
+      :key="`item.${header.key}`"
+      v-slot:[`item.${header.key}`]="{ item }"
+    >
+      <v-chip :color="header.chipColor || 'primary'" size="small" label>
+        {{ formatCellValue(item, header) }}
+      </v-chip>
+    </template>
+
+    <!-- Dynamic slots for columns with formatters (but not chips) -->
+    <template
+      v-for="header in props.headers.filter(
+        (h) => h.formatter && h.displayAs !== 'chip',
+      )"
+      :key="`item.${header.key}`"
+      v-slot:[`item.${header.key}`]="{ item }"
+    >
+      {{ formatCellValue(item, header) }}
+    </template>
+
     <template #item.action="{ item }">
       <v-container class="action-container">
         <v-btn
-          v-if="
-            showViewAction && checkPermissions(`view-${entity.toLowerCase()}s`)
-          "
+          v-if="showViewAction && checkPermissions(`view-${permissionEntity}`)"
           size="small"
           elevation="4"
           density="comfortable"
@@ -50,8 +69,7 @@
         />
         <v-btn
           v-if="
-            showEditAction &&
-            checkPermissions(`update-${entity.toLowerCase()}s`)
+            showEditAction && checkPermissions(`update-${permissionEntity}`)
           "
           size="small"
           elevation="4"
@@ -62,7 +80,7 @@
         <v-btn
           v-if="
             showDeleteAction &&
-            checkPermissions(`delete-${entity.toLowerCase()}s`) &&
+            checkPermissions(`delete-${permissionEntity}`) &&
             item.id !== authUser?.role_id &&
             item.id !== authUser?.id
           "
@@ -79,7 +97,7 @@
 
 <script lang="ts" setup>
 import { ColumnConfig, Data } from "@/types/types";
-import { ref, watch, onMounted } from "vue";
+import { ref, watch, onMounted, computed } from "vue";
 import { useAuth } from "@/composables/useAuth";
 import debounce from "lodash/debounce";
 
@@ -107,6 +125,38 @@ const form = ref({
   sortBy: [],
   search: "",
 });
+
+const permissionEntity = computed(() => {
+  const raw = (props.entity ?? "").toString().trim();
+
+  // Convert CamelCase to words: EmploymentStatus -> Employment Status
+  const withSpaces = raw.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
+
+  // Normalize to kebab: Employment Status / employment_status -> employment-status
+  const kebab = withSpaces.replace(/[\s_]+/g, "-").toLowerCase();
+
+  // Simple pluralization (works for your slugs like employment-statuses)
+  if (kebab.endsWith("s")) return kebab;
+  if (kebab.endsWith("y")) return kebab.slice(0, -1) + "ies"; // company -> companies
+  if (kebab.endsWith("status")) return kebab + "es"; // status -> statuses
+  return kebab + "s";
+});
+
+// Helper function to get nested property value
+const getNestedValue = (obj: any, path: string): any => {
+  return path.split(".").reduce((current, key) => current?.[key], obj);
+};
+
+// Format cell value using formatter if available
+const formatCellValue = (item: any, header: ColumnConfig): string => {
+  const value = getNestedValue(item, header.key);
+
+  if (header.formatter && typeof header.formatter === "function") {
+    return header.formatter(value);
+  }
+
+  return value ?? "";
+};
 
 const handleTableChange = (options: any) => {
   form.value = { ...form.value, ...options };

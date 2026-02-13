@@ -1,4 +1,5 @@
 import { ColumnConfig } from "@/types/types";
+import { formatDate } from "@/utils/dateFormatter";
 
 export const fields: ColumnConfig[] = [
   {
@@ -40,6 +41,7 @@ export const fields: ColumnConfig[] = [
     key: "birthday",
     inputField: "date",
     nullable: false,
+    formatter: formatDate, // Format as "April 15, 2001"
   },
   {
     title: "Role",

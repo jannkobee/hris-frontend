@@ -17,25 +17,44 @@ export type Data = {
 type BaseColumnConfig = {
   title: string;
   key: string;
-  selectKey?: string;
   sortable?: boolean;
   align?: "start" | "end" | "center";
-  inputField?: "text" | "radio" | "select" | "checkbox" | "date" | "none";
+  inputField?:
+    | "text"
+    | "radio"
+    | "select"
+    | "checkbox"
+    | "date"
+    | "datetime"
+    | "none";
   inputOptions?: Array<any>;
   nullable?: boolean;
+  readOnly?: boolean;
+  readOnlyOnEdit?: boolean;
+  formatter?: (value: any) => string;
+  displayAs?: "chip" | "text";
+  chipColor?: string;
 };
 
 type TextLikeColumn = BaseColumnConfig & {
-  inputField?: "text" | "checkbox" | "date" | "none";
-  inputOptions?: never;
+  inputField?: "text" | "checkbox" | "date" | "datetime" | "none";
+  inputOptions?: Array<{ label: string; value: any }>;
+  selectKey?: never;
 };
 
-type OptionsColumn = BaseColumnConfig & {
-  inputField: "radio" | "select";
-  inputOptions: Array<{ label: string; value: string }>;
+type SelectColumn = BaseColumnConfig & {
+  inputField: "select";
+  inputOptions: Array<{ label: string; value: any }>;
+  selectKey: string; // Required for select fields
 };
 
-export type ColumnConfig = TextLikeColumn | OptionsColumn;
+type RadioColumn = BaseColumnConfig & {
+  inputField: "radio";
+  inputOptions: Array<{ label: string; value: any }>;
+  selectKey?: string; // Optional for radio fields
+};
+
+export type ColumnConfig = TextLikeColumn | SelectColumn | RadioColumn;
 
 export type User = {
   id: string;

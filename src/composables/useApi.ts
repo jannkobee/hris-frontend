@@ -57,6 +57,10 @@ export const useApi = <T>(endpoint: string) => {
       delete params.sortBy;
       delete params.itemsPerPage;
 
+      if (pagination.value.itemsPerPage) {
+        params.limit = pagination.value.itemsPerPage;
+      }
+
       if (!sort.key && !sort.order) {
         delete params.sort_by_column;
         delete params.sort_by;

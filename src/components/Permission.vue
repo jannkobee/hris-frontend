@@ -8,7 +8,7 @@
             :key="model"
           >
             <v-expansion-panel-title>
-              {{ model.split("\\").pop() }} Permissions
+              {{ formatModuleName(model) }} Permissions
             </v-expansion-panel-title>
             <v-expansion-panel-text>
               <v-checkbox
@@ -82,6 +82,15 @@ const groupedPermissions = computed(() => {
   }
   return groups;
 });
+
+const formatModuleName = (model: string): string => {
+  const className = model.split("\\").pop() || model;
+
+  return className
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
+    .trim();
+};
 
 const fillPermissions = () => {
   permissions.value = props.data.permissions.map((p) => p.id);

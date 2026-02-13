@@ -81,7 +81,7 @@
             checkPermissions('view-positions') ||
             checkPermissions('view-departments')
           "
-          value="employee-setup"
+          value="configuration"
         >
           <template #activator="{ props }">
             <v-list-item

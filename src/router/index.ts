@@ -44,9 +44,9 @@ const routes: RouteRecordRaw[] = [
           import("@/views/Modules/EmployeeManagement/EmployeeManagement.vue"),
       },
 
-      // ✅ SubModules (Employee Setup)
+      // ✅ SubModules (Configurations)
       {
-        path: "employee-setup/employment-statuses",
+        path: "configuration/employment-statuses",
         name: "employment-status-management",
         component: () =>
           import(
@@ -54,7 +54,7 @@ const routes: RouteRecordRaw[] = [
           ),
       },
       {
-        path: "employee-setup/positions",
+        path: "configuration/positions",
         name: "position-management",
         component: () =>
           import(
@@ -62,7 +62,7 @@ const routes: RouteRecordRaw[] = [
           ),
       },
       {
-        path: "employee-setup/departments",
+        path: "configuration/departments",
         name: "department-management",
         component: () =>
           import(
