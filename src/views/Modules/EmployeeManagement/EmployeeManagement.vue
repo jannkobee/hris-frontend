@@ -1,13 +1,15 @@
 <template>
-  <Form
+  <EmployeeStepperForm
     :loading="loadingActions"
     :entity="entity"
     :action="action"
     :readOnly="readOnly()"
     :visible="isFormVisible"
-    :form="form"
+    :employeeForm="form"
     :data="data"
-    :fields="fields"
+    :employeeFields="fields"
+    :addressFields="addressFields"
+    :contactFields="contactFields"
     @close="close"
     @execute="execute"
   />
@@ -32,11 +34,20 @@
 import { ref, onMounted } from "vue";
 import { useApi } from "@/composables/useApi";
 import { fields as importedFields } from "@/fields/employee";
+import { fields as addressFieldsImported } from "@/fields/employee_address";
+import { fields as contactFieldsImported } from "@/fields/employee_contact";
 import axios from "@/plugins/axios";
 import type { ColumnConfig } from "@/types/types";
+import EmployeeStepperForm from "@/components/EmployeeStepperForm.vue";
 
 // Create a reactive copy of fields with proper typing
 const fields = ref<ColumnConfig[]>([...importedFields] as ColumnConfig[]);
+const addressFields = ref<ColumnConfig[]>([
+  ...addressFieldsImported,
+] as ColumnConfig[]);
+const contactFields = ref<ColumnConfig[]>([
+  ...contactFieldsImported,
+] as ColumnConfig[]);
 
 const {
   index,
@@ -57,7 +68,8 @@ const { getOptions: getDepartments } = useApi("/departments");
 const { getOptions: getPositions } = useApi("/positions");
 const { getOptions: getJobGrades } = useApi("/job-grades");
 
-const relations = "user,employmentStatus,department,position,jobGrade";
+const relations =
+  "user,employmentStatus,department,position,jobGrade,addresses,contacts";
 
 const title = ref("Employee Management");
 const entity = ref("Employee");
@@ -248,6 +260,8 @@ const edit = (dataParam: any) => {
     job_grade: dataParam.job_grade_id
       ? { id: dataParam.job_grade_id, name: dataParam.job_grade?.name || "" }
       : null,
+    addresses: dataParam.addresses || [],
+    contacts: dataParam.contacts || [],
   };
 };
 
