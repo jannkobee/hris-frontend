@@ -75,6 +75,14 @@
           @click="$router.push({ name: 'employee-management' })"
         />
 
+        <v-list-item
+          v-if="checkPermissions('view-attendances')"
+          prepend-icon="mdi-calendar-clock"
+          title="Attendance Management"
+          value="attendance-management"
+          @click="$router.push({ name: 'attendance-management' })"
+        />
+
         <v-list-group
           v-if="
             checkPermissions('view-employment-statuses') ||

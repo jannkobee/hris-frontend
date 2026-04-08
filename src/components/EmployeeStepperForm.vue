@@ -100,9 +100,9 @@
                       <div
                         class="d-flex justify-space-between align-center mb-2"
                       >
-                        <span class="text-subtitle-2"
-                          >Address {{ index + 1 }}</span
-                        >
+                        <span class="text-subtitle-2">
+                          Address {{ index + 1 }}
+                        </span>
                         <v-btn
                           icon="mdi-delete"
                           size="small"
@@ -382,11 +382,9 @@ const employeeForm = ref<Record<string, any>>({});
 const addresses = ref<Array<Record<string, any>>>([]);
 const contacts = ref<Array<Record<string, any>>>([]);
 
-// Country/State/City options
 const countryOptions = ref<any[]>([]);
 const loadingCountries = ref(false);
 
-// Address type options
 const addressTypeOptions = [
   { label: "Current", value: "current" },
   { label: "Permanent", value: "permanent" },
@@ -436,7 +434,6 @@ const getColSize = (key: string): number => {
   return 12;
 };
 
-// Load countries on mount
 const loadCountries = async () => {
   loadingCountries.value = true;
   try {
@@ -449,28 +446,25 @@ const loadCountries = async () => {
   }
 };
 
-// Handle country change - load states
 const onCountryChange = async (index: number, countryIso2: string) => {
   const address = addresses.value[index];
 
-  // Reset dependent fields
   address.province_iso2 = "";
   address.province = "";
   address.city = "";
   address.stateOptions = [];
   address.cityOptions = [];
 
-  // Find country name from iso2
   const country = countryOptions.value.find((c) => c.iso2 === countryIso2);
   address.country = country?.name || "";
 
-  if (!countryIso2) return;
+  if (!address.country) return;
 
-  // Load states for selected country
   address.loadingStates = true;
   try {
+    // Pass the country NAME instead of ISO2
     const response = await axios.get(
-      `/public-apis/countries/${countryIso2}/states`,
+      `/public-apis/countries/${encodeURIComponent(address.country)}/states`,
     );
     address.stateOptions = response.data.data || [];
   } catch (error) {
@@ -481,25 +475,22 @@ const onCountryChange = async (index: number, countryIso2: string) => {
   }
 };
 
-// Handle state change - load cities
 const onStateChange = async (index: number, stateIso2: string) => {
   const address = addresses.value[index];
 
-  // Reset city
   address.city = "";
   address.cityOptions = [];
 
-  // Find state name from iso2
   const state = address.stateOptions?.find((s: any) => s.iso2 === stateIso2);
   address.province = state?.name || "";
 
-  if (!stateIso2 || !address.country_iso2) return;
+  if (!address.province || !address.country) return;
 
-  // Load cities for selected state
   address.loadingCities = true;
   try {
+    // Pass country NAME and state NAME
     const response = await axios.get(
-      `/public-apis/countries/${address.country_iso2}/states/${stateIso2}/cities`,
+      `/public-apis/countries/${encodeURIComponent(address.country)}/states/${encodeURIComponent(address.province)}/cities`,
     );
     address.cityOptions = response.data.data || [];
   } catch (error) {
@@ -544,7 +535,6 @@ const removeContact = (index: number) => {
 };
 
 const handleSubmit = () => {
-  // Clean addresses before submitting - remove UI-only fields
   const cleanAddresses = addresses.value.map((addr) => ({
     id: addr.id,
     type: addr.type,
@@ -568,7 +558,6 @@ const handleSubmit = () => {
   emit("execute", payload);
 };
 
-// Load countries on mount
 onMounted(() => {
   loadCountries();
 });
@@ -580,7 +569,6 @@ watch(
       currentStep.value = 1;
       employeeForm.value = { ...props.employeeForm, ...props.data };
 
-      // Initialize addresses with cascading data
       if (props.data.addresses && props.data.addresses.length > 0) {
         addresses.value = await Promise.all(
           props.data.addresses.map(async (addr: any) => {
@@ -594,7 +582,6 @@ watch(
               loadingCities: false,
             };
 
-            // If address has country, find its ISO2 and load states
             if (addr.country) {
               const country = countryOptions.value.find(
                 (c) => c.name.toLowerCase() === addr.country.toLowerCase(),
@@ -602,14 +589,13 @@ watch(
               if (country) {
                 address.country_iso2 = country.iso2;
 
-                // Load states
                 try {
+                  // Fetch using country NAME
                   const response = await axios.get(
-                    `/public-apis/countries/${country.iso2}/states`,
+                    `/public-apis/countries/${encodeURIComponent(country.name)}/states`,
                   );
                   address.stateOptions = response.data.data || [];
 
-                  // If has province, find its ISO2 and load cities
                   if (addr.province) {
                     const state = address.stateOptions.find(
                       (s: any) =>
@@ -618,9 +604,9 @@ watch(
                     if (state) {
                       address.province_iso2 = state.iso2;
 
-                      // Load cities
+                      // Fetch using country NAME and state NAME
                       const citiesResponse = await axios.get(
-                        `/public-apis/countries/${country.iso2}/states/${state.iso2}/cities`,
+                        `/public-apis/countries/${encodeURIComponent(country.name)}/states/${encodeURIComponent(state.name)}/cities`,
                       );
                       address.cityOptions = citiesResponse.data.data || [];
                     }

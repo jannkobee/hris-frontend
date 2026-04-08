@@ -43,31 +43,31 @@ const routes: RouteRecordRaw[] = [
         component: () =>
           import("@/views/Modules/EmployeeManagement/EmployeeManagement.vue"),
       },
+      {
+        path: "attendance-management",
+        name: "attendance-management",
+        component: () =>
+          import("@/views/Modules/AttendanceManagement/AttendanceManagement.vue"),
+      },
 
       // ✅ SubModules (Configurations)
       {
         path: "configuration/employment-statuses",
         name: "employment-status-management",
         component: () =>
-          import(
-            "@/views/Modules/SubModules/EmploymentStatusManagement/EmploymentStatusManagement.vue"
-          ),
+          import("@/views/Modules/SubModules/EmploymentStatusManagement/EmploymentStatusManagement.vue"),
       },
       {
         path: "configuration/positions",
         name: "position-management",
         component: () =>
-          import(
-            "@/views/Modules/SubModules/PositionManagement/PositionManagement.vue"
-          ),
+          import("@/views/Modules/SubModules/PositionManagement/PositionManagement.vue"),
       },
       {
         path: "configuration/departments",
         name: "department-management",
         component: () =>
-          import(
-            "@/views/Modules/SubModules/DepartmentManagement/DepartmentManagement.vue"
-          ),
+          import("@/views/Modules/SubModules/DepartmentManagement/DepartmentManagement.vue"),
       },
     ],
   },
