@@ -7,24 +7,28 @@ export const fields: ColumnConfig[] = [
     key: "first_name",
     inputField: "text",
     nullable: false,
+    required: true,
   },
   {
     title: "Middle Name",
     key: "middle_name",
     inputField: "text",
     nullable: true,
+    required: false,
   },
   {
     title: "Last Name",
     key: "last_name",
     inputField: "text",
     nullable: false,
+    required: true,
   },
   {
     title: "Email",
     key: "email",
     inputField: "text",
     nullable: false,
+    required: true,
   },
   {
     title: "Gender",
@@ -35,13 +39,15 @@ export const fields: ColumnConfig[] = [
       { label: "Female", value: "Female" },
     ],
     nullable: false,
+    required: true,
   },
   {
     title: "Birthday",
     key: "birthday",
     inputField: "date",
     nullable: false,
-    formatter: formatDate, // Format as "April 15, 2001"
+    required: true,
+    formatter: formatDate,
   },
   {
     title: "Role",
@@ -50,6 +56,7 @@ export const fields: ColumnConfig[] = [
     inputField: "select",
     inputOptions: [],
     nullable: false,
+    required: true,
   },
   {
     title: "Action",

@@ -12,6 +12,7 @@ export const fields: ColumnConfig[] = [
     key: "user.email",
     inputField: "text",
     nullable: false,
+    required: true,
     sortable: true,
   },
   {
@@ -19,20 +20,23 @@ export const fields: ColumnConfig[] = [
     key: "date",
     inputField: "date",
     nullable: false,
+    required: true,
     sortable: true,
   },
   {
     title: "Time In",
     key: "time_in",
-    inputField: "text",
+    inputField: "time",
     nullable: false,
+    required: true,
     sortable: true,
   },
   {
     title: "Time Out",
     key: "time_out",
-    inputField: "text",
+    inputField: "time",
     nullable: true,
+    required: false,
     sortable: true,
   },
   {
@@ -47,6 +51,7 @@ export const fields: ColumnConfig[] = [
     key: "time_out_notes",
     inputField: "text",
     nullable: true,
+    required: false,
     sortable: false,
   },
   {

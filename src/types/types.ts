@@ -25,10 +25,12 @@ type BaseColumnConfig = {
     | "select"
     | "checkbox"
     | "date"
+    | "time"
     | "datetime"
     | "none";
   inputOptions?: Array<any>;
   nullable?: boolean;
+  required?: boolean;
   readOnly?: boolean;
   readOnlyOnEdit?: boolean;
   formatter?: (value: any) => string;
@@ -37,7 +39,7 @@ type BaseColumnConfig = {
 };
 
 type TextLikeColumn = BaseColumnConfig & {
-  inputField?: "text" | "checkbox" | "date" | "datetime" | "none";
+  inputField?: "text" | "checkbox" | "date" | "time" | "datetime" | "none";
   inputOptions?: Array<{ label: string; value: any }>;
   selectKey?: never;
 };
@@ -45,13 +47,13 @@ type TextLikeColumn = BaseColumnConfig & {
 type SelectColumn = BaseColumnConfig & {
   inputField: "select";
   inputOptions: Array<{ label: string; value: any }>;
-  selectKey: string; // Required for select fields
+  selectKey: string;
 };
 
 type RadioColumn = BaseColumnConfig & {
   inputField: "radio";
   inputOptions: Array<{ label: string; value: any }>;
-  selectKey?: string; // Optional for radio fields
+  selectKey?: string;
 };
 
 export type ColumnConfig = TextLikeColumn | SelectColumn | RadioColumn;

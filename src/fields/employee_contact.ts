@@ -14,12 +14,14 @@ export const fields: ColumnConfig[] = [
       { label: "Emergency", value: "emergency" },
     ],
     nullable: false,
+    required: true,
   },
   {
     title: "Value",
     key: "value",
     inputField: "text",
     nullable: false,
+    required: true,
   },
   {
     title: "Action",

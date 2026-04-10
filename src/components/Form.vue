@@ -6,18 +6,39 @@
           Are you sure you want to delete this item?
         </template>
         <template v-else v-for="field in props.fields" :key="field.key">
-          <h5 v-if="field.inputField != 'none'">{{ field.title }}</h5>
+          <h5 v-if="field.inputField != 'none'">
+            {{ field.title }}
+            <span v-if="field.required" style="color: red">*</span>
+          </h5>
+
           <v-text-field
             v-if="field.inputField === 'text'"
-            :required="field.nullable"
             v-model="form[field.key]"
             :readonly="isFieldReadOnly(field)"
+            :required="field.required"
+            :rules="
+              field.required ? [(v) => !!v || `${field.title} is required`] : []
+            "
           />
           <v-text-field
             v-else-if="field.inputField === 'date'"
             type="date"
             v-model="form[field.key]"
             :readonly="isFieldReadOnly(field)"
+            :required="field.required"
+            :rules="
+              field.required ? [(v) => !!v || `${field.title} is required`] : []
+            "
+          />
+          <v-text-field
+            v-else-if="field.inputField === 'time'"
+            type="time"
+            v-model="form[field.key]"
+            :readonly="isFieldReadOnly(field)"
+            :required="field.required"
+            :rules="
+              field.required ? [(v) => !!v || `${field.title} is required`] : []
+            "
           />
           <v-checkbox
             v-else-if="field.inputField === 'checkbox'"
@@ -43,6 +64,10 @@
             item-value="value"
             :items="field.inputOptions"
             :readonly="isFieldReadOnly(field)"
+            :required="field.required"
+            :rules="
+              field.required ? [(v) => !!v || `${field.title} is required`] : []
+            "
           />
         </template>
         <v-btn
@@ -90,6 +115,7 @@
     </v-card>
   </v-dialog>
 </template>
+
 <script lang="ts" setup>
 import { computed, ref, watch } from "vue";
 import { ColumnConfig } from "@/types/types";
@@ -109,17 +135,10 @@ const form = ref<Record<string, any>>({});
 
 const emit = defineEmits(["permission", "close", "execute"]);
 
-// Helper to determine if a field should be read-only
 const isFieldReadOnly = (field: ColumnConfig): boolean => {
-  // If globally read-only, always true
   if (props.readOnly) return true;
-
-  // If field has readOnly flag, always true
   if (field.readOnly) return true;
-
-  // If field has readOnlyOnEdit and action is Edit, true
   if (field.readOnlyOnEdit && props.action === "Edit") return true;
-
   return false;
 };
 
