@@ -49,6 +49,12 @@ const routes: RouteRecordRaw[] = [
         component: () =>
           import("@/views/Modules/AttendanceManagement/AttendanceManagement.vue"),
       },
+      {
+        path: "leave-management",
+        name: "leave-management",
+        component: () =>
+          import("@/views/Modules/LeaveManagement/LeaveManagement.vue"),
+      },
 
       // ✅ SubModules (Configurations)
       {
@@ -74,6 +80,12 @@ const routes: RouteRecordRaw[] = [
         name: "employee-number-settings",
         component: () =>
           import("@/views/Modules/SubModules/EmployeeNumberSettings/EmployeeNumberSettings.vue"),
+      },
+      {
+        path: "configuration/leave-types",
+        name: "leave-type-management",
+        component: () =>
+          import("@/views/Modules/SubModules/LeaveTypeManagement/LeaveTypeManagement.vue"),
       },
     ],
   },

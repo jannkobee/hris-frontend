@@ -83,11 +83,20 @@
           @click="$router.push({ name: 'attendance-management' })"
         />
 
+        <v-list-item
+          v-if="checkPermissions('view-leave-requests')"
+          prepend-icon="mdi-calendar-account"
+          title="Leave Management"
+          value="leave-management"
+          @click="$router.push({ name: 'leave-management' })"
+        />
+
         <v-list-group
           v-if="
             checkPermissions('view-employment-statuses') ||
             checkPermissions('view-positions') ||
-            checkPermissions('view-departments')
+            checkPermissions('view-departments') ||
+            checkPermissions('view-leave-types')
           "
           value="configuration"
         >
@@ -121,6 +130,14 @@
             title="Departments"
             value="departments"
             @click="$router.push({ name: 'department-management' })"
+          />
+
+          <v-list-item
+            v-if="checkPermissions('view-leave-types')"
+            prepend-icon="mdi-calendar-badge"
+            title="Leave Types"
+            value="leave-types"
+            @click="$router.push({ name: 'leave-type-management' })"
           />
 
           <v-list-item
