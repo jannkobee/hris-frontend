@@ -157,13 +157,13 @@ export const useApi = <T>(endpoint: string) => {
     downloadFile(res.data, payload.filename);
   }
 
-  async function getOptions() {
+  async function getOptions(payload: any = []) {
     loading.value = true;
 
     try {
-      const payload = { all: 1 };
+      const params = { ...payload, all: 1 };
 
-      const res = await axios.get(endpoint, { params: payload });
+      const res = await axios.get(endpoint, { params });
 
       return (options.value = res.data.data);
     } catch (error) {

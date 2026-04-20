@@ -2,15 +2,11 @@ import { ColumnConfig } from "@/types/types";
 
 export const fields: ColumnConfig[] = [
   {
-    title: "ID",
-    key: "id",
-    inputField: "none",
-    sortable: true,
-  },
-  {
-    title: "Employee Email",
-    key: "user.email",
-    inputField: "text",
+    title: "Employee",
+    key: "employee.user.email",
+    inputField: "select",
+    selectKey: "employee_id",
+    inputOptions: [],
     nullable: false,
     required: true,
     sortable: true,
@@ -44,6 +40,7 @@ export const fields: ColumnConfig[] = [
     key: "time_in_notes",
     inputField: "text",
     nullable: true,
+    required: false,
     sortable: false,
   },
   {

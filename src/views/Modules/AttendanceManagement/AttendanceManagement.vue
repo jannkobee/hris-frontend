@@ -47,7 +47,9 @@ const {
   destroy,
 } = useApi("/attendances");
 
-const relations = "user";
+const { getOptions: getEmployees } = useApi("/employees");
+
+const relations = "employee.user";
 
 const title = ref("Attendance Management");
 const entity = ref("Attendance");
@@ -57,25 +59,56 @@ const isFormVisible = ref(false);
 
 type AttendanceForm = {
   id: string;
-  user_id: string;
+  employee_id: string;
   date: string;
   time_in: string;
   time_out: string;
-  status: string;
+  time_in_notes: string;
+  time_out_notes: string;
 };
 
 const initializeForm = (): AttendanceForm => ({
   id: "",
-  user_id: "",
+  employee_id: "",
   date: "",
   time_in: "",
   time_out: "",
-  status: "",
+  time_in_notes: "",
+  time_out_notes: "",
 });
 
 const form = ref<AttendanceForm>(initializeForm());
 
 const readOnly = () => action.value === "View";
+
+const setSelectOptions = (
+  selectKey: string,
+  options: any[],
+  label: string | ((o: any) => string),
+): void => {
+  const mapped = options.map((o: any) => ({
+    label: typeof label === "function" ? label(o) : (o[label] ?? ""),
+    value: o.id,
+  }));
+
+  const field = fields.value.find((f) => f.selectKey === selectKey);
+  if (field) {
+    field.inputOptions = mapped;
+  }
+};
+
+const loadOptions = async () => {
+  try {
+    const employees = await getEmployees({ relations: "user" });
+    setSelectOptions(
+      "employee_id",
+      employees,
+      (e) => `${e.user.first_name} ${e.user.last_name} - ${e.user?.email ?? ""}`,
+    );
+  } catch (error) {
+    console.error("Error loading options:", error);
+  }
+};
 
 const create = () => {
   form.value = initializeForm();
@@ -124,6 +157,7 @@ const execute = async (payload: any) => {
 };
 
 onMounted(async () => {
+  await loadOptions();
   await index({ relations } as any);
 });
 </script>

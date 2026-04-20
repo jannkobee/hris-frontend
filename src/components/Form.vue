@@ -57,7 +57,7 @@
               :value="option.value"
             />
           </v-radio-group>
-          <v-select
+          <v-autocomplete
             v-else-if="field.inputField === 'select'"
             v-model="form[field.selectKey!]"
             item-title="label"
@@ -68,6 +68,7 @@
             :rules="
               field.required ? [(v) => !!v || `${field.title} is required`] : []
             "
+            clearable
           />
         </template>
         <v-btn
