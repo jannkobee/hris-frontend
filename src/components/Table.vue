@@ -4,6 +4,7 @@
     <v-btn
       v-if="showCreateAction && checkPermissions(`create-${permissionEntity}`)"
       class="button"
+      color="success"
       prepend-icon="mdi-plus"
       elevation="4"
       @click="$emit('create')"
@@ -35,7 +36,6 @@
   >
     <template #top> </template>
 
-    <!-- Dynamic slots for columns with chips -->
     <template
       v-for="header in props.headers.filter((h) => h.displayAs === 'chip')"
       :key="`item.${header.key}`"
@@ -46,7 +46,6 @@
       </v-chip>
     </template>
 
-    <!-- Dynamic slots for columns with formatters (but not chips) -->
     <template
       v-for="header in props.headers.filter(
         (h) => h.formatter && h.displayAs !== 'chip',
@@ -61,16 +60,19 @@
       <v-container class="action-container">
         <v-btn
           v-if="showViewAction && checkPermissions(`view-${permissionEntity}`)"
+          color="grey-darken-3"
           size="small"
           elevation="4"
           density="comfortable"
           icon="mdi-eye"
+          class="text-white"
           @click="$emit('view', item)"
         />
         <v-btn
           v-if="
             showEditAction && checkPermissions(`update-${permissionEntity}`)
           "
+          color="info"
           size="small"
           elevation="4"
           density="comfortable"
@@ -84,6 +86,7 @@
             item.id !== authUser?.role_id &&
             item.id !== authUser?.id
           "
+          color="error"
           size="small"
           elevation="4"
           density="comfortable"
@@ -173,7 +176,6 @@ const checkPermissions = (permission: string): boolean => {
     (perm: { slug: string }) => perm.slug === permission,
   );
 
-  console.log("Checking permissions for:", permission, "→", value);
   return value;
 };
 
@@ -216,6 +218,8 @@ watch(
   margin: 0;
   display: flex;
   gap: 5px;
+  justify-content: center; /* Centers the buttons horizontally */
+  align-items: center; /* Centers the buttons vertically */
 }
 
 @media (max-width: 1200px) {

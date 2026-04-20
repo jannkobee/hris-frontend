@@ -145,7 +145,7 @@ const formatDateForInput = (date: any): string => {
 
 const getEmployeeNumber = async () => {
   try {
-    const res = await axios.get("/employees/generate-employee-number");
+    const res = await axios.get("/employees/employee-no/generate");
 
     form.value.employee_no = res.data.data.employee_no;
 
@@ -161,7 +161,7 @@ const setSelectOptions = (
   label: string | ((o: any) => string),
 ): void => {
   const mapped = options.map((o: any) => ({
-    label: typeof label === "function" ? label(o) : o[label] ?? "",
+    label: typeof label === "function" ? label(o) : (o[label] ?? ""),
     value: o.id,
   }));
 

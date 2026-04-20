@@ -122,6 +122,14 @@
             value="departments"
             @click="$router.push({ name: 'department-management' })"
           />
+
+          <v-list-item
+            v-if="checkPermissions('view-employee-number-settings')"
+            prepend-icon="mdi-badge-account-horizontal-outline"
+            title="Employee Number Settings"
+            value="employee-number-settings"
+            @click="$router.push({ name: 'employee-number-settings' })"
+          />
         </v-list-group>
       </v-list>
 

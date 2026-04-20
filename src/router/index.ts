@@ -69,6 +69,12 @@ const routes: RouteRecordRaw[] = [
         component: () =>
           import("@/views/Modules/SubModules/DepartmentManagement/DepartmentManagement.vue"),
       },
+      {
+        path: "configuration/employee-number-settings",
+        name: "employee-number-settings",
+        component: () =>
+          import("@/views/Modules/SubModules/EmployeeNumberSettings/EmployeeNumberSettings.vue"),
+      },
     ],
   },
 
