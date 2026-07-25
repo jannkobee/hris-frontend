@@ -27,6 +27,7 @@ type BaseColumnConfig = {
     | "date"
     | "time"
     | "datetime"
+    | "richtext"
     | "none";
   inputOptions?: Array<any>;
   nullable?: boolean;
@@ -39,7 +40,14 @@ type BaseColumnConfig = {
 };
 
 type TextLikeColumn = BaseColumnConfig & {
-  inputField?: "text" | "checkbox" | "date" | "time" | "datetime" | "none";
+  inputField?:
+    | "text"
+    | "checkbox"
+    | "date"
+    | "time"
+    | "datetime"
+    | "richtext"
+    | "none";
   inputOptions?: Array<{ label: string; value: any }>;
   selectKey?: never;
 };
@@ -69,6 +77,7 @@ export type User = {
   gender: string;
   birthday: string;
   role?: RoleWithPermissions;
+  settings?: Record<string, any>;
 };
 
 export type RoleWithPermissions = Role & {

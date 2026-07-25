@@ -47,7 +47,9 @@ const routes: RouteRecordRaw[] = [
         path: "attendance-management",
         name: "attendance-management",
         component: () =>
-          import("@/views/Modules/AttendanceManagement/AttendanceManagement.vue"),
+          import(
+            "@/views/Modules/AttendanceManagement/AttendanceManagement.vue"
+          ),
       },
       {
         path: "leave-management",
@@ -55,37 +57,60 @@ const routes: RouteRecordRaw[] = [
         component: () =>
           import("@/views/Modules/LeaveManagement/LeaveManagement.vue"),
       },
+      {
+        path: "announcements",
+        name: "announcement-management",
+        component: () =>
+          import(
+            "@/views/Modules/AnnouncementManagement/AnnouncementManagement.vue"
+          ),
+      },
 
       // ✅ SubModules (Configurations)
       {
         path: "configuration/employment-statuses",
         name: "employment-status-management",
         component: () =>
-          import("@/views/Modules/SubModules/EmploymentStatusManagement/EmploymentStatusManagement.vue"),
+          import(
+            "@/views/Modules/SubModules/EmploymentStatusManagement/EmploymentStatusManagement.vue"
+          ),
       },
       {
         path: "configuration/positions",
         name: "position-management",
         component: () =>
-          import("@/views/Modules/SubModules/PositionManagement/PositionManagement.vue"),
+          import(
+            "@/views/Modules/SubModules/PositionManagement/PositionManagement.vue"
+          ),
       },
       {
         path: "configuration/departments",
         name: "department-management",
         component: () =>
-          import("@/views/Modules/SubModules/DepartmentManagement/DepartmentManagement.vue"),
+          import(
+            "@/views/Modules/SubModules/DepartmentManagement/DepartmentManagement.vue"
+          ),
       },
       {
         path: "configuration/employee-number-settings",
         name: "employee-number-settings",
         component: () =>
-          import("@/views/Modules/SubModules/EmployeeNumberSettings/EmployeeNumberSettings.vue"),
+          import(
+            "@/views/Modules/SubModules/EmployeeNumberSettings/EmployeeNumberSettings.vue"
+          ),
+      },
+      {
+        path: "configuration/theme-settings",
+        name: "theme-settings",
+        component: () => import("@/views/Modules/SubModules/Settings.vue"),
       },
       {
         path: "configuration/leave-types",
         name: "leave-type-management",
         component: () =>
-          import("@/views/Modules/SubModules/LeaveTypeManagement/LeaveTypeManagement.vue"),
+          import(
+            "@/views/Modules/SubModules/LeaveTypeManagement/LeaveTypeManagement.vue"
+          ),
       },
     ],
   },

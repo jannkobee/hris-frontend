@@ -26,7 +26,7 @@
             :subtitle="authUser?.email"
           >
             <template #prepend>
-              <v-avatar color="black">
+              <v-avatar color="surface-variant" class="text-on-surface">
                 <span class="text-h6">{{ authUser?.initials }}</span>
               </v-avatar>
             </template>
@@ -91,6 +91,14 @@
           @click="$router.push({ name: 'leave-management' })"
         />
 
+        <v-list-item
+          v-if="checkPermissions('view-announcements')"
+          prepend-icon="mdi-bullhorn-outline"
+          title="Announcements"
+          value="announcements"
+          @click="$router.push({ name: 'announcement-management' })"
+        />
+
         <v-list-group
           v-if="
             checkPermissions('view-employment-statuses') ||
@@ -104,7 +112,7 @@
             <v-list-item
               v-bind="props"
               prepend-icon="mdi-cog-outline"
-              title="Configuration"
+              title="Configurations"
             />
           </template>
 
@@ -141,6 +149,13 @@
           />
 
           <v-list-item
+            prepend-icon="mdi-cog-box"
+            title="App Settings"
+            value="theme-settings"
+            @click="$router.push({ name: 'theme-settings' })"
+          />
+
+          <v-list-item
             v-if="checkPermissions('view-employee-number-settings')"
             prepend-icon="mdi-badge-account-horizontal-outline"
             title="Employee Number Settings"
@@ -173,14 +188,23 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
+import { computed, ref, onMounted } from "vue";
+import { useTheme } from "vuetify";
 import { useAuth } from "@/composables/useAuth";
 
 const rail = ref(false);
 
 const showConfirm = ref(false);
 
-const { loading, getUser, authUser, logout } = useAuth();
+const theme = useTheme();
+const isDark = computed(() => theme.global.current.value.dark);
+
+const applyTheme = (themeName: string) => {
+  theme.global.name.value = themeName;
+  localStorage.setItem("APP_THEME", themeName);
+};
+
+const { loading, getUser, getSettings, authUser, logout } = useAuth();
 
 const checkPermissions = (permission: string): boolean => {
   if (!authUser.value?.role?.permissions) {
@@ -198,7 +222,11 @@ const checkPermissions = (permission: string): boolean => {
 onMounted(async () => {
   await getUser();
 
-  console.log(authUser.value);
+  const savedSettings = await getSettings();
+  const savedTheme =
+    savedSettings?.theme || localStorage.getItem("APP_THEME") || "light";
+
+  applyTheme(savedTheme);
 });
 </script>
 

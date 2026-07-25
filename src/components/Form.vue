@@ -8,7 +8,7 @@
         <template v-else v-for="field in props.fields" :key="field.key">
           <h5 v-if="field.inputField != 'none'">
             {{ field.title }}
-            <span v-if="field.required" style="color: red">*</span>
+            <span v-if="field.required" class="text-error">*</span>
           </h5>
 
           <v-text-field
@@ -40,6 +40,11 @@
               field.required ? [(v) => !!v || `${field.title} is required`] : []
             "
           />
+          <RichTextEditor
+            v-else-if="field.inputField === 'richtext'"
+            v-model="form[field.key]"
+            :read-only="isFieldReadOnly(field)"
+          />
           <v-checkbox
             v-else-if="field.inputField === 'checkbox'"
             v-model="form[field.key]"
@@ -60,16 +65,24 @@
           <v-autocomplete
             v-else-if="field.inputField === 'select'"
             v-model="form[field.selectKey!]"
-            item-title="label"
-            item-value="value"
             :items="field.inputOptions"
+            :item-title="(item) => getSelectOptionLabel(item)"
+            :item-value="(item) => getSelectOptionValue(item)"
             :readonly="isFieldReadOnly(field)"
             :required="field.required"
             :rules="
               field.required ? [(v) => !!v || `${field.title} is required`] : []
             "
             clearable
-          />
+          >
+            <template #item="{ props, item }">
+              <v-list-item
+                v-bind="props"
+                :title="getSelectOptionLabel(item.raw)"
+                :subtitle="getSelectOptionDescription(item.raw)"
+              />
+            </template>
+          </v-autocomplete>
         </template>
         <v-btn
           v-if="props.entity === 'Role' && props.action !== 'Remove'"
@@ -81,37 +94,39 @@
       </template>
 
       <template v-slot:actions>
-        <v-btn @click="$emit('close')"> Close </v-btn>
-        <v-btn
-          v-if="props.action === 'Create'"
-          prepend-icon="mdi-plus"
-          color="success"
-          :loading="props.loading"
-          :disabled="props.readOnly"
-          @click="execute"
-        >
-          Create {{ displayEntity }}
-        </v-btn>
-        <v-btn
-          v-if="props.action === 'Edit'"
-          prepend-icon="mdi-pencil"
-          color="info"
-          :loading="props.loading"
-          :disabled="props.readOnly"
-          @click="execute"
-        >
-          Save {{ displayEntity }}
-        </v-btn>
-        <v-btn
-          v-if="props.action === 'Remove'"
-          prepend-icon="mdi-delete"
-          color="error"
-          :loading="props.loading"
-          :disabled="props.readOnly"
-          @click="execute"
-        >
-          Delete {{ displayEntity }}
-        </v-btn>
+        <div class="form-actions">
+          <v-btn @click="$emit('close')"> Close </v-btn>
+          <v-btn
+            v-if="props.action === 'Create'"
+            prepend-icon="mdi-plus"
+            color="success"
+            :loading="props.loading"
+            :disabled="props.readOnly"
+            @click="execute"
+          >
+            Create {{ displayEntity }}
+          </v-btn>
+          <v-btn
+            v-if="props.action === 'Edit'"
+            prepend-icon="mdi-pencil"
+            color="info"
+            :loading="props.loading"
+            :disabled="props.readOnly"
+            @click="execute"
+          >
+            Save {{ displayEntity }}
+          </v-btn>
+          <v-btn
+            v-if="props.action === 'Remove'"
+            prepend-icon="mdi-delete"
+            color="error"
+            :loading="props.loading"
+            :disabled="props.readOnly"
+            @click="execute"
+          >
+            Delete {{ displayEntity }}
+          </v-btn>
+        </div>
       </template>
     </v-card>
   </v-dialog>
@@ -120,6 +135,7 @@
 <script lang="ts" setup>
 import { computed, ref, watch } from "vue";
 import { ColumnConfig } from "@/types/types";
+import RichTextEditor from "@/components/RIchTextEditor.vue";
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
@@ -141,6 +157,30 @@ const isFieldReadOnly = (field: ColumnConfig): boolean => {
   if (field.readOnly) return true;
   if (field.readOnlyOnEdit && props.action === "Edit") return true;
   return false;
+};
+
+const getSelectOptionLabel = (option: any): string => {
+  if (!option) return "";
+
+  if (typeof option === "string") return option;
+  if (typeof option?.label === "string") return option.label;
+  if (typeof option?.title === "string") return option.title;
+  if (typeof option?.name === "string") return option.name;
+
+  return String(option?.value ?? "");
+};
+
+const getSelectOptionValue = (option: any): unknown => {
+  if (!option) return "";
+  if (typeof option === "string") return option;
+
+  return option?.value ?? option?.id ?? option;
+};
+
+const getSelectOptionDescription = (option: any): string => {
+  if (!option || typeof option === "string") return "";
+
+  return option?.description ?? option?.subtitle ?? option?.hint ?? "";
 };
 
 const displayEntity = computed(() => {
@@ -184,3 +224,14 @@ watch(
   },
 );
 </script>
+
+<style lang="css" scoped>
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 0;
+}
+</style>

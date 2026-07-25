@@ -25,7 +25,7 @@
     />
   </v-container>
   <v-data-table-server
-    :headers="props.headers"
+    :headers="tableHeaders"
     :items="props.data"
     :items-length="props.pagination.total"
     :items-per-page-options="[5, 10, 20, 50, 100]"
@@ -57,15 +57,17 @@
     </template>
 
     <template #item.action="{ item }">
-      <v-container class="action-container">
+      <div class="action-container">
         <v-btn
           v-if="showViewAction && checkPermissions(`view-${permissionEntity}`)"
-          color="grey-darken-3"
+          color="primary"
+          variant="tonal"
           size="small"
           elevation="4"
           density="comfortable"
           icon="mdi-eye"
-          class="text-white"
+          :title="`View ${title}`"
+          :aria-label="`View ${title}`"
           @click="$emit('view', item)"
         />
         <v-btn
@@ -93,7 +95,22 @@
           icon="mdi-delete"
           @click="$emit('remove', item)"
         />
-      </v-container>
+        <v-btn
+          v-if="
+            showDeleteAction &&
+            checkPermissions(`delete-${permissionEntity}`) &&
+            item.id !== authUser?.role_id &&
+            item.id !== authUser?.id
+          "
+          color="error"
+          size="small"
+          elevation="4"
+          density="comfortable"
+          icon="mdi-delete"
+          @click="$emit('remove', item)"
+        />
+        + <slot name="extra-actions" :item="item" />
+      </div>
     </template>
   </v-data-table-server>
 </template>
@@ -121,6 +138,16 @@ const props = defineProps({
 const { authUser, getUser } = useAuth();
 
 const emit = defineEmits(["filter", "create", "view", "edit", "remove"]);
+
+// The Action column's buttons are centered (see .action-container below),
+// but header labels default to left/"start" alignment. Force that one
+// column's header to center so it lines up with the buttons underneath,
+// regardless of what the fields config passed in via props.headers sets.
+const tableHeaders = computed(() =>
+  props.headers.map((header) =>
+    header.key === "action" ? { ...header, align: "center" as const } : header,
+  ),
+);
 
 const form = ref({
   page: 1,
@@ -214,10 +241,9 @@ watch(
 }
 
 .action-container {
-  padding: 0;
-  margin: 0;
   display: flex;
-  gap: 5px;
+  width: 100%;
+  gap: 6px;
   justify-content: center; /* Centers the buttons horizontally */
   align-items: center; /* Centers the buttons vertically */
 }

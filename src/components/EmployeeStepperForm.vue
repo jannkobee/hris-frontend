@@ -490,7 +490,9 @@ const onStateChange = async (index: number, stateIso2: string) => {
   try {
     // Pass country NAME and state NAME
     const response = await axios.get(
-      `/public-apis/countries/${encodeURIComponent(address.country)}/states/${encodeURIComponent(address.province)}/cities`,
+      `/public-apis/countries/${encodeURIComponent(
+        address.country,
+      )}/states/${encodeURIComponent(address.province)}/cities`,
     );
     address.cityOptions = response.data.data || [];
   } catch (error) {
@@ -592,7 +594,9 @@ watch(
                 try {
                   // Fetch using country NAME
                   const response = await axios.get(
-                    `/public-apis/countries/${encodeURIComponent(country.name)}/states`,
+                    `/public-apis/countries/${encodeURIComponent(
+                      country.name,
+                    )}/states`,
                   );
                   address.stateOptions = response.data.data || [];
 
@@ -606,7 +610,9 @@ watch(
 
                       // Fetch using country NAME and state NAME
                       const citiesResponse = await axios.get(
-                        `/public-apis/countries/${encodeURIComponent(country.name)}/states/${encodeURIComponent(state.name)}/cities`,
+                        `/public-apis/countries/${encodeURIComponent(
+                          country.name,
+                        )}/states/${encodeURIComponent(state.name)}/cities`,
                       );
                       address.cityOptions = citiesResponse.data.data || [];
                     }

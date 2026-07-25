@@ -9,6 +9,7 @@ export const useAuth = () => {
   const router = useRouter();
 
   const authUser = ref<User>();
+  const settings = ref<Record<string, any>>({});
 
   async function login(payload: any) {
     const response = await axios.post("/auth/login", payload);
@@ -37,10 +38,41 @@ export const useAuth = () => {
       const res = await axios.get("/auth/auth-user");
 
       authUser.value = res.data.data;
+      settings.value = authUser.value?.settings ?? {};
 
       loading.value = false;
 
       return res.data;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function getSettings() {
+    try {
+      const res = await axios.get("/auth/settings");
+      settings.value = res.data.data ?? {};
+
+      if (authUser.value) {
+        authUser.value.settings = settings.value;
+      }
+
+      return settings.value;
+    } catch (err) {
+      console.error(err);
+    }
+  }
+
+  async function updateSettings(payload: Record<string, any>) {
+    try {
+      const res = await axios.patch("/auth/settings", payload);
+      settings.value = { ...settings.value, ...payload };
+
+      if (authUser.value) {
+        authUser.value.settings = settings.value;
+      }
+
+      return res;
     } catch (err) {
       console.error(err);
     }
@@ -67,9 +99,12 @@ export const useAuth = () => {
   return {
     loading,
     authUser,
+    settings,
     login,
     logout,
     getUser,
+    getSettings,
+    updateSettings,
     forgot_password,
     reset_password,
     update_password,

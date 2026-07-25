@@ -1,7 +1,7 @@
 <template>
   <div class="p-6 max-w-4xl mx-auto">
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-semibold text-gray-800">{{ title }}</h1>
+      <h1 class="text-2xl font-semibold text-on-background">{{ title }}</h1>
     </div>
 
     <v-card variant="tonal" color="primary" class="mb-6 rounded-lg">
@@ -103,7 +103,7 @@
 
         <v-divider></v-divider>
 
-        <v-card-actions class="pa-3 bg-grey-lighten-4 justify-end">
+        <v-card-actions class="pa-3 bg-surface-variant justify-end">
           <v-btn
             type="submit"
             color="primary"
@@ -122,7 +122,9 @@
     <v-card
       elevation="0"
       border
-      class="rounded-lg border-error bg-red-lighten-5"
+      variant="tonal"
+      color="error"
+      class="rounded-lg border-error"
     >
       <v-card-title class="text-error font-weight-bold pt-4 px-6">
         <v-icon color="error" class="mr-2" size="small"
@@ -134,10 +136,10 @@
         class="px-6 pb-6 pt-2 d-flex align-center justify-space-between"
       >
         <div>
-          <h3 class="text-subtitle-2 font-weight-medium text-red-darken-4">
+          <h3 class="text-subtitle-2 font-weight-medium text-error">
             Reformat Existing Employees
           </h3>
-          <p class="text-caption text-red-darken-2 mt-1 font-weight-medium">
+          <p class="text-caption text-error mt-1 font-weight-medium">
             Retroactively apply current settings to everyone. This action is
             permanent.
           </p>
@@ -158,7 +160,7 @@
     <v-dialog v-model="confirmDialog" max-width="400" persistent>
       <v-card>
         <v-card-title
-          class="bg-error text-white pa-3 text-subtitle-1 d-flex align-center"
+          class="bg-error text-on-error pa-3 text-subtitle-1 d-flex align-center"
         >
           <v-icon size="small" class="mr-2">mdi-alert</v-icon>
           Confirm Reformat

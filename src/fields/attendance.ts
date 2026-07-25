@@ -3,7 +3,7 @@ import { ColumnConfig } from "@/types/types";
 export const fields: ColumnConfig[] = [
   {
     title: "Employee",
-    key: "employee.user.email",
+    key: "employee.user.full_name",
     inputField: "select",
     selectKey: "employee_id",
     inputOptions: [],
