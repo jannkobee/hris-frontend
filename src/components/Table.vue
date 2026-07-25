@@ -95,21 +95,7 @@
           icon="mdi-delete"
           @click="$emit('remove', item)"
         />
-        <v-btn
-          v-if="
-            showDeleteAction &&
-            checkPermissions(`delete-${permissionEntity}`) &&
-            item.id !== authUser?.role_id &&
-            item.id !== authUser?.id
-          "
-          color="error"
-          size="small"
-          elevation="4"
-          density="comfortable"
-          icon="mdi-delete"
-          @click="$emit('remove', item)"
-        />
-        + <slot name="extra-actions" :item="item" />
+        <slot name="extra-actions" :item="item" />
       </div>
     </template>
   </v-data-table-server>
