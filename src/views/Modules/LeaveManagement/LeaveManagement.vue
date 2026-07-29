@@ -16,7 +16,6 @@
     <v-tabs v-model="activeTab" color="primary" class="mb-4">
       <v-tab value="requests">Leave Requests</v-tab>
       <v-tab value="credits">Leave Credits</v-tab>
-      <v-tab value="creditSettings">Leave Credit Settings</v-tab>
       <v-tab value="conversions">Leave Conversions</v-tab>
     </v-tabs>
 
@@ -77,10 +76,9 @@ import type { ColumnConfig } from "@/types/types";
 
 import { fields as requestFieldsRaw } from "@/fields/leave_request";
 import { fields as creditFieldsRaw } from "@/fields/leave_credit";
-import { fields as creditSettingFieldsRaw } from "@/fields/leave_credit_setting";
 import { fields as conversionFieldsRaw } from "@/fields/leave_conversion_request";
 
-type TabKey = "requests" | "credits" | "creditSettings" | "conversions";
+type TabKey = "requests" | "credits" | "conversions";
 
 const activeTab = ref<TabKey>("requests");
 const entity = ref("LeaveRequest");
@@ -91,12 +89,10 @@ const conversionActionLoading = ref<string | null>(null);
 
 const requestFields = ref<ColumnConfig[]>([...requestFieldsRaw]);
 const creditFields = ref<ColumnConfig[]>([...creditFieldsRaw]);
-const creditSettingFields = ref<ColumnConfig[]>([...creditSettingFieldsRaw]);
 const conversionFields = ref<ColumnConfig[]>([...conversionFieldsRaw]);
 
 const requestApi = useApi("/leave-requests");
 const creditApi = useApi("/leave-credits");
-const creditSettingApi = useApi("/leave-credit-settings");
 const conversionApi = useApi("/leave-conversion-requests");
 
 const { getOptions: getEmployees } = useApi("/employees");
@@ -119,17 +115,6 @@ const emptyCreditForm = () => ({
   year: new Date().getFullYear(),
   total_earned: 0,
   used: 0,
-});
-
-const emptyCreditSettingForm = () => ({
-  id: "",
-  leave_type_id: "",
-  name: "",
-  description: "",
-  credit_amount: 0,
-  frequency: "monthly",
-  run_months: [],
-  is_active: true,
 });
 
 const emptyConversionForm = () => ({
@@ -157,14 +142,6 @@ const tabs = {
     relations: "employee.user,leaveType",
     emptyForm: emptyCreditForm,
     api: creditApi,
-  },
-  creditSettings: {
-    entity: "LeaveCreditSetting",
-    title: "Leave Credit Accrual Settings",
-    fields: creditSettingFields,
-    relations: "leaveType",
-    emptyForm: emptyCreditSettingForm,
-    api: creditSettingApi,
   },
   conversions: {
     entity: "LeaveConversionRequest",
@@ -194,7 +171,7 @@ const setSelectOptions = (
   label: string | ((option: any) => string),
 ) => {
   const mapped = options.map((option) => ({
-    label: typeof label === "function" ? label(option) : option[label] ?? "",
+    label: typeof label === "function" ? label(option) : (option[label] ?? ""),
     value: option.id,
   }));
 
@@ -285,7 +262,6 @@ onMounted(async () => {
     loadOptions(),
     requestApi.index({ relations: tabs.requests.relations }),
     creditApi.index({ relations: tabs.credits.relations }),
-    creditSettingApi.index({ relations: tabs.creditSettings.relations }),
     conversionApi.index({ relations: tabs.conversions.relations }),
   ]);
 });

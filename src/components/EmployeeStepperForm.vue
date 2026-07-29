@@ -1,16 +1,57 @@
 <template>
-  <v-dialog v-model="props.visible" max-width="1200" persistent scrollable>
-    <v-card>
-      <v-card-title class="d-flex align-center">
+  <v-dialog
+    v-model="props.visible"
+    :fullscreen="props.action === 'Remove' ? false : isFullscreen"
+    :max-width="props.action === 'Remove' ? 500 : undefined"
+    persistent
+    scrollable
+  >
+    <v-card
+      ref="cardEl"
+      :class="[
+        props.action === 'Remove' ? '' : 'resizable-card',
+        {
+          'is-fullscreen': isFullscreen && props.action !== 'Remove',
+          dragging,
+          resizing,
+        },
+      ]"
+      :style="isFullscreen || props.action === 'Remove' ? undefined : cardStyle"
+    >
+      <v-card-title
+        class="d-flex align-center"
+        :class="{ 'drag-handle': props.action !== 'Remove' }"
+        @mousedown="onTitleMouseDown"
+      >
         <span>{{ props.action }} {{ displayEntity }}</span>
         <v-spacer />
-        <v-btn icon="mdi-close" variant="text" @click="$emit('close')" />
+        <v-btn
+          v-if="props.action !== 'Remove'"
+          :icon="isFullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
+          variant="text"
+          size="small"
+          density="comfortable"
+          :title="isFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
+          :aria-label="isFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
+          @click="isFullscreen = !isFullscreen"
+          class="mr-2"
+        />
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="small"
+          density="comfortable"
+          @click="$emit('close')"
+        />
       </v-card-title>
 
-      <v-divider />
-
-      <v-card-text class="pa-0">
-        <v-stepper v-model="currentStep" alt-labels>
+      <v-card-text>
+        <template v-if="props.action === 'Remove'">
+          <div class="pa-4 text-body-1">
+            Are you sure you want to delete this item?
+          </div>
+        </template>
+        <v-stepper v-else v-model="currentStep" alt-labels>
           <v-stepper-header>
             <v-stepper-item
               :complete="currentStep > 1"
@@ -311,15 +352,21 @@
         </v-stepper>
       </v-card-text>
 
-      <v-divider />
-
       <v-card-actions>
-        <v-btn v-if="currentStep > 1" @click="currentStep--" variant="text">
+        <v-btn
+          v-if="currentStep > 1 && props.action !== 'Remove'"
+          @click="currentStep--"
+          variant="text"
+        >
           Previous
         </v-btn>
         <v-spacer />
         <v-btn @click="$emit('close')" variant="text"> Close </v-btn>
-        <v-btn v-if="currentStep < 3" color="primary" @click="currentStep++">
+        <v-btn
+          v-if="currentStep < 3 && props.action !== 'Remove'"
+          color="primary"
+          @click="currentStep++"
+        >
           Next
         </v-btn>
         <v-btn
@@ -353,6 +400,12 @@
           Delete {{ displayEntity }}
         </v-btn>
       </v-card-actions>
+
+      <div
+        v-if="!isFullscreen && props.action !== 'Remove'"
+        class="resize-handle"
+        @mousedown="onResizeMouseDown"
+      />
     </v-card>
   </v-dialog>
 </template>
@@ -361,6 +414,8 @@
 import { computed, ref, watch, onMounted } from "vue";
 import { ColumnConfig } from "@/types/types";
 import axios from "@/plugins/axios";
+import { useDraggable } from "@/composables/useDraggable";
+import { useResizable } from "@/composables/useResizable";
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
@@ -384,6 +439,41 @@ const contacts = ref<Array<Record<string, any>>>([]);
 
 const countryOptions = ref<any[]>([]);
 const loadingCountries = ref(false);
+const isFullscreen = ref(false);
+
+const cardEl = ref<{ $el: HTMLElement } | null>(null);
+const cardElement = computed<HTMLElement | null>(
+  () => cardEl.value?.$el ?? null,
+);
+
+const {
+  offset: dragOffset,
+  dragging,
+  onMouseDown: onTitleMouseDown,
+  reset: resetDrag,
+} = useDraggable(() => isFullscreen.value || props.action === "Remove");
+
+const {
+  size,
+  resizing,
+  onMouseDown: onResizeMouseDown,
+  reset: resetResize,
+} = useResizable(
+  cardElement,
+  { minWidth: 600, minHeight: 400, maxWidth: window.innerWidth * 0.95 },
+  () => isFullscreen.value || props.action === "Remove",
+);
+
+const cardStyle = computed(() => ({
+  transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
+  ...(size.width !== null ? { width: `${size.width}px` } : {}),
+  ...(size.height !== null ? { height: `${size.height}px` } : {}),
+}));
+
+const resetDialogGeometry = () => {
+  resetDrag();
+  resetResize();
+};
 
 const addressTypeOptions = [
   { label: "Current", value: "current" },
@@ -564,11 +654,16 @@ onMounted(() => {
   loadCountries();
 });
 
+watch(isFullscreen, (value) => {
+  if (!value) resetDialogGeometry();
+});
+
 watch(
   () => props.visible,
   async (visible) => {
     if (visible) {
       currentStep.value = 1;
+      resetDialogGeometry();
       employeeForm.value = { ...props.employeeForm, ...props.data };
 
       if (props.data.addresses && props.data.addresses.length > 0) {
@@ -631,12 +726,83 @@ watch(
       }
 
       contacts.value = props.data.contacts ? [...props.data.contacts] : [];
+    } else {
+      isFullscreen.value = false;
+      resetDialogGeometry();
     }
   },
 );
 </script>
 
 <style scoped>
+.drag-handle {
+  cursor: move;
+}
+
+.resizable-card.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.resizable-card.resizing {
+  cursor: nwse-resize;
+  user-select: none;
+}
+
+.resizable-card {
+  flex: 0 0 auto !important;
+  align-self: center;
+  justify-self: center;
+  width: min(1200px, 95vw);
+  max-height: 90vh;
+  min-width: 600px;
+  min-height: 400px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.resize-handle {
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 14px;
+  height: 14px;
+  cursor: nwse-resize;
+  z-index: 2;
+  opacity: 0.45;
+  transition: opacity 0.15s ease;
+  background-image: linear-gradient(
+    135deg,
+    transparent 0%,
+    transparent 65%,
+    rgba(var(--v-theme-on-surface), 0.6) 65%,
+    rgba(var(--v-theme-on-surface), 0.6) 75%,
+    transparent 75%
+  );
+}
+
+.resize-handle:hover,
+.resizable-card.resizing .resize-handle {
+  opacity: 0.9;
+}
+
+.resizable-card :deep(.v-card-actions) {
+  padding-right: 20px;
+  padding-bottom: 12px;
+}
+
+.resizable-card.is-fullscreen {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0;
+  min-height: 0;
+  resize: none;
+}
+
 .v-stepper {
   box-shadow: none;
 }
