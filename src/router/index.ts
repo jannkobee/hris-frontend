@@ -102,7 +102,7 @@ const routes: RouteRecordRaw[] = [
         path: "configuration/leave-credit-settings",
         name: "leave-credit-setting-management",
         component: () =>
-          import("@/views/Modules/SubModules/LeaveCreditSettingManagement/LeaveCreditSettingManagement.vue"),
+          import("@/views/Modules/SubModules/LeaveCreditManagement/LeaveCreditManagement.vue"),
       },
     ],
   },

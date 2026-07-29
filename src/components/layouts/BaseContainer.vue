@@ -104,7 +104,8 @@
             checkPermissions('view-employment-statuses') ||
             checkPermissions('view-positions') ||
             checkPermissions('view-departments') ||
-            checkPermissions('view-leave-types')
+            checkPermissions('view-leave-types') ||
+            checkPermissions('view-leave-credit-settings')
           "
           value="configuration"
         >
@@ -146,6 +147,14 @@
             title="Leave Types"
             value="leave-types"
             @click="$router.push({ name: 'leave-type-management' })"
+          />
+
+          <v-list-item
+            v-if="checkPermissions('view-leave-credit-settings')"
+            prepend-icon="mdi-calendar-plus"
+            title="Leave Credit Settings"
+            value="leave-credit-settings"
+            @click="$router.push({ name: 'leave-credit-setting-management' })"
           />
 
           <v-list-item
