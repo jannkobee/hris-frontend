@@ -1,191 +1,164 @@
 <template>
-  <v-dialog
-    v-model="props.visible"
-    :fullscreen="props.action === 'Remove' ? false : isFullscreen"
-    :max-width="props.action === 'Remove' ? 500 : undefined"
-    persistent
-  >
+  <v-dialog v-model="props.visible" :fullscreen="isFullscreen" persistent>
     <v-card
       ref="cardEl"
-      :class="[
-        props.action === 'Remove' ? '' : 'resizable-card',
-        {
-          'is-fullscreen': isFullscreen && props.action !== 'Remove',
-          dragging,
-          resizing,
-        },
-      ]"
-      :style="isFullscreen || props.action === 'Remove' ? undefined : cardStyle"
+      class="resizable-card"
+      :class="{ 'is-fullscreen': isFullscreen, dragging, resizing }"
+      :style="isFullscreen ? undefined : cardStyle"
     >
-      <v-card-title
-        class="d-flex align-center"
-        :class="{ 'drag-handle': props.action !== 'Remove' }"
-        @mousedown="onTitleMouseDown"
-      >
-        <span>{{ props.action }} {{ displayEntity }}</span>
-        <v-spacer />
-        <v-btn
-          v-if="props.action !== 'Remove'"
-          :icon="isFullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
-          variant="text"
-          size="small"
-          density="comfortable"
-          :title="isFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
-          :aria-label="isFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
-          @click="isFullscreen = !isFullscreen"
-          class="mr-2"
-        />
-        <v-btn
-          icon="mdi-close"
-          variant="text"
-          size="small"
-          density="comfortable"
-          @click="$emit('close')"
-        />
-      </v-card-title>
-
-      <v-card-text>
-        <template v-if="props.action === 'Remove'">
-          <div class="pa-4 text-body-1">
-            Are you sure you want to delete this item?
-          </div>
-        </template>
-        <template v-else>
-          <template v-for="field in props.fields" :key="field.key">
-            <h5 v-if="field.inputField != 'none'">
-              {{ field.title }}
-              <span v-if="field.required" class="text-error">*</span>
-            </h5>
-
-            <v-text-field
-              v-if="field.inputField === 'text'"
-              v-model="form[field.key]"
-              :readonly="isFieldReadOnly(field)"
-              :required="field.required"
-              :rules="
-                field.required
-                  ? [(v) => !!v || `${field.title} is required`]
-                  : []
-              "
-            />
-            <v-text-field
-              v-else-if="field.inputField === 'date'"
-              type="date"
-              v-model="form[field.key]"
-              :readonly="isFieldReadOnly(field)"
-              :required="field.required"
-              :rules="
-                field.required
-                  ? [(v) => !!v || `${field.title} is required`]
-                  : []
-              "
-            />
-            <v-text-field
-              v-else-if="field.inputField === 'time'"
-              type="time"
-              v-model="form[field.key]"
-              :readonly="isFieldReadOnly(field)"
-              :required="field.required"
-              :rules="
-                field.required
-                  ? [(v) => !!v || `${field.title} is required`]
-                  : []
-              "
-            />
-            <RichTextEditor
-              v-else-if="field.inputField === 'richtext'"
-              v-model="form[field.key]"
-              :read-only="isFieldReadOnly(field)"
-            />
-            <v-checkbox
-              v-else-if="field.inputField === 'checkbox'"
-              v-model="form[field.key]"
-              :readonly="isFieldReadOnly(field)"
-            />
-            <v-radio-group
-              v-else-if="field.inputField === 'radio'"
-              v-model="form[field.key]"
-              :readonly="isFieldReadOnly(field)"
-            >
-              <v-radio
-                v-for="option in field.inputOptions"
-                :key="option.value"
-                :label="option.label"
-                :value="option.value"
-              />
-            </v-radio-group>
-            <v-autocomplete
-              v-else-if="field.inputField === 'select'"
-              v-model="form[field.selectKey!]"
-              :items="field.inputOptions"
-              :item-title="(item) => getSelectOptionLabel(item)"
-              :item-value="(item) => getSelectOptionValue(item)"
-              :readonly="isFieldReadOnly(field)"
-              :required="field.required"
-              :rules="
-                field.required
-                  ? [(v) => !!v || `${field.title} is required`]
-                  : []
-              "
-              clearable
-            >
-              <template #item="{ props, item }">
-                <v-list-item
-                  v-bind="props"
-                  :title="getSelectOptionLabel(item.raw)"
-                  :subtitle="getSelectOptionDescription(item.raw)"
-                />
-              </template>
-            </v-autocomplete>
-          </template>
+      <template v-slot:title>
+        <div class="dialog-title-row drag-handle" @mousedown="onTitleMouseDown">
+          <span>{{ props.action }} {{ displayEntity }}</span>
           <v-btn
-            v-if="props.entity === 'Role' && props.action !== 'Remove'"
-            prepend-icon="mdi-account-lock-outline"
-            class="mt-4"
-            @click="emit('permission')"
-          >
-            Permissions
-          </v-btn>
+            :icon="isFullscreen ? 'mdi-fullscreen-exit' : 'mdi-fullscreen'"
+            variant="text"
+            size="small"
+            density="comfortable"
+            :title="isFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
+            :aria-label="isFullscreen ? 'Exit fullscreen' : 'Fullscreen'"
+            @click="isFullscreen = !isFullscreen"
+          />
+        </div>
+      </template>
+      <template v-slot:text>
+        <template v-if="props.action === 'Remove'">
+          Are you sure you want to delete this item?
         </template>
-      </v-card-text>
+        <template v-else v-for="field in props.fields" :key="field.key">
+          <h5 v-if="field.inputField != 'none'">
+            {{ field.title }}
+            <span v-if="field.required" class="text-error">*</span>
+          </h5>
 
-      <v-card-actions>
-        <v-spacer />
-        <v-btn @click="$emit('close')"> Close </v-btn>
+          <v-text-field
+            v-if="field.inputField === 'text'"
+            v-model="form[field.key]"
+            :readonly="isFieldReadOnly(field)"
+            :required="field.required"
+            :rules="
+              field.required ? [(v) => !!v || `${field.title} is required`] : []
+            "
+          />
+          <v-text-field
+            v-else-if="field.inputField === 'date'"
+            type="date"
+            v-model="form[field.key]"
+            :readonly="isFieldReadOnly(field)"
+            :required="field.required"
+            :rules="
+              field.required ? [(v) => !!v || `${field.title} is required`] : []
+            "
+          />
+          <v-text-field
+            v-else-if="field.inputField === 'time'"
+            type="time"
+            v-model="form[field.key]"
+            :readonly="isFieldReadOnly(field)"
+            :required="field.required"
+            :rules="
+              field.required ? [(v) => !!v || `${field.title} is required`] : []
+            "
+          />
+          <RichTextEditor
+            v-else-if="field.inputField === 'richtext'"
+            v-model="form[field.key]"
+            :read-only="isFieldReadOnly(field)"
+          />
+          <v-checkbox
+            v-else-if="field.inputField === 'checkbox'"
+            v-model="form[field.key]"
+            :readonly="isFieldReadOnly(field)"
+          />
+          <v-radio-group
+            v-else-if="field.inputField === 'radio'"
+            v-model="form[field.key]"
+            :readonly="isFieldReadOnly(field)"
+          >
+            <v-radio
+              v-for="option in field.inputOptions"
+              :key="option.value"
+              :label="option.label"
+              :value="option.value"
+            />
+          </v-radio-group>
+          <v-autocomplete
+            v-else-if="field.inputField === 'select'"
+            v-model="form[field.selectKey!]"
+            :items="field.inputOptions"
+            :item-title="(item) => getSelectOptionLabel(item)"
+            :item-value="(item) => getSelectOptionValue(item)"
+            :readonly="isFieldReadOnly(field)"
+            :required="field.required"
+            :multiple="field.multiple"
+            :chips="field.multiple"
+            :closable-chips="field.multiple"
+            :rules="
+              field.required
+                ? [
+                    (v) =>
+                      (field.multiple ? !!v?.length : !!v) ||
+                      `${field.title} is required`,
+                  ]
+                : []
+            "
+            clearable
+          >
+            <template #item="{ props, item }">
+              <v-list-item
+                v-bind="props"
+                :title="getSelectOptionLabel(item.raw)"
+                :subtitle="getSelectOptionDescription(item.raw)"
+              />
+            </template>
+          </v-autocomplete>
+        </template>
         <v-btn
-          v-if="props.action === 'Create'"
-          prepend-icon="mdi-plus"
-          color="success"
-          :loading="props.loading"
-          :disabled="props.readOnly"
-          @click="execute"
+          v-if="props.entity === 'Role' && props.action !== 'Remove'"
+          prepend-icon="mdi-account-lock-outline"
+          @click="emit('permission')"
         >
-          Create {{ displayEntity }}
+          Permissions
         </v-btn>
-        <v-btn
-          v-if="props.action === 'Edit'"
-          prepend-icon="mdi-pencil"
-          color="info"
-          :loading="props.loading"
-          :disabled="props.readOnly"
-          @click="execute"
-        >
-          Save {{ displayEntity }}
-        </v-btn>
-        <v-btn
-          v-if="props.action === 'Remove'"
-          prepend-icon="mdi-delete"
-          color="error"
-          :loading="props.loading"
-          :disabled="props.readOnly"
-          @click="execute"
-        >
-          Delete {{ displayEntity }}
-        </v-btn>
-      </v-card-actions>
+      </template>
+
+      <template v-slot:actions>
+        <div class="form-actions">
+          <v-btn @click="$emit('close')"> Close </v-btn>
+          <v-btn
+            v-if="props.action === 'Create'"
+            prepend-icon="mdi-plus"
+            color="success"
+            :loading="props.loading"
+            :disabled="props.readOnly"
+            @click="execute"
+          >
+            Create {{ displayEntity }}
+          </v-btn>
+          <v-btn
+            v-if="props.action === 'Edit'"
+            prepend-icon="mdi-pencil"
+            color="info"
+            :loading="props.loading"
+            :disabled="props.readOnly"
+            @click="execute"
+          >
+            Save {{ displayEntity }}
+          </v-btn>
+          <v-btn
+            v-if="props.action === 'Remove'"
+            prepend-icon="mdi-delete"
+            color="error"
+            :loading="props.loading"
+            :disabled="props.readOnly"
+            @click="execute"
+          >
+            Delete {{ displayEntity }}
+          </v-btn>
+        </div>
+      </template>
 
       <div
-        v-if="!isFullscreen && props.action !== 'Remove'"
+        v-if="!isFullscreen"
         class="resize-handle"
         @mousedown="onResizeMouseDown"
       />
@@ -194,7 +167,7 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, watch } from "vue";
+import { computed, ref, watch, nextTick } from "vue";
 import { ColumnConfig } from "@/types/types";
 import RichTextEditor from "@/components/RIchTextEditor.vue";
 import { useDraggable } from "@/composables/useDraggable";
@@ -214,6 +187,13 @@ const props = defineProps({
 const form = ref<Record<string, any>>({});
 const isFullscreen = ref(false);
 
+// Guards the field-linking watchers below from firing when the form is
+// being populated/reset by opening the dialog, rather than by the user
+// actually changing a field.
+const isPopulating = ref(false);
+
+// v-card's template ref is the component instance, not the DOM node —
+// useResizable needs the actual element to read its rendered size.
 const cardEl = ref<{ $el: HTMLElement } | null>(null);
 const cardElement = computed<HTMLElement | null>(
   () => cardEl.value?.$el ?? null,
@@ -224,7 +204,7 @@ const {
   dragging,
   onMouseDown: onTitleMouseDown,
   reset: resetDrag,
-} = useDraggable(() => isFullscreen.value || props.action === "Remove");
+} = useDraggable(() => isFullscreen.value);
 
 const {
   size,
@@ -234,9 +214,12 @@ const {
 } = useResizable(
   cardElement,
   { minWidth: 320, minHeight: 320, maxWidth: window.innerWidth * 0.95 },
-  () => isFullscreen.value || props.action === "Remove",
+  () => isFullscreen.value,
 );
 
+// Combining position + size in one binding keeps them in sync through the
+// same Vue-reactive style patch, rather than mixing a JS-driven transform
+// with the browser's own native `resize` box model.
 const cardStyle = computed(() => ({
   transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)`,
   ...(size.width !== null ? { width: `${size.width}px` } : {}),
@@ -259,21 +242,25 @@ const isFieldReadOnly = (field: ColumnConfig): boolean => {
 
 const getSelectOptionLabel = (option: any): string => {
   if (!option) return "";
+
   if (typeof option === "string") return option;
   if (typeof option?.label === "string") return option.label;
   if (typeof option?.title === "string") return option.title;
   if (typeof option?.name === "string") return option.name;
+
   return String(option?.value ?? "");
 };
 
 const getSelectOptionValue = (option: any): unknown => {
   if (!option) return "";
   if (typeof option === "string") return option;
+
   return option?.value ?? option?.id ?? option;
 };
 
 const getSelectOptionDescription = (option: any): string => {
   if (!option || typeof option === "string") return "";
+
   return option?.description ?? option?.subtitle ?? option?.hint ?? "";
 };
 
@@ -315,37 +302,69 @@ watch(isFullscreen, (value) => {
 
 watch(
   () => props.visible,
-  (visible) => {
+  async (visible) => {
     if (visible) {
+      isPopulating.value = true;
       form.value = { ...props.form, ...props.data };
       resetDialogGeometry();
+      await nextTick();
+      isPopulating.value = false;
     } else {
       isFullscreen.value = false;
       resetDialogGeometry();
     }
   },
 );
+
+// Wire up any field that declares an `onChange` handler (e.g. "Frequency"
+// auto-populating "Run Months"). Fields are fixed for the lifetime of a
+// given Form instance, so it's safe to set these watchers up once.
+props.fields
+  .filter((field) => field.onChange)
+  .forEach((field) => {
+    const bindKey = field.selectKey ?? field.key;
+    watch(
+      () => form.value[bindKey],
+      (newValue) => {
+        if (isPopulating.value) return;
+        const patch = field.onChange!(newValue, form.value);
+        if (patch) Object.assign(form.value, patch);
+      },
+    );
+  });
 </script>
 
 <style lang="css" scoped>
+.dialog-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
 .drag-handle {
   cursor: move;
 }
 
-.resizable-card.dragging {
+.resizable-card.dragging,
+.resizable-card.resizing {
   cursor: grabbing;
   user-select: none;
 }
 
-.resizable-card.resizing {
-  cursor: nwse-resize;
-  user-select: none;
-}
-
 .resizable-card {
+  /* Vuetify's own VDialog.sass sets `flex: 1 1 var(--v-card-height, 100%)`
+     on this exact element unconditionally (not just with the `scrollable`
+     prop), which force-grows the card to fill the dialog's available
+     height on every layout pass — silently overriding any height we set
+     ourselves. Cancel that out so our own width/height bindings are the
+     only thing controlling size, and escape ancestor `align-items` so
+     centering recalculates in both directions. */
   flex: 0 0 auto !important;
   align-self: center;
   justify-self: center;
+
   width: min(1000px, 95vw);
   max-height: 90vh;
   min-width: 320px;
@@ -358,27 +377,28 @@ watch(
 
 .resize-handle {
   position: absolute;
-  right: 2px;
-  bottom: 2px;
-  width: 14px;
-  height: 14px;
+  right: 0;
+  bottom: 0;
+  width: 18px;
+  height: 18px;
   cursor: nwse-resize;
-  z-index: 2;
-  opacity: 0.45;
-  transition: opacity 0.15s ease;
-  background-image: linear-gradient(
+  z-index: 1;
+  background: linear-gradient(
     135deg,
     transparent 0%,
-    transparent 65%,
-    rgba(var(--v-theme-on-surface), 0.6) 65%,
-    rgba(var(--v-theme-on-surface), 0.6) 75%,
-    transparent 75%
+    transparent 45%,
+    rgba(255, 255, 255, 0.35) 45%,
+    rgba(255, 255, 255, 0.35) 55%,
+    transparent 55%,
+    transparent 60%,
+    rgba(255, 255, 255, 0.35) 60%,
+    rgba(255, 255, 255, 0.35) 70%,
+    transparent 70%,
+    transparent 75%,
+    rgba(255, 255, 255, 0.35) 75%,
+    rgba(255, 255, 255, 0.35) 85%,
+    transparent 85%
   );
-}
-
-.resize-handle:hover,
-.resizable-card.resizing .resize-handle {
-  opacity: 0.9;
 }
 
 .resizable-card.is-fullscreen {
@@ -397,8 +417,12 @@ watch(
   overflow-y: auto;
 }
 
-.resizable-card :deep(.v-card-actions) {
-  padding-right: 20px;
-  padding-bottom: 12px;
+.form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 4px 0;
 }
 </style>

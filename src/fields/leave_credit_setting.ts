@@ -43,12 +43,27 @@ export const fields: ColumnConfig[] = [
       { label: "Custom", value: "custom" },
     ],
     required: false,
+    onChange: (value: string) => {
+      const runMonthsByFrequency: Record<string, number[]> = {
+        monthly: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
+        quarterly: [1, 4, 7, 10],
+        semi_annually: [1, 7],
+        annually: [1],
+      };
+
+      // "custom" (or anything unrecognized) leaves run_months alone so the
+      // admin can pick whatever combination they need.
+      if (value in runMonthsByFrequency) {
+        return { run_months: runMonthsByFrequency[value] };
+      }
+    },
   },
   {
     title: "Run Months",
     key: "run_months",
     inputField: "select",
     selectKey: "run_months",
+    multiple: true,
     inputOptions: [
       { label: "January", value: 1 },
       { label: "February", value: 2 },
@@ -64,6 +79,23 @@ export const fields: ColumnConfig[] = [
       { label: "December", value: 12 },
     ],
     required: true,
+    formatter: (v: number[]) => {
+      const names = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+      return Array.isArray(v) ? v.map((m) => names[m - 1]).join(", ") : "";
+    },
   },
   {
     title: "Active",

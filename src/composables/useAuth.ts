@@ -3,13 +3,13 @@ import { useRouter } from "vue-router";
 import { ref } from "vue";
 import { User } from "@/types/types";
 
+// 1. ALL state variables moved outside the function so they are shared globally
 const loading = ref(false);
+const authUser = ref<User>();
+const settings = ref<Record<string, any>>({});
 
 export const useAuth = () => {
   const router = useRouter();
-
-  const authUser = ref<User>();
-  const settings = ref<Record<string, any>>({});
 
   async function login(payload: any) {
     const response = await axios.post("/auth/login", payload);
@@ -45,6 +45,7 @@ export const useAuth = () => {
       return res.data;
     } catch (err) {
       console.error(err);
+      loading.value = false; // Always a good idea to reset loading on error
     }
   }
 

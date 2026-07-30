@@ -57,7 +57,7 @@ const emptyForm = () => ({
   description: "",
   credit_amount: 0,
   frequency: "monthly",
-  run_months: [],
+  run_months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
   is_active: true,
 });
 

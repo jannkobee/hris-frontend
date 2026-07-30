@@ -37,6 +37,14 @@ type BaseColumnConfig = {
   formatter?: (value: any) => string;
   displayAs?: "chip" | "text";
   chipColor?: string;
+  // Called whenever this field's bound value changes from real user input
+  // (not when the form is populated/reset by opening the dialog). Return a
+  // partial object to merge into the form, e.g. to keep a derived field in
+  // sync — return nothing to leave the rest of the form untouched.
+  onChange?: (
+    value: any,
+    form: Record<string, any>,
+  ) => Record<string, any> | void;
 };
 
 type TextLikeColumn = BaseColumnConfig & {
@@ -56,6 +64,10 @@ type SelectColumn = BaseColumnConfig & {
   inputField: "select";
   inputOptions: Array<{ label: string; value: any }>;
   selectKey: string;
+  // When true, the field binds to an array (e.g. run_months: [1, 6]) instead
+  // of a single scalar. Needed for any select-type field whose backend
+  // validation expects an array.
+  multiple?: boolean;
 };
 
 type RadioColumn = BaseColumnConfig & {
