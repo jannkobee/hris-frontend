@@ -47,8 +47,32 @@
     </template>
 
     <template
+      v-for="header in props.headers.filter((h) => h.displayAs === 'chips')"
+      :key="`item.${header.key}`"
+      v-slot:[`item.${header.key}`]="{ item }"
+    >
+      <div class="chip-group">
+        <v-chip
+          v-for="(label, idx) in formatCellArray(item, header)"
+          :key="idx"
+          :color="header.chipColor || 'primary'"
+          size="small"
+          label
+        >
+          {{ label }}
+        </v-chip>
+        <span
+          v-if="formatCellArray(item, header).length === 0"
+          class="text-medium-emphasis"
+        >
+          —
+        </span>
+      </div>
+    </template>
+
+    <template
       v-for="header in props.headers.filter(
-        (h) => h.formatter && h.displayAs !== 'chip',
+        (h) => h.formatter && h.displayAs !== 'chip' && h.displayAs !== 'chips',
       )"
       :key="`item.${header.key}`"
       v-slot:[`item.${header.key}`]="{ item }"
@@ -168,10 +192,28 @@ const formatCellValue = (item: any, header: ColumnConfig): string => {
   const value = getNestedValue(item, header.key);
 
   if (header.formatter && typeof header.formatter === "function") {
-    return header.formatter(value);
+    const result = header.formatter(value);
+    return Array.isArray(result) ? result.join(", ") : result;
   }
 
   return value ?? "";
+};
+
+// Like formatCellValue, but for `displayAs: "chips"` columns: returns a
+// list of labels (one per chip) instead of a single joined string. The
+// header's formatter is expected to return an array here (e.g. run_months
+// -> ["Jan", "Apr", "Jul", "Oct"]); anything else is coerced into a
+// single-item list so a plain array value still renders sensibly.
+const formatCellArray = (item: any, header: ColumnConfig): string[] => {
+  const value = getNestedValue(item, header.key);
+
+  if (header.formatter && typeof header.formatter === "function") {
+    const result = header.formatter(value);
+    return Array.isArray(result) ? result : result ? [String(result)] : [];
+  }
+
+  if (Array.isArray(value)) return value.map(String);
+  return value ? [String(value)] : [];
 };
 
 const handleTableChange = (options: any) => {
@@ -232,6 +274,13 @@ watch(
   gap: 6px;
   justify-content: center; /* Centers the buttons horizontally */
   align-items: center; /* Centers the buttons vertically */
+}
+
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px 0;
 }
 
 @media (max-width: 1200px) {

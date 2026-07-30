@@ -79,6 +79,8 @@ export const fields: ColumnConfig[] = [
       { label: "December", value: 12 },
     ],
     required: true,
+    displayAs: "chips" as const,
+    chipColor: "primary",
     formatter: (v: number[]) => {
       const names = [
         "Jan",
@@ -94,7 +96,7 @@ export const fields: ColumnConfig[] = [
         "Nov",
         "Dec",
       ];
-      return Array.isArray(v) ? v.map((m) => names[m - 1]).join(", ") : "";
+      return Array.isArray(v) ? v.map((m) => names[m - 1]) : [];
     },
   },
   {

@@ -34,8 +34,8 @@ type BaseColumnConfig = {
   required?: boolean;
   readOnly?: boolean;
   readOnlyOnEdit?: boolean;
-  formatter?: (value: any) => string;
-  displayAs?: "chip" | "text";
+  formatter?: (value: any) => string | string[];
+  displayAs?: "chip" | "chips" | "text";
   chipColor?: string;
   // Called whenever this field's bound value changes from real user input
   // (not when the form is populated/reset by opening the dialog). Return a
