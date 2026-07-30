@@ -1,181 +1,158 @@
 <template>
-  <v-row justify="center">
-    <v-col cols="12" lg="10" xl="8">
-      <v-card class="modern-settings-card" variant="elevated">
-        <v-card-item class="pb-2">
-          <div class="d-flex align-center justify-space-between flex-wrap ga-3">
+  <v-container fluid>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+      <div>
+        <div class="text-h5 font-weight-bold">App Settings</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Personalize the application experience.
+        </p>
+      </div>
+      <v-chip color="primary" variant="flat">Configurations</v-chip>
+    </div>
+
+    <!-- Wait for global authUser to hydrate before rendering tabs -->
+    <template v-if="authUser">
+      <v-tabs v-model="tab" color="primary" class="mb-4">
+        <v-tab value="general">
+          <v-icon icon="mdi-palette-outline" start size="small" />
+          General
+        </v-tab>
+
+        <v-tab v-if="canViewTasks" value="scheduled-tasks">
+          <v-icon icon="mdi-clock-time-eight-outline" start size="small" />
+          Scheduled Tasks
+        </v-tab>
+      </v-tabs>
+
+      <v-window v-model="tab">
+        <!-- GENERAL TAB -->
+        <v-window-item value="general">
+          <v-sheet
+            class="pa-4 mb-5 d-flex align-center"
+            border
+            rounded
+            color="transparent"
+          >
+            <v-avatar color="primary" variant="tonal" size="48" class="mr-4">
+              <v-icon icon="mdi-palette-outline" size="large" />
+            </v-avatar>
             <div>
-              <div class="text-h5 font-weight-bold">App Settings</div>
-              <p class="text-body-2 text-medium-emphasis mb-0">
-                Personalize the application experience.
-              </p>
+              <div class="text-subtitle-1 font-weight-bold">Theme</div>
+              <div class="text-body-2 text-medium-emphasis">
+                Choose the visual appearance for the app.
+              </div>
             </div>
-            <v-chip color="primary" variant="flat">Configurations</v-chip>
-          </div>
-        </v-card-item>
+          </v-sheet>
 
-        <!-- Wait for global authUser to hydrate before rendering tabs -->
-        <template v-if="authUser">
-          <v-tabs v-model="tab" class="px-4" color="primary">
-            <v-tab value="general">
-              <v-icon icon="mdi-palette-outline" start size="small" />
-              General
-            </v-tab>
+          <v-select
+            v-model="theme"
+            label="Application Theme"
+            :items="themeOptions"
+            variant="outlined"
+            prepend-inner-icon="mdi-theme-light-dark"
+          />
 
-            <v-tab v-if="canViewTasks" value="scheduled-tasks">
-              <v-icon icon="mdi-clock-time-eight-outline" start size="small" />
-              Scheduled Tasks
-            </v-tab>
-          </v-tabs>
-
-          <v-divider />
-
-          <v-tabs-window v-model="tab">
-            <!-- GENERAL TAB -->
-            <v-tabs-window-item value="general">
-              <v-card-text>
-                <v-sheet
-                  class="pa-4 mb-5 d-flex align-center"
-                  border
-                  rounded
-                  color="transparent"
-                >
-                  <v-avatar
-                    color="primary"
-                    variant="tonal"
-                    size="48"
-                    class="mr-4"
-                  >
-                    <v-icon icon="mdi-palette-outline" size="large" />
-                  </v-avatar>
-                  <div>
-                    <div class="text-subtitle-1 font-weight-bold">Theme</div>
-                    <div class="text-body-2 text-medium-emphasis">
-                      Choose the visual appearance for the app.
-                    </div>
-                  </div>
-                </v-sheet>
-
-                <v-select
-                  v-model="theme"
-                  label="Application Theme"
-                  :items="themeOptions"
-                  variant="outlined"
-                  prepend-inner-icon="mdi-theme-light-dark"
-                />
-
-                <div class="d-flex justify-end mt-6">
-                  <v-btn
-                    color="primary"
-                    size="large"
-                    class="text-none"
-                    @click="saveTheme"
-                    :loading="saving"
-                  >
-                    Save Changes
-                  </v-btn>
-                </div>
-              </v-card-text>
-            </v-tabs-window-item>
-
-            <!-- SCHEDULED TASKS TAB -->
-            <v-tabs-window-item v-if="canViewTasks" value="scheduled-tasks">
-              <v-card-text>
-                <v-sheet
-                  class="pa-4 mb-5 d-flex align-center"
-                  border
-                  rounded
-                  color="transparent"
-                >
-                  <v-avatar
-                    color="primary"
-                    variant="tonal"
-                    size="48"
-                    class="mr-4"
-                  >
-                    <v-icon icon="mdi-clock-time-eight-outline" size="large" />
-                  </v-avatar>
-                  <div>
-                    <div class="text-subtitle-1 font-weight-bold">
-                      Scheduled Tasks
-                    </div>
-                    <div class="text-body-2 text-medium-emphasis">
-                      Automate recurring jobs without touching the server
-                      crontab.
-                    </div>
-                  </div>
-                </v-sheet>
-
-                <v-alert
-                  type="info"
-                  variant="tonal"
-                  density="compact"
-                  class="mb-4"
-                  icon="mdi-information-outline"
-                >
-                  "Leave Accrual"'s timing is auto-derived from the active rules
-                  in Leave Credit Settings, so its schedule fields are locked
-                  here. Change how often it runs by editing the rules there, not
-                  on this row.
-                </v-alert>
-
-                <Table
-                  entity="ScheduledTask"
-                  title=""
-                  :headers="taskHeaders"
-                  :data="taskItems"
-                  :pagination="taskPagination"
-                  :loading="taskLoading"
-                  @filter="onTaskFilter"
-                  @create="onTaskCreate"
-                  @view="onTaskView"
-                  @edit="onTaskEdit"
-                  @remove="onTaskRemove"
-                >
-                  <template #extra-actions="{ item }">
-                    <v-btn
-                      color="success"
-                      variant="tonal"
-                      size="small"
-                      elevation="4"
-                      density="comfortable"
-                      icon="mdi-play"
-                      :loading="runningId === item.id"
-                      :title="`Run ${item.name} now`"
-                      :aria-label="`Run ${item.name} now`"
-                      @click="runTaskNow(item)"
-                    />
-                  </template>
-                </Table>
-
-                <Form
-                  :visible="taskDialog.visible"
-                  :action="taskDialog.action"
-                  entity="ScheduledTask"
-                  :fields="taskFieldsForDialog"
-                  :form="defaultTaskForm"
-                  :data="taskDialog.data"
-                  :loading="taskLoadingActions"
-                  @close="taskDialog.visible = false"
-                  @execute="onTaskExecute"
-                />
-              </v-card-text>
-            </v-tabs-window-item>
-          </v-tabs-window>
-        </template>
-
-        <!-- Loading state while waiting for global authUser -->
-        <template v-else>
-          <div class="pa-10 text-center">
-            <v-progress-circular
-              indeterminate
+          <div class="d-flex justify-end mt-6">
+            <v-btn
               color="primary"
-            ></v-progress-circular>
+              size="large"
+              class="text-none"
+              @click="saveTheme"
+              :loading="saving"
+            >
+              Save Changes
+            </v-btn>
           </div>
-        </template>
-      </v-card>
-    </v-col>
-  </v-row>
+        </v-window-item>
+
+        <!-- SCHEDULED TASKS TAB -->
+        <v-window-item v-if="canViewTasks" value="scheduled-tasks">
+          <v-sheet
+            class="pa-4 mb-5 d-flex align-center"
+            border
+            rounded
+            color="transparent"
+          >
+            <v-avatar color="primary" variant="tonal" size="48" class="mr-4">
+              <v-icon icon="mdi-clock-time-eight-outline" size="large" />
+            </v-avatar>
+            <div>
+              <div class="text-subtitle-1 font-weight-bold">
+                Scheduled Tasks
+              </div>
+              <div class="text-body-2 text-medium-emphasis">
+                Automate recurring jobs without touching the server crontab.
+              </div>
+            </div>
+          </v-sheet>
+
+          <v-alert
+            type="info"
+            variant="tonal"
+            density="compact"
+            class="mb-4"
+            icon="mdi-information-outline"
+          >
+            "Leave Accrual"'s timing is auto-derived from the active rules in
+            Leave Credit Settings, so its schedule fields are locked here.
+            Change how often it runs by editing the rules there, not on this
+            row.
+          </v-alert>
+
+          <Table
+            entity="ScheduledTask"
+            title=""
+            :headers="taskHeaders"
+            :data="taskItems"
+            :pagination="taskPagination"
+            :loading="taskLoading"
+            @filter="onTaskFilter"
+            @create="onTaskCreate"
+            @view="onTaskView"
+            @edit="onTaskEdit"
+            @remove="onTaskRemove"
+          >
+            <template #extra-actions="{ item }">
+              <v-btn
+                color="success"
+                variant="tonal"
+                size="small"
+                elevation="4"
+                density="comfortable"
+                icon="mdi-play"
+                :loading="runningId === item.id"
+                :title="`Run ${item.name} now`"
+                :aria-label="`Run ${item.name} now`"
+                @click="runTaskNow(item)"
+              />
+            </template>
+          </Table>
+
+          <Form
+            :visible="taskDialog.visible"
+            :action="taskDialog.action"
+            entity="ScheduledTask"
+            :fields="taskFieldsForDialog"
+            :form="defaultTaskForm"
+            :data="taskDialog.data"
+            :loading="taskLoadingActions"
+            @close="taskDialog.visible = false"
+            @execute="onTaskExecute"
+          />
+        </v-window-item>
+      </v-window>
+    </template>
+
+    <!-- Loading state while waiting for global authUser -->
+    <template v-else>
+      <div class="pa-10 text-center">
+        <v-progress-circular
+          indeterminate
+          color="primary"
+        ></v-progress-circular>
+      </div>
+    </template>
+  </v-container>
 </template>
 
 <script lang="ts" setup>
@@ -458,10 +435,3 @@ onMounted(async () => {
   applyTheme(savedTheme);
 });
 </script>
-
-<style scoped>
-.modern-settings-card {
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.08);
-}
-</style>
