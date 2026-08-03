@@ -158,6 +158,12 @@ const navItems: NavItem[] = [
     permission: "view-announcements",
   },
   {
+    title: "Audit Logs",
+    icon: "mdi-clipboard-text-clock-outline",
+    routeName: "audit-log-management",
+    // permission: "view-audit-logs",
+  },
+  {
     title: "Configurations",
     icon: "mdi-cog-outline",
     children: [

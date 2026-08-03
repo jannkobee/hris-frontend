@@ -67,6 +67,11 @@ const routes: RouteRecordRaw[] = [
         component: () =>
           import("@/views/Modules/AnnouncementManagement/AnnouncementManagement.vue"),
       },
+      {
+        path: "audit-logs",
+        name: "audit-log-management",
+        component: () => import("@/views/Modules/AuditLog/AuditLog.vue"),
+      },
 
       // ✅ SubModules (Configurations)
       {
