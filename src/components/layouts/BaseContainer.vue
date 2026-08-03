@@ -44,134 +44,34 @@
       <v-divider></v-divider>
 
       <v-list density="compact" nav>
-        <v-list-item
-          prepend-icon="mdi-view-dashboard"
-          title="Dashboard"
-          value="dashboard"
-          @click="$router.push({ name: 'dashboard' })"
-        />
+        <template v-for="item in visibleNavItems" :key="item.title">
+          <v-list-group v-if="item.children" :value="item.title">
+            <template #activator="{ props }">
+              <v-list-item
+                v-bind="props"
+                :prepend-icon="item.icon"
+                :title="item.title"
+              />
+            </template>
 
-        <v-list-item
-          v-if="checkPermissions('view-users')"
-          prepend-icon="mdi-account-cog-outline"
-          title="User Management"
-          value="user-management"
-          @click="$router.push({ name: 'user-management' })"
-        />
-
-        <v-list-item
-          v-if="checkPermissions('view-roles')"
-          prepend-icon="mdi-head-cog-outline"
-          title="Role Management"
-          value="role-management"
-          @click="$router.push({ name: 'role-management' })"
-        />
-
-        <v-list-item
-          v-if="checkPermissions('view-employees')"
-          prepend-icon="mdi-account-group-outline"
-          title="Employee Management"
-          value="employee-management"
-          @click="$router.push({ name: 'employee-management' })"
-        />
-
-        <v-list-item
-          v-if="checkPermissions('view-attendances')"
-          prepend-icon="mdi-calendar-clock"
-          title="Attendance Management"
-          value="attendance-management"
-          @click="$router.push({ name: 'attendance-management' })"
-        />
-
-        <v-list-item
-          v-if="checkPermissions('view-leave-requests')"
-          prepend-icon="mdi-calendar-account"
-          title="Leave Management"
-          value="leave-management"
-          @click="$router.push({ name: 'leave-management' })"
-        />
-
-        <v-list-item
-          v-if="checkPermissions('view-announcements')"
-          prepend-icon="mdi-bullhorn-outline"
-          title="Announcements"
-          value="announcements"
-          @click="$router.push({ name: 'announcement-management' })"
-        />
-
-        <v-list-group
-          v-if="
-            checkPermissions('view-employment-statuses') ||
-            checkPermissions('view-positions') ||
-            checkPermissions('view-departments') ||
-            checkPermissions('view-leave-types') ||
-            checkPermissions('view-leave-credit-settings')
-          "
-          value="configuration"
-        >
-          <template #activator="{ props }">
             <v-list-item
-              v-bind="props"
-              prepend-icon="mdi-cog-outline"
-              title="Configurations"
+              v-for="child in item.children"
+              :key="child.routeName"
+              :prepend-icon="child.icon"
+              :title="child.title"
+              :value="child.routeName"
+              @click="$router.push({ name: child.routeName })"
             />
-          </template>
+          </v-list-group>
 
           <v-list-item
-            v-if="checkPermissions('view-employment-statuses')"
-            prepend-icon="mdi-list-status"
-            title="Employment Statuses"
-            value="employment-statuses"
-            @click="$router.push({ name: 'employment-status-management' })"
+            v-else
+            :prepend-icon="item.icon"
+            :title="item.title"
+            :value="item.routeName"
+            @click="$router.push({ name: item.routeName })"
           />
-
-          <v-list-item
-            v-if="checkPermissions('view-positions')"
-            prepend-icon="mdi-briefcase-outline"
-            title="Positions"
-            value="positions"
-            @click="$router.push({ name: 'position-management' })"
-          />
-
-          <v-list-item
-            v-if="checkPermissions('view-departments')"
-            prepend-icon="mdi-domain"
-            title="Departments"
-            value="departments"
-            @click="$router.push({ name: 'department-management' })"
-          />
-
-          <v-list-item
-            v-if="checkPermissions('view-leave-types')"
-            prepend-icon="mdi-calendar-badge"
-            title="Leave Types"
-            value="leave-types"
-            @click="$router.push({ name: 'leave-type-management' })"
-          />
-
-          <v-list-item
-            v-if="checkPermissions('view-leave-credit-settings')"
-            prepend-icon="mdi-calendar-plus"
-            title="Leave Credit Settings"
-            value="leave-credit-settings"
-            @click="$router.push({ name: 'leave-credit-setting-management' })"
-          />
-
-          <v-list-item
-            prepend-icon="mdi-cog-box"
-            title="App Settings"
-            value="theme-settings"
-            @click="$router.push({ name: 'theme-settings' })"
-          />
-
-          <v-list-item
-            v-if="checkPermissions('view-employee-number-settings')"
-            prepend-icon="mdi-badge-account-horizontal-outline"
-            title="Employee Number Settings"
-            value="employee-number-settings"
-            @click="$router.push({ name: 'employee-number-settings' })"
-          />
-        </v-list-group>
+        </template>
       </v-list>
 
       <v-divider></v-divider>
@@ -201,6 +101,111 @@ import { computed, ref, onMounted } from "vue";
 import { useTheme } from "vuetify";
 import { useAuth } from "@/composables/useAuth";
 
+type NavItem = {
+  title: string;
+  icon: string;
+  // Route name to navigate to. Omit for group headers that only contain children.
+  routeName?: string;
+  // Permission slug required to show this item. Omit to always show it.
+  permission?: string;
+  children?: NavItem[];
+};
+
+// Single source of truth for the sidebar. Add/remove/reorder modules here —
+// nothing else in this file needs to change to reflect it in the drawer.
+const navItems: NavItem[] = [
+  { title: "Dashboard", icon: "mdi-view-dashboard", routeName: "dashboard" },
+  {
+    title: "User Management",
+    icon: "mdi-account-cog-outline",
+    routeName: "user-management",
+    permission: "view-users",
+  },
+  {
+    title: "Role Management",
+    icon: "mdi-head-cog-outline",
+    routeName: "role-management",
+    permission: "view-roles",
+  },
+  {
+    title: "Employee Management",
+    icon: "mdi-account-group-outline",
+    routeName: "employee-management",
+    permission: "view-employees",
+  },
+  {
+    title: "Attendance Management",
+    icon: "mdi-calendar-clock",
+    routeName: "attendance-management",
+    permission: "view-attendances",
+  },
+  {
+    title: "Leave Management",
+    icon: "mdi-calendar-account",
+    routeName: "leave-management",
+    permission: "view-leave-requests",
+  },
+  {
+    title: "Overtime Management",
+    icon: "mdi-clock-plus-outline",
+    routeName: "overtime-management",
+    permission: "view-overtimes",
+  },
+  {
+    title: "Announcements",
+    icon: "mdi-bullhorn-outline",
+    routeName: "announcement-management",
+    permission: "view-announcements",
+  },
+  {
+    title: "Configurations",
+    icon: "mdi-cog-outline",
+    children: [
+      {
+        title: "Employment Statuses",
+        icon: "mdi-list-status",
+        routeName: "employment-status-management",
+        permission: "view-employment-statuses",
+      },
+      {
+        title: "Positions",
+        icon: "mdi-briefcase-outline",
+        routeName: "position-management",
+        permission: "view-positions",
+      },
+      {
+        title: "Departments",
+        icon: "mdi-domain",
+        routeName: "department-management",
+        permission: "view-departments",
+      },
+      {
+        title: "Leave Types",
+        icon: "mdi-calendar-badge",
+        routeName: "leave-type-management",
+        permission: "view-leave-types",
+      },
+      {
+        title: "Leave Credit Settings",
+        icon: "mdi-calendar-plus",
+        routeName: "leave-credit-setting-management",
+        permission: "view-leave-credit-settings",
+      },
+      {
+        title: "App Settings",
+        icon: "mdi-cog-box",
+        routeName: "theme-settings",
+      },
+      {
+        title: "Employee Number Settings",
+        icon: "mdi-badge-account-horizontal-outline",
+        routeName: "employee-number-settings",
+        permission: "view-employee-number-settings",
+      },
+    ],
+  },
+];
+
 const rail = ref(false);
 
 const showConfirm = ref(false);
@@ -220,13 +225,28 @@ const checkPermissions = (permission: string): boolean => {
     return false;
   }
 
-  const value = authUser.value.role.permissions.some(
+  return authUser.value.role.permissions.some(
     (perm: { slug: string }) => perm.slug === permission,
   );
-
-  console.log("Checking permissions for:", permission, "→", value);
-  return value;
 };
+
+// Filters navItems down to what the current user can actually see.
+// A group survives only if at least one of its children is visible.
+const isVisible = (item: NavItem): boolean =>
+  !item.permission || checkPermissions(item.permission);
+
+const visibleNavItems = computed<NavItem[]>(() =>
+  navItems.reduce<NavItem[]>((acc, item) => {
+    if (item.children) {
+      const children = item.children.filter(isVisible);
+      if (children.length) acc.push({ ...item, children });
+    } else if (isVisible(item)) {
+      acc.push(item);
+    }
+
+    return acc;
+  }, []),
+);
 
 onMounted(async () => {
   await getUser();

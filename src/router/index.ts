@@ -56,6 +56,12 @@ const routes: RouteRecordRaw[] = [
           import("@/views/Modules/LeaveManagement/LeaveManagement.vue"),
       },
       {
+        path: "overtime-management",
+        name: "overtime-management",
+        component: () =>
+          import("@/views/Modules/OvertimeManagement/OvertimeManagement.vue"),
+      },
+      {
         path: "announcements",
         name: "announcement-management",
         component: () =>
