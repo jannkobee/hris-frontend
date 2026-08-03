@@ -12,24 +12,38 @@
     @execute="execute"
   />
 
-  <DataTable
-    :entity="entity"
-    :title="title"
-    :headers="fields"
-    :data="items"
-    :loading="loading"
-    :pagination="pagination"
-    @filter="index"
-    @create="create"
-    @view="view"
-    @edit="edit"
-    @remove="remove"
-  />
+  <v-container fluid>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+      <div>
+        <div class="text-h5 font-weight-bold">Department Management</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Organize and manage the departments in your organization.
+        </p>
+      </div>
+      <v-chip color="primary" variant="flat">Departments</v-chip>
+    </div>
+
+    <Table
+      :entity="entity"
+      title="Department Records"
+      :headers="fields"
+      :data="items"
+      :loading="loading"
+      :pagination="pagination"
+      @filter="index"
+      @create="create"
+      @view="view"
+      @edit="edit"
+      @remove="remove"
+    />
+  </v-container>
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
 import { useApi } from "@/composables/useApi";
+import Table from "@/components/Table.vue";
+import Form from "@/components/Form.vue";
 import { fields } from "@/fields/department";
 
 const {
@@ -43,7 +57,6 @@ const {
   destroy,
 } = useApi("/departments");
 
-const title = ref("Department Management");
 const entity = ref("Department");
 const action = ref("");
 const data = ref();

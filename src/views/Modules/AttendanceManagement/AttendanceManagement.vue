@@ -11,20 +11,32 @@
     @execute="execute"
   />
 
-  <DataTable
-    :entity="entity"
-    :title="title"
-    :headers="fields"
-    :data="items"
-    :loading="loading"
-    :pagination="pagination"
-    :relations="relations"
-    @filter="index"
-    @create="create"
-    @view="view"
-    @edit="edit"
-    @remove="remove"
-  />
+  <v-container fluid>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+      <div>
+        <div class="text-h5 font-weight-bold">Attendance Management</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Track and manage employee time-in and time-out records.
+        </p>
+      </div>
+      <v-chip color="primary" variant="flat">Attendance</v-chip>
+    </div>
+
+    <Table
+      :entity="entity"
+      title="Attendance Records"
+      :headers="fields"
+      :data="items"
+      :loading="loading"
+      :pagination="pagination"
+      :relations="relations"
+      @filter="index"
+      @create="create"
+      @view="view"
+      @edit="edit"
+      @remove="remove"
+    />
+  </v-container>
 </template>
 
 <script lang="ts" setup>
@@ -33,6 +45,7 @@ import { useApi } from "@/composables/useApi";
 import { fields as importedFields } from "@/fields/attendance";
 import type { ColumnConfig } from "@/types/types";
 import Form from "@/components/Form.vue";
+import Table from "@/components/Table.vue";
 
 const fields = ref<ColumnConfig[]>([...importedFields] as ColumnConfig[]);
 
@@ -51,7 +64,6 @@ const { getOptions: getEmployees } = useApi("/employees");
 
 const relations = "employee.user";
 
-const title = ref("Attendance Management");
 const entity = ref("Attendance");
 const action = ref("");
 const data = ref();
@@ -103,7 +115,8 @@ const loadOptions = async () => {
     setSelectOptions(
       "employee_id",
       employees,
-      (e) => `${e.user.first_name} ${e.user.last_name} - ${e.user?.email ?? ""}`,
+      (e) =>
+        `${e.user.first_name} ${e.user.last_name} - ${e.user?.email ?? ""}`,
     );
   } catch (error) {
     console.error("Error loading options:", error);

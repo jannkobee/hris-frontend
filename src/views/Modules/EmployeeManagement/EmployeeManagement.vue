@@ -14,20 +14,32 @@
     @execute="execute"
   />
 
-  <DataTable
-    :entity="entity"
-    :title="title"
-    :headers="fields"
-    :data="items"
-    :loading="loading"
-    :pagination="pagination"
-    :relations="relations"
-    @filter="index"
-    @create="create"
-    @view="view"
-    @edit="edit"
-    @remove="remove"
-  />
+  <v-container fluid>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+      <div>
+        <div class="text-h5 font-weight-bold">Employee Management</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Manage employee records, profiles, and organizational assignments.
+        </p>
+      </div>
+      <v-chip color="primary" variant="flat">Employees</v-chip>
+    </div>
+
+    <Table
+      :entity="entity"
+      title="Employee Records"
+      :headers="fields"
+      :data="items"
+      :loading="loading"
+      :pagination="pagination"
+      :relations="relations"
+      @filter="index"
+      @create="create"
+      @view="view"
+      @edit="edit"
+      @remove="remove"
+    />
+  </v-container>
 </template>
 
 <script lang="ts" setup>
@@ -39,6 +51,7 @@ import { fields as contactFieldsImported } from "@/fields/employee_contact";
 import axios from "@/plugins/axios";
 import type { ColumnConfig } from "@/types/types";
 import EmployeeStepperForm from "@/components/EmployeeStepperForm.vue";
+import Table from "@/components/Table.vue";
 
 // Create a reactive copy of fields with proper typing
 const fields = ref<ColumnConfig[]>([...importedFields] as ColumnConfig[]);
@@ -71,7 +84,6 @@ const { getOptions: getJobGrades } = useApi("/job-grades");
 const relations =
   "user,employmentStatus,department,position,jobGrade,addresses,contacts";
 
-const title = ref("Employee Management");
 const entity = ref("Employee");
 const action = ref("");
 const data = ref();

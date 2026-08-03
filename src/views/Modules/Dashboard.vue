@@ -1,8 +1,11 @@
 <template>
   <v-container fluid class="pa-0">
-    <div class="mb-6">
-      <h1 class="text-h4">Dashboard</h1>
-      <p class="text-medium-emphasis mb-0">Today at a glance</p>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-6">
+      <div>
+        <div class="text-h5 font-weight-bold">Dashboard</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">Today at a glance.</p>
+      </div>
+      <v-chip color="primary" variant="flat">Overview</v-chip>
     </div>
 
     <v-row>

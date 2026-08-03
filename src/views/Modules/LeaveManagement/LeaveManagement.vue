@@ -13,6 +13,16 @@
   />
 
   <v-container fluid>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+      <div>
+        <div class="text-h5 font-weight-bold">Leave Management</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Manage employee leave requests, credits, and conversions.
+        </p>
+      </div>
+      <v-chip color="primary" variant="flat">Leave</v-chip>
+    </div>
+
     <v-tabs v-model="activeTab" color="primary" class="mb-4">
       <v-tab value="requests">Leave Requests</v-tab>
       <v-tab value="credits">Leave Credits</v-tab>

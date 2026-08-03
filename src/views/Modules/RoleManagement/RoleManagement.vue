@@ -12,19 +12,32 @@
     @close="close"
     @execute="execute"
   />
-  <DataTable
-    :entity="entity"
-    :title="title"
-    :headers="fields"
-    :data="items"
-    :loading="loading"
-    :pagination="pagination"
-    @filter="index"
-    @create="create"
-    @view="view"
-    @edit="edit"
-    @remove="remove"
-  />
+  <v-container fluid>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+      <div>
+        <div class="text-h5 font-weight-bold">Role Management</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Manage roles and configure their permissions.
+        </p>
+      </div>
+      <v-chip color="primary" variant="flat">Roles</v-chip>
+    </div>
+
+    <Table
+      :entity="entity"
+      title="Role Records"
+      :headers="fields"
+      :data="items"
+      :loading="loading"
+      :pagination="pagination"
+      @filter="index"
+      @create="create"
+      @view="view"
+      @edit="edit"
+      @remove="remove"
+    />
+  </v-container>
+
   <Permission
     :visible="isPermissionVisible"
     :action="action"
@@ -40,6 +53,8 @@ import { useApi } from "@/composables/useApi";
 import { fields } from "@/fields/role";
 import { Role } from "@/types/types";
 import Permission from "@/components/Permission.vue";
+import Table from "@/components/Table.vue";
+import Form from "@/components/Form.vue";
 
 const {
   index,
@@ -54,7 +69,6 @@ const {
 
 const relations = "permissions";
 
-const title = ref("Role Management");
 const entity = ref("Role");
 const action = ref("");
 const data = ref();

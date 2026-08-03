@@ -13,6 +13,16 @@
   />
 
   <v-container fluid>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+      <div>
+        <div class="text-h5 font-weight-bold">Leave Credit Management</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Configure automatic leave credit accrual rules.
+        </p>
+      </div>
+      <v-chip color="primary" variant="flat">Leave Credits</v-chip>
+    </div>
+
     <Table
       :entity="entity"
       title="Leave Credit Accrual Settings"

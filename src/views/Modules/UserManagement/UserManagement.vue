@@ -11,20 +11,32 @@
     @close="close"
     @execute="execute"
   />
-  <DataTable
-    :entity="entity"
-    :title="title"
-    :headers="fields"
-    :data="items"
-    :loading="loading"
-    :pagination="pagination"
-    :relations="relations"
-    @filter="index"
-    @create="create"
-    @view="view"
-    @edit="edit"
-    @remove="remove"
-  />
+  <v-container fluid>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+      <div>
+        <div class="text-h5 font-weight-bold">User Management</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Manage user accounts and their role assignments.
+        </p>
+      </div>
+      <v-chip color="primary" variant="flat">Users</v-chip>
+    </div>
+
+    <Table
+      :entity="entity"
+      title="User Records"
+      :headers="fields"
+      :data="items"
+      :loading="loading"
+      :pagination="pagination"
+      :relations="relations"
+      @filter="index"
+      @create="create"
+      @view="view"
+      @edit="edit"
+      @remove="remove"
+    />
+  </v-container>
 </template>
 
 <script lang="ts" setup>
@@ -32,6 +44,8 @@ import { ref, onMounted, readonly } from "vue";
 import { useApi } from "@/composables/useApi";
 import { fields } from "@/fields/user";
 import { User } from "@/types/types";
+import Table from "@/components/Table.vue";
+import Form from "@/components/Form.vue";
 
 const {
   index,
@@ -48,7 +62,6 @@ const { getOptions } = useApi("/roles");
 
 const relations = "role";
 
-const title = ref("User Management");
 const entity = ref("User");
 const action = ref("");
 const data = ref();

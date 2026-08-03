@@ -1,7 +1,13 @@
 <template>
-  <div class="p-6 max-w-4xl mx-auto">
-    <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-semibold text-on-background">{{ title }}</h1>
+  <v-container fluid>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+      <div>
+        <div class="text-h5 font-weight-bold">Employee Number Settings</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Configure how employee numbers are automatically generated.
+        </p>
+      </div>
+      <v-chip color="primary" variant="flat">Employee Numbers</v-chip>
     </div>
 
     <v-card variant="tonal" color="primary" class="mb-6 rounded-lg">
@@ -183,7 +189,7 @@
         </v-card-actions>
       </v-card>
     </v-dialog>
-  </div>
+  </v-container>
 </template>
 
 <script lang="ts" setup>
@@ -193,7 +199,6 @@ import { useNotification } from "@/composables/useNotification";
 
 const { showNotification } = useNotification();
 
-const title = ref("Employee Number Settings");
 const loading = ref(false);
 const reformatting = ref(false);
 const confirmDialog = ref(false);

@@ -12,24 +12,38 @@
     @execute="execute"
   />
 
-  <DataTable
-    :entity="entity"
-    :title="title"
-    :headers="fields"
-    :data="items"
-    :loading="loading"
-    :pagination="pagination"
-    @filter="index"
-    @create="create"
-    @view="view"
-    @edit="edit"
-    @remove="remove"
-  />
+  <v-container fluid>
+    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+      <div>
+        <div class="text-h5 font-weight-bold">Employment Status Management</div>
+        <p class="text-body-2 text-medium-emphasis mb-0">
+          Manage the employment status types used across employee records.
+        </p>
+      </div>
+      <v-chip color="primary" variant="flat">Employment Statuses</v-chip>
+    </div>
+
+    <Table
+      :entity="entity"
+      title="Employment Status Records"
+      :headers="fields"
+      :data="items"
+      :loading="loading"
+      :pagination="pagination"
+      @filter="index"
+      @create="create"
+      @view="view"
+      @edit="edit"
+      @remove="remove"
+    />
+  </v-container>
 </template>
 
 <script lang="ts" setup>
 import { ref, onMounted } from "vue";
 import { useApi } from "@/composables/useApi";
+import Table from "@/components/Table.vue";
+import Form from "@/components/Form.vue";
 import { fields } from "@/fields/employment_status";
 
 const {
@@ -43,7 +57,6 @@ const {
   destroy,
 } = useApi("/employment-statuses");
 
-const title = ref("Employment Status Management");
 const entity = ref("Employment_Statuses"); // match your permission slug style if needed
 const action = ref("");
 const data = ref();
