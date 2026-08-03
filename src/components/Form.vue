@@ -24,7 +24,7 @@
         <template v-if="props.action === 'Remove'">
           Are you sure you want to delete this item?
         </template>
-        <template v-else v-for="field in props.fields" :key="field.key">
+        <template v-else v-for="field in formFields" :key="field.key">
           <h5 v-if="field.inputField != 'none'">
             {{ field.title }}
             <span v-if="field.required" class="text-error">*</span>
@@ -239,6 +239,15 @@ const isFieldReadOnly = (field: ColumnConfig): boolean => {
   if (field.readOnlyOnEdit && props.action === "Edit") return true;
   return false;
 };
+
+// The "action" column is a Table-only concept (it's where Table.vue renders
+// its view/edit/delete buttons). Fields configs share one array between
+// Table's headers and Form's fields, so Form must filter that column out
+// itself rather than relying on every fields file remembering to mark it
+// `inputField: "none"`.
+const formFields = computed(() =>
+  props.fields.filter((field) => field.key !== "action"),
+);
 
 const getSelectOptionLabel = (option: any): string => {
   if (!option) return "";

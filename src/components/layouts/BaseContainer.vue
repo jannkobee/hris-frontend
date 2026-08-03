@@ -180,6 +180,12 @@ const navItems: NavItem[] = [
         permission: "view-departments",
       },
       {
+        title: "Job Grades",
+        icon: "mdi-podium-gold",
+        routeName: "job-grade-management",
+        permission: "view-job-grades",
+      },
+      {
         title: "Leave Types",
         icon: "mdi-calendar-badge",
         routeName: "leave-type-management",
