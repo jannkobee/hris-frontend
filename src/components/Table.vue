@@ -11,18 +11,21 @@
     >
       Create
     </v-btn>
-    <v-text-field
-      v-model="form.search"
-      class="text-field"
-      append-inner-icon="mdi-magnify"
-      density="compact"
-      placeholder="Search here..."
-      variant="outlined"
-      hide-details
-      clearable
-      @input="emitFilter"
-      @click:clear="emitFilter"
-    />
+    <div class="filters-group">
+      <slot name="filters" />
+      <v-text-field
+        v-model="form.search"
+        class="text-field"
+        append-inner-icon="mdi-magnify"
+        density="compact"
+        placeholder="Search here..."
+        variant="outlined"
+        hide-details
+        clearable
+        @input="emitFilter"
+        @click:clear="emitFilter"
+      />
+    </div>
   </v-container>
   <v-data-table-server
     :headers="tableHeaders"
@@ -264,8 +267,22 @@ watch(
 }
 
 .text-field {
-  max-width: 500px;
+  flex: 1 1 320px;
+  max-width: 480px;
+  min-width: 200px;
+}
+
+.filters-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 12px;
   margin-left: auto;
+  min-width: 0;
+}
+
+.filters-group > :not(.text-field) {
+  flex-shrink: 0;
 }
 
 .action-container {
@@ -283,7 +300,7 @@ watch(
   padding: 4px 0;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 640px) {
   .container {
     flex-direction: column;
     gap: 5px;
@@ -296,7 +313,15 @@ watch(
 
   .text-field {
     min-width: 100%;
-    margin-left: auto;
+  }
+
+  .filters-group {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .filters-group > * {
+    width: 100%;
   }
 }
 </style>

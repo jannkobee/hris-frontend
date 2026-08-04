@@ -28,13 +28,13 @@ export const useApi = <T>(endpoint: string) => {
     total: 0,
   });
 
-  const assignPagination = (data: Data) => {
-    pagination.value.current_page = data.current_page;
-    pagination.value.from = data.from;
-    pagination.value.last_page = data.last_page;
-    pagination.value.per_page = data.per_page;
-    pagination.value.to = data.to;
-    pagination.value.total = data.total;
+  const assignPagination = (data: Partial<Data>) => {
+    pagination.value.current_page = data.current_page ?? 0;
+    pagination.value.from = data.from ?? 0;
+    pagination.value.last_page = data.last_page ?? 0;
+    pagination.value.per_page = data.per_page ?? 0;
+    pagination.value.to = data.to ?? 0;
+    pagination.value.total = data.total ?? 0;
   };
 
   async function index(options?: any) {
@@ -71,9 +71,12 @@ export const useApi = <T>(endpoint: string) => {
       if (options?.all) {
         items.value = res.data.data;
       } else {
-        items.value = res.data.data.data;
+        const raw = res.data?.data;
+        const paginator = Array.isArray(raw) ? res.data : raw;
 
-        assignPagination(res.data.data);
+        items.value = Array.isArray(paginator?.data) ? paginator.data : [];
+
+        assignPagination(paginator ?? {});
       }
 
       return res;

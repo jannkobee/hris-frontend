@@ -71,17 +71,17 @@
         item-value="id"
         @update:options="onOptionsUpdate"
       >
-        <template #item.created_at="{ item }">
+        <template #item.created_at="{ item }: { item: AuditLogEntry }">
           {{ formatDate(item.created_at) }}
         </template>
 
-        <template #item.module_name="{ item }">
+        <template #item.module_name="{ item }: { item: AuditLogEntry }">
           <v-chip size="small" color="primary" variant="tonal">
             {{ formatModuleName(item.module_name) }}
           </v-chip>
         </template>
 
-        <template #item.result="{ item }">
+        <template #item.result="{ item }: { item: AuditLogEntry }">
           <v-chip
             size="small"
             :color="item.result === 'Success' ? 'green' : 'red'"
@@ -91,7 +91,7 @@
           </v-chip>
         </template>
 
-        <template #item.action_details="{ item }">
+        <template #item.action_details="{ item }: { item: AuditLogEntry }">
           <v-btn
             size="small"
             variant="text"
@@ -167,9 +167,24 @@ import { fields as importedFields } from "@/fields/audit_log";
 import { formatDate } from "@/utils/dateFormatter";
 import type { ColumnConfig } from "@/types/types";
 
+// Shape of a single audit log row, as returned by GET /audit-logs.
+// Typing useApi with this (instead of leaving it to infer `unknown`)
+// is what lets the `{ item }` scoped slots below type-check.
+interface AuditLogEntry {
+  id: string;
+  created_at: string;
+  module_name: string;
+  action: string;
+  result: "Success" | "Failed" | string;
+  user_full_name: string;
+  action_details?: unknown;
+  payload?: string | Record<string, unknown> | null;
+}
+
 const headers = ref<ColumnConfig[]>([...importedFields] as ColumnConfig[]);
 
-const { index, items, loading, pagination } = useApi("/audit-logs");
+const { index, items, loading, pagination } =
+  useApi<AuditLogEntry>("/audit-logs");
 
 const defaultFrom = () => {
   const d = new Date();
@@ -214,9 +229,9 @@ const resetFilters = () => {
 };
 
 const isDetailVisible = ref(false);
-const selectedLog = ref<any>(null);
+const selectedLog = ref<AuditLogEntry | null>(null);
 
-const viewLog = (item: any) => {
+const viewLog = (item: AuditLogEntry) => {
   selectedLog.value = item;
   isDetailVisible.value = true;
 };

@@ -186,6 +186,27 @@ const checkPermissions = (permission: string): boolean => {
   );
 };
 
+// API responses are sometimes a plain array and sometimes a paginated
+// wrapper (e.g. Laravel's `{ data: [...], meta: {...} }`). Normalize
+// here so downstream refs are always guaranteed to be arrays — this is
+// what prevents `attendances.value.filter is not a function` and similar
+// crashes if a response shape ever changes.
+const toArray = (value: unknown): any[] => {
+  if (Array.isArray(value)) return value;
+  if (
+    value &&
+    typeof value === "object" &&
+    Array.isArray((value as any).data)
+  ) {
+    return (value as any).data;
+  }
+  console.warn(
+    "Expected an array (or paginated {data: []}) response, got:",
+    value,
+  );
+  return [];
+};
+
 // Regular Users land on this same dashboard, so the employee headcount,
 // leave count, and attendance tables (HR/admin data) are gated behind
 // permission checks. Announcements stay visible to everyone.
@@ -299,7 +320,7 @@ onMounted(async () => {
       requests.push(
         getEmployees({ relations: "user" }),
         getLeaveRequests(),
-        getAttendances({ relations: "employee.user" }),
+        getAttendances({ relations: "employee.user", date: today }),
       );
     }
 
@@ -310,12 +331,12 @@ onMounted(async () => {
       attendanceRecords,
     ] = await Promise.all(requests);
 
-    announcements.value = announcementRecords;
+    announcements.value = toArray(announcementRecords);
 
     if (canViewEmployeeOverview.value) {
-      employees.value = employeeRecords;
-      leaveRequests.value = leaveRecords;
-      attendances.value = attendanceRecords;
+      employees.value = toArray(employeeRecords);
+      leaveRequests.value = toArray(leaveRecords);
+      attendances.value = toArray(attendanceRecords);
     }
   } catch (error) {
     console.error("Unable to load dashboard data:", error);

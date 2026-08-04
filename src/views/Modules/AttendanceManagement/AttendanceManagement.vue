@@ -30,12 +30,24 @@
       :loading="loading"
       :pagination="pagination"
       :relations="relations"
-      @filter="index"
+      @filter="fetchAttendance"
       @create="create"
       @view="view"
       @edit="edit"
       @remove="remove"
-    />
+    >
+      <template #filters>
+        <v-text-field
+          v-model="selectedDate"
+          type="date"
+          density="compact"
+          variant="outlined"
+          hide-details
+          class="date-input"
+          @update:model-value="onDateChange"
+        />
+      </template>
+    </Table>
   </v-container>
 </template>
 
@@ -68,6 +80,17 @@ const entity = ref("Attendance");
 const action = ref("");
 const data = ref();
 const isFormVisible = ref(false);
+
+const todayIso = () => new Date().toLocaleDateString("en-CA");
+const selectedDate = ref(todayIso());
+
+const fetchAttendance = async (options: any = {}) => {
+  await index({ ...options, relations, date: selectedDate.value });
+};
+
+const onDateChange = () => {
+  fetchAttendance();
+};
 
 type AttendanceForm = {
   id: string;
@@ -171,6 +194,12 @@ const execute = async (payload: any) => {
 
 onMounted(async () => {
   await loadOptions();
-  await index({ relations } as any);
+  await fetchAttendance();
 });
 </script>
+
+<style scoped>
+.date-input {
+  max-width: 165px;
+}
+</style>
