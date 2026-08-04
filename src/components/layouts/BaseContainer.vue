@@ -206,7 +206,7 @@ const navItems: NavItem[] = [
       {
         title: "App Settings",
         icon: "mdi-cog-box",
-        routeName: "theme-settings",
+        routeName: "settings",
       },
       {
         title: "Employee Number Settings",

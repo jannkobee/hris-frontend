@@ -1,18 +1,58 @@
 <template>
   <h1>{{ title }}</h1>
-  <v-container class="container">
-    <v-btn
-      v-if="showCreateAction && checkPermissions(`create-${permissionEntity}`)"
-      class="button"
-      color="success"
-      prepend-icon="mdi-plus"
-      elevation="4"
-      @click="$emit('create')"
-    >
-      Create
-    </v-btn>
+
+  <!-- Top Bar Container -->
+  <v-container class="top-bar-container">
+    <!-- Left side: Create Button -->
+    <div class="actions-group">
+      <v-btn
+        v-if="
+          showCreateAction && checkPermissions(`create-${permissionEntity}`)
+        "
+        class="button"
+        color="success"
+        prepend-icon="mdi-plus"
+        elevation="4"
+        @click="$emit('create')"
+      >
+        Create
+      </v-btn>
+    </div>
+
+    <!-- Right side: Template, Import, Search & Filters -->
     <div class="filters-group">
+      <v-btn
+        v-if="showImport"
+        class="button"
+        color="info"
+        prepend-icon="mdi-upload"
+        elevation="4"
+        @click="triggerFileInput"
+      >
+        Import
+      </v-btn>
+
+      <v-btn
+        v-if="showDownloadTemplate"
+        class="button"
+        color="secondary"
+        prepend-icon="mdi-download"
+        elevation="4"
+        @click="$emit('download-template')"
+      >
+        Template
+      </v-btn>
+
+      <input
+        type="file"
+        ref="fileInput"
+        style="display: none"
+        accept=".xlsx,.xls,.csv"
+        @change="onFileChange"
+      />
+
       <slot name="filters" />
+
       <v-text-field
         v-model="form.search"
         class="text-field"
@@ -27,6 +67,7 @@
       />
     </div>
   </v-container>
+
   <v-data-table-server
     :headers="tableHeaders"
     :items="props.data"
@@ -146,16 +187,22 @@ const props = defineProps({
   showViewAction: { type: Boolean, default: true },
   showEditAction: { type: Boolean, default: true },
   showDeleteAction: { type: Boolean, default: true },
+  showImport: { type: Boolean, default: false },
+  showDownloadTemplate: { type: Boolean, default: false },
 });
 
 const { authUser, getUser } = useAuth();
 
-const emit = defineEmits(["filter", "create", "view", "edit", "remove"]);
+const emit = defineEmits([
+  "filter",
+  "create",
+  "view",
+  "edit",
+  "remove",
+  "import",
+  "download-template",
+]);
 
-// The Action column's buttons are centered (see .action-container below),
-// but header labels default to left/"start" alignment. Force that one
-// column's header to center so it lines up with the buttons underneath,
-// regardless of what the fields config passed in via props.headers sets.
 const tableHeaders = computed(() =>
   props.headers.map((header) =>
     header.key === "action" ? { ...header, align: "center" as const } : header,
@@ -169,28 +216,35 @@ const form = ref({
   search: "",
 });
 
+const fileInput = ref<HTMLInputElement | null>(null);
+
+const triggerFileInput = () => {
+  fileInput.value?.click();
+};
+
+const onFileChange = (event: Event) => {
+  const target = event.target as HTMLInputElement;
+  if (target.files && target.files.length > 0) {
+    emit("import", target.files[0]);
+    target.value = ""; // Reset input so the same file can be selected again if needed
+  }
+};
+
 const permissionEntity = computed(() => {
   const raw = (props.entity ?? "").toString().trim();
-
-  // Convert CamelCase to words: EmploymentStatus -> Employment Status
   const withSpaces = raw.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
-
-  // Normalize to kebab: Employment Status / employment_status -> employment-status
   const kebab = withSpaces.replace(/[\s_]+/g, "-").toLowerCase();
 
-  // Simple pluralization (works for your slugs like employment-statuses)
   if (kebab.endsWith("s")) return kebab;
-  if (kebab.endsWith("y")) return kebab.slice(0, -1) + "ies"; // company -> companies
-  if (kebab.endsWith("status")) return kebab + "es"; // status -> statuses
+  if (kebab.endsWith("y")) return kebab.slice(0, -1) + "ies";
+  if (kebab.endsWith("status")) return kebab + "es";
   return kebab + "s";
 });
 
-// Helper function to get nested property value
 const getNestedValue = (obj: any, path: string): any => {
   return path.split(".").reduce((current, key) => current?.[key], obj);
 };
 
-// Format cell value using formatter if available
 const formatCellValue = (item: any, header: ColumnConfig): string => {
   const value = getNestedValue(item, header.key);
 
@@ -202,11 +256,6 @@ const formatCellValue = (item: any, header: ColumnConfig): string => {
   return value ?? "";
 };
 
-// Like formatCellValue, but for `displayAs: "chips"` columns: returns a
-// list of labels (one per chip) instead of a single joined string. The
-// header's formatter is expected to return an array here (e.g. run_months
-// -> ["Jan", "Apr", "Jul", "Oct"]); anything else is coerced into a
-// single-item list so a plain array value still renders sensibly.
 const formatCellArray = (item: any, header: ColumnConfig): string[] => {
   const value = getNestedValue(item, header.key);
 
@@ -221,7 +270,6 @@ const formatCellArray = (item: any, header: ColumnConfig): string[] => {
 
 const handleTableChange = (options: any) => {
   form.value = { ...form.value, ...options };
-
   emitFilter();
 };
 
@@ -230,11 +278,9 @@ const checkPermissions = (permission: string): boolean => {
     return false;
   }
 
-  const value = authUser.value.role.permissions.some(
+  return authUser.value.role.permissions.some(
     (perm: { slug: string }) => perm.slug === permission,
   );
-
-  return value;
 };
 
 const emitFilter = debounce(() => {
@@ -250,7 +296,6 @@ watch(
   (data) => {
     if (data !== "") {
       const relations = { relations: data };
-
       form.value = { ...form.value, ...relations };
     }
   },
@@ -259,17 +304,22 @@ watch(
 </script>
 
 <style lang="css" scoped>
-.container {
-  padding: 5px 0 0 0;
+.top-bar-container {
+  padding: 10px 0 15px 0;
   display: flex;
-  min-width: 100%;
-  gap: 20px;
+  flex-wrap: nowrap; /* FORCES a single row */
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: 16px;
 }
 
-.text-field {
-  flex: 1 1 320px;
-  max-width: 480px;
-  min-width: 200px;
+.actions-group {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: nowrap; /* Prevent buttons from wrapping */
+  flex-shrink: 0; /* Prevent buttons from getting squished by the search bar */
 }
 
 .filters-group {
@@ -277,20 +327,22 @@ watch(
   align-items: center;
   flex-wrap: nowrap;
   gap: 12px;
-  margin-left: auto;
-  min-width: 0;
+  flex-grow: 1; /* Allows the search bar container to take up remaining space */
+  justify-content: flex-end; /* Pushes the search bar to the far right */
 }
 
-.filters-group > :not(.text-field) {
-  flex-shrink: 0;
+.text-field {
+  flex: 1 1 400px; /* Allows it to grow and shrink smoothly */
+  max-width: 600px;
+  min-width: 250px;
 }
 
 .action-container {
   display: flex;
   width: 100%;
   gap: 6px;
-  justify-content: center; /* Centers the buttons horizontally */
-  align-items: center; /* Centers the buttons vertically */
+  justify-content: center;
+  align-items: center;
 }
 
 .chip-group {
@@ -300,28 +352,20 @@ watch(
   padding: 4px 0;
 }
 
-@media (max-width: 640px) {
-  .container {
+/* Stacks nicely on phones where 1 row isn't possible. */
+@media (max-width: 768px) {
+  .top-bar-container {
     flex-direction: column;
-    gap: 5px;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .actions-group {
+    flex-wrap: wrap; /* Allows buttons to wrap on mobile */
   }
 
   .button {
-    width: 100%;
-    margin-bottom: 15px;
-  }
-
-  .text-field {
-    min-width: 100%;
-  }
-
-  .filters-group {
-    width: 100%;
-    margin-left: 0;
-  }
-
-  .filters-group > * {
-    width: 100%;
+    flex: 1 1 auto;
   }
 }
 </style>

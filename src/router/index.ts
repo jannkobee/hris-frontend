@@ -105,8 +105,8 @@ const routes: RouteRecordRaw[] = [
           import("@/views/Modules/SubModules/EmployeeNumberSettings/EmployeeNumberSettings.vue"),
       },
       {
-        path: "configuration/theme-settings",
-        name: "theme-settings",
+        path: "configuration/settings",
+        name: "settings",
         component: () => import("@/views/Modules/SubModules/Settings.vue"),
       },
       {
