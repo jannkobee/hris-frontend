@@ -116,6 +116,13 @@ type NavItem = {
 const navItems: NavItem[] = [
   { title: "Dashboard", icon: "mdi-view-dashboard", routeName: "dashboard" },
   {
+    title: "Messages",
+    icon: "mdi-message-text-outline",
+    routeName: "messages",
+    // No permission slug here since every authenticated user can message
+    // teammates. Add one (e.g. "view-messages") if you want to gate it.
+  },
+  {
     title: "User Management",
     icon: "mdi-account-cog-outline",
     routeName: "user-management",

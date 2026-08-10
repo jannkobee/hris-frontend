@@ -23,6 +23,11 @@ const routes: RouteRecordRaw[] = [
         name: "dashboard",
         component: () => import("@/views/Modules/Dashboard.vue"),
       },
+      {
+        path: "messages",
+        name: "messages",
+        component: () => import("@/views/Modules/Messages/Messages.vue"),
+      },
 
       // Management
       {

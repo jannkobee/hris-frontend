@@ -12,6 +12,8 @@
     "@mdi/font": "7.0.96",
     "axios": "^1.8.1",
     "core-js": "^3.29.0",
+    "laravel-echo": "^1.19.0",
+    "pusher-js": "^8.6.0",
     "roboto-fontface": "*",
     "vue": "^3.2.0",
     "vue-router": "^4.0.0",
