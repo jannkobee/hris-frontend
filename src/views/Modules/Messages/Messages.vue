@@ -7,10 +7,16 @@
       <div>
         <div class="text-h5 font-weight-bold">Messages</div>
         <p class="text-body-2 text-medium-emphasis mb-0">
-          Chat with your team in real time.
+          Start conversations available to your role.
         </p>
       </div>
-      <v-chip color="primary" variant="flat">Messages</v-chip>
+      <v-btn
+        color="primary"
+        prepend-icon="mdi-message-plus-outline"
+        @click="openNewConversation"
+      >
+        New message
+      </v-btn>
     </div>
 
     <v-card class="messages-card" variant="outlined">
@@ -140,37 +146,47 @@
         </v-col>
       </v-row>
     </v-card>
+
+    <v-dialog v-model="newConversationDialog" max-width="480">
+      <v-card title="New message">
+        <v-card-text>
+          <v-autocomplete
+            v-model="selectedParticipantId"
+            :items="teammates"
+            :item-title="userLabel"
+            item-value="id"
+            label="Recipient"
+            placeholder="Choose someone to message"
+            :loading="loadingTeammates"
+            no-data-text="No teammates available"
+            variant="outlined"
+            autofocus
+          />
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn variant="text" @click="newConversationDialog = false">
+            Cancel
+          </v-btn>
+          <v-btn
+            color="primary"
+            :disabled="!selectedParticipantId"
+            :loading="creatingConversation"
+            @click="createConversation"
+          >
+            Start chat
+          </v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
 <script lang="ts" setup>
 import { ref, nextTick, onBeforeUnmount } from "vue";
-import { echo } from "@/plugins/echo";
+import { getEcho } from "@/plugins/echo";
 import { useAuth } from "@/composables/useAuth";
-
-// NOTE: this view calls the API directly with fetch + the stored APP_TOKEN,
-// since /conversations and /conversations/:id/messages are nested resources
-// that don't fit the flat single-resource shape of useApi(). Swap `apiFetch`
-// below for your real API client if you have a shared axios instance —
-// the goal here is matching whatever already attaches auth headers/base URL.
-
-const API_URL = import.meta.env.VITE_API_URL;
-
-const apiFetch = async (path: string, options: RequestInit = {}) => {
-  const response = await fetch(`${API_URL}${path}`, {
-    ...options,
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${window.localStorage.getItem("APP_TOKEN")}`,
-      ...options.headers,
-    },
-  });
-
-  if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-  if (response.status === 204) return null;
-
-  return response.json();
-};
+import axios from "@/plugins/axios";
 
 const { authUser } = useAuth();
 
@@ -178,10 +194,15 @@ const conversations = ref<any[]>([]);
 const activeConversation = ref<any | null>(null);
 const messages = ref<any[]>([]);
 const newMessageBody = ref("");
+const teammates = ref<any[]>([]);
+const selectedParticipantId = ref<string | null>(null);
+const newConversationDialog = ref(false);
 
 const loadingConversations = ref(false);
 const loadingMessages = ref(false);
 const sending = ref(false);
+const loadingTeammates = ref(false);
+const creatingConversation = ref(false);
 
 const scrollArea = ref<HTMLElement | null>(null);
 let currentChannelName: string | null = null;
@@ -208,6 +229,11 @@ const conversationInitials = (conversation: any) => {
     .join("");
 };
 
+const userLabel = (user: any) =>
+  `${[user.first_name, user.last_name].filter(Boolean).join(" ") || user.email}${
+    user.role?.name ? ` (${user.role.name})` : ""
+  }`;
+
 const isOwnMessage = (message: any) =>
   message.sender?.id === authUser.value?.id;
 
@@ -227,15 +253,17 @@ const scrollToBottom = () => {
 const fetchConversations = async () => {
   loadingConversations.value = true;
   try {
-    const response = await apiFetch("/conversations");
-    conversations.value = response.data ?? response;
+    const { data } = await axios.get("/conversations");
+    conversations.value = data.data ?? data;
   } finally {
     loadingConversations.value = false;
   }
 };
 
 const leaveCurrentChannel = () => {
-  if (currentChannelName) {
+  const echo = getEcho();
+
+  if (currentChannelName && echo) {
     echo.leave(currentChannelName);
     currentChannelName = null;
   }
@@ -247,19 +275,21 @@ const selectConversation = async (conversation: any) => {
 
   loadingMessages.value = true;
   try {
-    const response = await apiFetch(
+    const { data } = await axios.get(
       `/conversations/${conversation.id}/messages`,
     );
-    messages.value = (response.data ?? response).slice().reverse();
+    messages.value = (data.data ?? data).slice().reverse();
     scrollToBottom();
 
-    await apiFetch(`/conversations/${conversation.id}/read`, {
-      method: "POST",
-    });
+    await axios.post(`/conversations/${conversation.id}/read`);
     conversation.unread_count = 0;
   } finally {
     loadingMessages.value = false;
   }
+
+  const echo = getEcho();
+
+  if (!echo) return;
 
   currentChannelName = `conversation.${conversation.id}`;
   echo.private(currentChannelName).listen(".message.sent", (event: any) => {
@@ -274,19 +304,52 @@ const sendMessage = async () => {
 
   sending.value = true;
   try {
-    const message = await apiFetch(
+    const { data } = await axios.post(
       `/conversations/${activeConversation.value.id}/messages`,
-      {
-        method: "POST",
-        body: JSON.stringify({ body }),
-      },
+      { body },
     );
 
-    messages.value.push(message);
+    messages.value.push(data.data ?? data);
     newMessageBody.value = "";
     scrollToBottom();
   } finally {
     sending.value = false;
+  }
+};
+
+const openNewConversation = async () => {
+  newConversationDialog.value = true;
+  selectedParticipantId.value = null;
+
+  if (teammates.value.length) return;
+
+  loadingTeammates.value = true;
+  try {
+    const { data } = await axios.get("/conversations/recipients");
+    teammates.value = data.data ?? data;
+  } finally {
+    loadingTeammates.value = false;
+  }
+};
+
+const createConversation = async () => {
+  if (!selectedParticipantId.value) return;
+
+  creatingConversation.value = true;
+  try {
+    const { data } = await axios.post("/conversations", {
+      participant_ids: [selectedParticipantId.value],
+    });
+    const created = data.data ?? data;
+
+    await fetchConversations();
+    const conversation =
+      conversations.value.find((item) => item.id === created.id) ?? created;
+
+    newConversationDialog.value = false;
+    await selectConversation(conversation);
+  } finally {
+    creatingConversation.value = false;
   }
 };
 
