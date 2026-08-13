@@ -1,5 +1,6 @@
 import { ColumnConfig } from "@/types/types";
 import { formatDate } from "@/utils/dateFormatter";
+import { booleanChipColor } from "@/utils/chipColors";
 
 const stripHtml = (value: string): string =>
   (value ?? "")
@@ -33,7 +34,7 @@ export const fields: ColumnConfig[] = [
     inputField: "checkbox",
     displayAs: "chip" as const,
     formatter: (value: boolean) => (value ? "Yes" : "No"),
-    chipColor: "success",
+    chipColor: booleanChipColor,
     required: true,
   },
   {

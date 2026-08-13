@@ -1,4 +1,5 @@
 import { ColumnConfig } from "@/types/types";
+import { booleanChipColor } from "@/utils/chipColors";
 
 export const fields: ColumnConfig[] = [
   {
@@ -43,6 +44,8 @@ export const fields: ColumnConfig[] = [
       { label: "Custom", value: "custom" },
     ],
     required: false,
+    displayAs: "chip",
+    chipColor: "info",
     onChange: (value: string) => {
       const runMonthsByFrequency: Record<string, number[]> = {
         monthly: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
@@ -105,7 +108,7 @@ export const fields: ColumnConfig[] = [
     inputField: "checkbox",
     displayAs: "chip" as const,
     formatter: (v: any) => (v ? "Yes" : "No"),
-    chipColor: "success",
+    chipColor: booleanChipColor,
     nullable: false,
     required: false,
   },

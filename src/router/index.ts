@@ -68,6 +68,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/Modules/PayrollManagement/PayrollManagement.vue"),
       },
       {
+        path: "workplace-hub",
+        name: "workplace-hub",
+        meta: { permission: "view-workplace-hub" },
+        component: () => import("@/views/Modules/WorkplaceHub/WorkplaceHub.vue"),
+      },
+      {
         path: "leave-management",
         name: "leave-management",
         meta: { permission: "view-leave-requests" },

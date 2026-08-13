@@ -11,7 +11,6 @@ export const fields: ColumnConfig[] = [
     nullable: false,
     required: true,
     sortable: true,
-    formatter: formatDate,
   },
   {
     title: "Date",
@@ -20,7 +19,7 @@ export const fields: ColumnConfig[] = [
     nullable: false,
     required: true,
     sortable: true,
-    formatter: formatTime,
+    formatter: formatDate,
   },
   {
     title: "Time In",
@@ -29,6 +28,7 @@ export const fields: ColumnConfig[] = [
     nullable: false,
     required: true,
     sortable: true,
+    formatter: formatTime,
   },
   {
     title: "Time Out",

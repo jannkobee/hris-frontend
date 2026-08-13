@@ -65,7 +65,7 @@ const successAlertsEnabled = () => {
   }
 };
 
-const api = "http://localhost:8000/backend/api/v1";
+const api = import.meta.env.VITE_API_URL || "http://localhost:8000/backend/api/v1";
 // const api = "http://13.251.88.87:6083/core/api/v1"
 
 axios.defaults.baseURL = api;

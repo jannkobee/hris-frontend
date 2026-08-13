@@ -62,7 +62,11 @@
               :title="child.title"
               :value="child.routeName"
               @click="$router.push({ name: child.routeName })"
-            />
+            >
+              <template v-if="badgeFor(child)" #append>
+                <span class="nav-count">{{ displayBadge(badgeFor(child)) }}</span>
+              </template>
+            </v-list-item>
           </v-list-group>
 
           <v-list-item
@@ -71,7 +75,11 @@
             :title="item.title"
             :value="item.routeName"
             @click="$router.push({ name: item.routeName })"
-          />
+          >
+            <template v-if="badgeFor(item)" #append>
+              <span class="nav-count" :class="{ 'nav-count--message': item.routeName === 'messages' }">{{ displayBadge(badgeFor(item)) }}</span>
+            </template>
+          </v-list-item>
         </template>
       </v-list>
 
@@ -99,13 +107,19 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, onMounted, watch } from "vue";
+import { computed, ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTheme } from "vuetify";
 import { useAuth } from "@/composables/useAuth";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { usePermissions } from "@/composables/usePermissions";
 import { useProfilePhoto } from "@/composables/useProfilePhoto";
+import axios from "@/plugins/axios";
+import { getEcho } from "@/plugins/echo";
+import {
+  initializeNotificationSound,
+  playMessageNotificationSound,
+} from "@/utils/notificationSound";
 
 type NavItem = {
   title: string;
@@ -156,6 +170,12 @@ const navItems: NavItem[] = [
     title: "Payroll",
     icon: "mdi-cash-multiple",
     routeName: "payroll-management",
+  },
+  {
+    title: "Workplace Hub",
+    icon: "mdi-office-building-marker-outline",
+    routeName: "workplace-hub",
+    permission: "view-workplace-hub",
   },
   {
     title: "Leave Management",
@@ -242,6 +262,11 @@ const route = useRoute();
 const router = useRouter();
 
 const showConfirm = ref(false);
+const navBadges = ref<Record<string, number>>({});
+let badgeRefreshTimer: ReturnType<typeof setInterval> | undefined;
+let notificationChannelName: string | null = null;
+let badgeRequest: Promise<void> | null = null;
+let lastBadgeLoadedAt = 0;
 
 const theme = useTheme();
 const isDark = computed(() => theme.global.current.value.dark);
@@ -255,6 +280,51 @@ const { loading, getUser, getSettings, authUser, logout } = useAuth();
 const { loadAppSettings, values: appSettings } = useAppSettings();
 const { checkPermissions } = usePermissions();
 const { photoUrl: profilePhotoUrl, loadProfilePhoto } = useProfilePhoto();
+
+const badgeFor = (item: NavItem): number =>
+  item.routeName ? Number(navBadges.value[item.routeName] || 0) : 0;
+
+const displayBadge = (count: number): string => count > 99 ? "99+" : String(count);
+
+const loadNavigationBadges = async (force = false) => {
+  if (!force && Date.now() - lastBadgeLoadedAt < 15_000) return;
+  if (badgeRequest) return badgeRequest;
+
+  badgeRequest = (async () => {
+    try {
+      const response = await axios.get("/navigation/badges", {
+        headers: { "X-Suppress-Success-Notification": "true" },
+      });
+      navBadges.value = response.data.data ?? {};
+      lastBadgeLoadedAt = Date.now();
+    } catch {
+      // Navigation remains usable if background badge refresh fails.
+    } finally {
+      badgeRequest = null;
+    }
+  })();
+
+  return badgeRequest;
+};
+
+const forceNavigationBadgeRefresh = () => void loadNavigationBadges(true);
+
+const refreshBadgesWhenVisible = () => {
+  if (document.visibilityState === "visible") void loadNavigationBadges();
+};
+
+const subscribeToMessageNotifications = async () => {
+  if (!authUser.value?.id) return;
+  const echo = await getEcho();
+  if (!echo) return;
+
+  notificationChannelName = `App.Models.User.${authUser.value.id}`;
+  echo.private(notificationChannelName).listen(".message.sent", async (event: any) => {
+    if (event.sender?.id === authUser.value?.id) return;
+    await playMessageNotificationSound();
+    await loadNavigationBadges(true);
+  });
+};
 
 // Filters navItems down to what the current user can actually see.
 // A group survives only if at least one of its children is visible.
@@ -280,8 +350,14 @@ const visibleNavItems = computed<NavItem[]>(() =>
 );
 
 onMounted(async () => {
+  initializeNotificationSound();
   await getUser();
   await loadProfilePhoto(authUser.value?.profile_photo_url);
+  await loadNavigationBadges();
+  await subscribeToMessageNotifications();
+  badgeRefreshTimer = setInterval(loadNavigationBadges, 45000);
+  window.addEventListener("navigation-badges:refresh", forceNavigationBadgeRefresh);
+  document.addEventListener("visibilitychange", refreshBadgesWhenVisible);
 
   const requiredPermission = route.meta.permission as string | undefined;
   if (requiredPermission && !checkPermissions(requiredPermission)) {
@@ -312,8 +388,18 @@ watch(
     if (requiredPermission && !checkPermissions(requiredPermission)) {
       await router.replace({ name: "dashboard" });
     }
+    await loadNavigationBadges();
   },
 );
+
+onBeforeUnmount(() => {
+  if (badgeRefreshTimer) clearInterval(badgeRefreshTimer);
+  window.removeEventListener("navigation-badges:refresh", forceNavigationBadgeRefresh);
+  document.removeEventListener("visibilitychange", refreshBadgesWhenVisible);
+  if (notificationChannelName) {
+    void getEcho().then((echo) => echo?.leave(notificationChannelName as string));
+  }
+});
 </script>
 
 <style lang="css" scoped>
@@ -327,5 +413,24 @@ watch(
 
 :deep(.v-list-item--nav) {
   padding-inline-start: 12px !important;
+}
+
+.nav-count {
+  display: grid;
+  min-width: 20px;
+  height: 20px;
+  place-items: center;
+  padding-inline: 5px;
+  border-radius: 999px;
+  color: rgb(var(--v-theme-on-warning));
+  background: rgb(var(--v-theme-warning));
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.nav-count--message {
+  color: rgb(var(--v-theme-on-primary));
+  background: rgb(var(--v-theme-primary));
 }
 </style>

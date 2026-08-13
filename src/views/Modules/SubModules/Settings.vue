@@ -14,19 +14,19 @@
       </div>
       <div class="d-flex ga-2 flex-wrap">
         <v-chip
-          :color="canManageAppSettings ? 'primary' : 'default'"
+          :color="canManageAnyAppSettings ? 'primary' : 'default'"
           variant="tonal"
           size="small"
-          :prepend-icon="canManageAppSettings ? 'mdi-shield-check-outline' : 'mdi-eye-outline'"
+          :prepend-icon="canManageAnyAppSettings ? 'mdi-shield-check-outline' : 'mdi-eye-outline'"
         >
-          {{ canManageAppSettings ? "Policy administrator" : "Company settings are read-only" }}
+          {{ canManageAnyAppSettings ? "Policy administrator" : "Company settings are read-only" }}
         </v-chip>
       </div>
     </div>
 
     <!-- Do not render fallback values while saved settings are hydrating. -->
     <template v-if="authUser && settingsReady">
-      <v-tabs v-model="tab" color="primary" class="settings-tabs mb-5" density="compact">
+      <v-tabs v-model="tab" color="primary" class="settings-tabs mb-5" :class="{ 'settings-tabs--two': !canViewTasks }" density="compact">
         <v-tab value="general">
           <v-icon icon="mdi-palette-outline" start size="small" />
           General
@@ -102,7 +102,7 @@
                     density="compact"
                     variant="outlined"
                     hide-details
-                    :disabled="!canManageAppSettings"
+                    :disabled="!canManageOrganizationSettings"
                     prepend-inner-icon="mdi-domain"
                   />
                   <v-autocomplete
@@ -112,7 +112,7 @@
                     density="compact"
                     variant="outlined"
                     hide-details
-                    :disabled="!canManageAppSettings"
+                    :disabled="!canManageOrganizationSettings"
                     prepend-inner-icon="mdi-map-clock-outline"
                   />
                 </div>
@@ -148,14 +148,14 @@
                       variant="outlined"
                       hide-details
                       class="policy-inline-select"
-                      :disabled="!canManageAppSettings"
+                      :disabled="!canManageAttendanceSettings"
                     />
                     <v-switch
                       v-model="appSettingValues['attendance.photo_capture_enabled']"
                       color="primary"
                       density="compact"
                       hide-details
-                      :disabled="!canManageAppSettings"
+                      :disabled="!canManageAttendanceSettings"
                     />
                   </div>
 
@@ -170,7 +170,7 @@
                     color="primary"
                     density="compact"
                     hide-details
-                    :disabled="!canManageAppSettings"
+                    :disabled="!canManageAttendanceSettings"
                   />
                   </div>
 
@@ -192,7 +192,7 @@
                     density="compact"
                     hide-details
                     :disabled="
-                      !canManageAppSettings ||
+                      !canManageAttendanceSettings ||
                       !appSettingValues['attendance.location_capture_enabled']
                     "
                   />
@@ -209,7 +209,7 @@
                     color="primary"
                     density="compact"
                     hide-details
-                    :disabled="!canManageAppSettings"
+                    :disabled="!canManageAttendanceSettings"
                   />
                   </div>
 
@@ -224,7 +224,7 @@
                     color="primary"
                     density="compact"
                     hide-details
-                    :disabled="!canManageAppSettings"
+                    :disabled="!canManageAttendanceSettings"
                   />
                   </div>
 
@@ -239,7 +239,7 @@
                     color="primary"
                     density="compact"
                     hide-details
-                    :disabled="!canManageAppSettings"
+                    :disabled="!canManageAttendanceSettings"
                   />
                   </div>
                 </div>
@@ -267,7 +267,7 @@
                     color="primary"
                     density="compact"
                     hide-details
-                    :disabled="!canManageAppSettings"
+                    :disabled="!canManageFeatureSettings"
                   />
                   </div>
 
@@ -287,14 +287,14 @@
                       variant="outlined"
                       hide-details
                       class="policy-inline-select"
-                      :disabled="!canManageAppSettings"
+                      :disabled="!canManageFeatureSettings"
                     />
                     <v-switch
                       v-model="appSettingValues['employee_documents.enabled']"
                       color="primary"
                       density="compact"
                       hide-details
-                      :disabled="!canManageAppSettings"
+                      :disabled="!canManageFeatureSettings"
                     />
                   </div>
 
@@ -309,7 +309,7 @@
                     color="primary"
                     density="compact"
                     hide-details
-                    :disabled="!canManageAppSettings"
+                    :disabled="!canManageFeatureSettings"
                   />
                   </div>
 
@@ -324,7 +324,7 @@
                     color="primary"
                     density="compact"
                     hide-details
-                    :disabled="!canManageAppSettings"
+                    :disabled="!canManageFeatureSettings"
                   />
                   </div>
                 </div>
@@ -338,7 +338,7 @@
                 {{ hasChanges ? "You have unsaved changes" : "Settings are up to date" }}
               </div>
               <div class="text-caption text-medium-emphasis">
-                {{ canManageAppSettings ? "Changes affect the organization unless marked Personal." : "You can save changes to your personal theme." }}
+                {{ canManageAnyAppSettings ? "Changes affect the organization unless marked Personal." : "You can save changes to your personal theme." }}
               </div>
             </div>
             <v-btn
@@ -364,7 +364,7 @@
                 <div class="text-body-2 text-medium-emphasis">Current statutory defaults remain editable and are snapshotted when payroll is processed.</div>
               </div>
             </div>
-            <v-switch v-model="appSettingValues['payroll.enabled']" label="Payroll enabled" color="primary" density="compact" hide-details :disabled="!canManageAppSettings" />
+            <v-switch v-model="appSettingValues['payroll.enabled']" label="Payroll enabled" color="primary" density="compact" hide-details :disabled="!canManagePayrollSettings" />
           </div>
 
           <div class="payroll-settings-grid">
@@ -374,10 +374,10 @@
                 <div><div class="panel-title">Pay policy</div><div class="panel-description">Company calculation defaults.</div></div>
               </div>
               <div class="compact-field-grid">
-                <v-select v-model="appSettingValues['payroll.default_frequency']" label="Default frequency" :items="payFrequencyOptions" item-title="title" item-value="value" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" />
-                <v-text-field v-model.number="appSettingValues['payroll.work_days_per_month']" type="number" label="Work days / month" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" />
-                <v-text-field v-model.number="appSettingValues['payroll.hours_per_day']" type="number" label="Hours / day" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" />
-                <v-text-field v-model.number="appSettingValues['payroll.overtime_multiplier']" type="number" step="0.01" label="OT multiplier" suffix="×" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" />
+                <v-select v-model="appSettingValues['payroll.default_frequency']" label="Default frequency" :items="payFrequencyOptions" item-title="title" item-value="value" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" />
+                <v-text-field v-model.number="appSettingValues['payroll.work_days_per_month']" type="number" label="Work days / month" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" />
+                <v-text-field v-model.number="appSettingValues['payroll.hours_per_day']" type="number" label="Hours / day" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" />
+                <v-text-field v-model.number="appSettingValues['payroll.overtime_multiplier']" type="number" step="0.01" label="OT multiplier" suffix="×" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" />
               </div>
               <div class="policy-footnote"><v-icon icon="mdi-alert-circle-outline" size="17" />Regular overtime is seeded at 1.25×. Configure holiday/rest-day rules before using this as final production payroll.</div>
             </section>
@@ -386,7 +386,7 @@
               <div class="panel-heading">
                 <v-avatar color="primary" variant="tonal" size="36"><v-icon icon="mdi-calendar-account-outline" size="19" /></v-avatar>
                 <div><div class="panel-title">Attendance and leave calculation</div><div class="panel-description">Define how the payroll generator interprets work records.</div></div>
-                <v-switch v-model="appSettingValues['payroll.attendance_calculation_enabled']" color="primary" density="compact" hide-details :disabled="!canManageAppSettings" />
+                <v-switch v-model="appSettingValues['payroll.attendance_calculation_enabled']" color="primary" density="compact" hide-details :disabled="!canManagePayrollSettings" />
               </div>
               <div :class="{ 'policy-row--disabled': !appSettingValues['payroll.attendance_calculation_enabled'] }">
                 <div class="weekday-setting">
@@ -398,20 +398,20 @@
                     color="primary"
                     density="compact"
                     variant="tonal"
-                    :disabled="!canManageAppSettings || !appSettingValues['payroll.attendance_calculation_enabled']"
+                    :disabled="!canManagePayrollSettings || !appSettingValues['payroll.attendance_calculation_enabled']"
                   >
                     <v-btn v-for="day in payrollWeekdays" :key="day.value" :value="day.value" size="small">{{ day.label }}</v-btn>
                   </v-btn-toggle>
                 </div>
                 <div class="compact-field-grid mt-4">
-                  <v-text-field v-model="appSettingValues['payroll.scheduled_start_time']" type="time" label="Scheduled start" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings || !appSettingValues['payroll.attendance_calculation_enabled']" />
-                  <v-text-field v-model="appSettingValues['payroll.scheduled_end_time']" type="time" label="Scheduled end" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings || !appSettingValues['payroll.attendance_calculation_enabled']" />
-                  <v-text-field v-model.number="appSettingValues['payroll.grace_minutes']" type="number" min="0" label="Late grace period" suffix="minutes" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings || !appSettingValues['payroll.attendance_calculation_enabled']" class="span-2" />
+                  <v-text-field v-model="appSettingValues['payroll.scheduled_start_time']" type="time" label="Scheduled start" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings || !appSettingValues['payroll.attendance_calculation_enabled']" />
+                  <v-text-field v-model="appSettingValues['payroll.scheduled_end_time']" type="time" label="Scheduled end" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings || !appSettingValues['payroll.attendance_calculation_enabled']" />
+                  <v-text-field v-model.number="appSettingValues['payroll.grace_minutes']" type="number" min="0" label="Late grace period" suffix="minutes" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings || !appSettingValues['payroll.attendance_calculation_enabled']" class="span-2" />
                 </div>
                 <div class="deduction-policy-grid mt-4">
-                  <label class="deduction-policy"><div><strong>Absence deductions</strong><small>Deduct scheduled days without attendance or approved leave.</small></div><v-switch v-model="appSettingValues['payroll.deduct_absences']" color="primary" density="compact" hide-details :disabled="!canManageAppSettings || !appSettingValues['payroll.attendance_calculation_enabled']" /></label>
-                  <label class="deduction-policy"><div><strong>Late and undertime</strong><small>Use the salary-derived per-minute rate.</small></div><v-switch v-model="appSettingValues['payroll.deduct_late_undertime']" color="primary" density="compact" hide-details :disabled="!canManageAppSettings || !appSettingValues['payroll.attendance_calculation_enabled']" /></label>
-                  <label class="deduction-policy"><div><strong>Unpaid leave</strong><small>Deduct approved leave types marked as unpaid.</small></div><v-switch v-model="appSettingValues['payroll.deduct_unpaid_leave']" color="primary" density="compact" hide-details :disabled="!canManageAppSettings || !appSettingValues['payroll.attendance_calculation_enabled']" /></label>
+                  <label class="deduction-policy"><div><strong>Absence deductions</strong><small>Deduct scheduled days without attendance or approved leave.</small></div><v-switch v-model="appSettingValues['payroll.deduct_absences']" color="primary" density="compact" hide-details :disabled="!canManagePayrollSettings || !appSettingValues['payroll.attendance_calculation_enabled']" /></label>
+                  <label class="deduction-policy"><div><strong>Late and undertime</strong><small>Use the salary-derived per-minute rate.</small></div><v-switch v-model="appSettingValues['payroll.deduct_late_undertime']" color="primary" density="compact" hide-details :disabled="!canManagePayrollSettings || !appSettingValues['payroll.attendance_calculation_enabled']" /></label>
+                  <label class="deduction-policy"><div><strong>Unpaid leave</strong><small>Deduct approved leave types marked as unpaid.</small></div><v-switch v-model="appSettingValues['payroll.deduct_unpaid_leave']" color="primary" density="compact" hide-details :disabled="!canManagePayrollSettings || !appSettingValues['payroll.attendance_calculation_enabled']" /></label>
                 </div>
                 <div class="policy-footnote"><v-icon icon="mdi-information-outline" size="17" />Missing or duplicate attendance becomes a payroll exception. HR must review or acknowledge it before approval.</div>
               </div>
@@ -424,13 +424,13 @@
                 <a href="https://www.sss.gov.ph/pay-contribution/" target="_blank" rel="noopener" class="source-link">Official source <v-icon icon="mdi-open-in-new" size="13" /></a>
               </div>
               <div class="compact-field-grid compact-field-grid--rates">
-                <v-text-field :model-value="percent(appSettingValues['payroll.sss_employee_rate'])" label="Employee rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" @update:model-value="appSettingValues['payroll.sss_employee_rate'] = rate($event)" />
-                <v-text-field :model-value="percent(appSettingValues['payroll.sss_employer_rate'])" label="Employer rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" @update:model-value="appSettingValues['payroll.sss_employer_rate'] = rate($event)" />
-                <v-text-field v-model.number="appSettingValues['payroll.sss_min_msc']" type="number" label="Minimum MSC" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" />
-                <v-text-field v-model.number="appSettingValues['payroll.sss_max_msc']" type="number" label="Maximum MSC" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" />
-                <v-text-field v-model.number="appSettingValues['payroll.sss_ec_low']" type="number" label="EC lower" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" />
-                <v-text-field v-model.number="appSettingValues['payroll.sss_ec_high']" type="number" label="EC upper" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" />
-                <v-text-field v-model.number="appSettingValues['payroll.sss_ec_threshold']" type="number" label="EC MSC threshold" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" class="span-2" />
+                <v-text-field :model-value="percent(appSettingValues['payroll.sss_employee_rate'])" label="Employee rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" @update:model-value="appSettingValues['payroll.sss_employee_rate'] = rate($event)" />
+                <v-text-field :model-value="percent(appSettingValues['payroll.sss_employer_rate'])" label="Employer rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" @update:model-value="appSettingValues['payroll.sss_employer_rate'] = rate($event)" />
+                <v-text-field v-model.number="appSettingValues['payroll.sss_min_msc']" type="number" label="Minimum MSC" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" />
+                <v-text-field v-model.number="appSettingValues['payroll.sss_max_msc']" type="number" label="Maximum MSC" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" />
+                <v-text-field v-model.number="appSettingValues['payroll.sss_ec_low']" type="number" label="EC lower" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" />
+                <v-text-field v-model.number="appSettingValues['payroll.sss_ec_high']" type="number" label="EC upper" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" />
+                <v-text-field v-model.number="appSettingValues['payroll.sss_ec_threshold']" type="number" label="EC MSC threshold" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" class="span-2" />
               </div>
             </section>
 
@@ -441,9 +441,9 @@
                 <a href="https://www.philhealth.gov.ph/advisories/2025/PA2025-0002.pdf" target="_blank" rel="noopener" class="source-link">Official source <v-icon icon="mdi-open-in-new" size="13" /></a>
               </div>
               <div class="compact-field-grid">
-                <v-text-field :model-value="percent(appSettingValues['payroll.philhealth_rate'])" label="Premium rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" @update:model-value="appSettingValues['payroll.philhealth_rate'] = rate($event)" />
-                <v-text-field v-model.number="appSettingValues['payroll.philhealth_salary_floor']" type="number" label="Income floor" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" />
-                <v-text-field v-model.number="appSettingValues['payroll.philhealth_salary_ceiling']" type="number" label="Income ceiling" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" class="span-2" />
+                <v-text-field :model-value="percent(appSettingValues['payroll.philhealth_rate'])" label="Premium rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" @update:model-value="appSettingValues['payroll.philhealth_rate'] = rate($event)" />
+                <v-text-field v-model.number="appSettingValues['payroll.philhealth_salary_floor']" type="number" label="Income floor" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" />
+                <v-text-field v-model.number="appSettingValues['payroll.philhealth_salary_ceiling']" type="number" label="Income ceiling" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" class="span-2" />
               </div>
             </section>
 
@@ -454,11 +454,11 @@
                 <a href="https://www.pagibigfund.gov.ph/document/pdf/payments/PasilidadPagbabayadPamamagitanOTC_24%20JAN%202025.pdf" target="_blank" rel="noopener" class="source-link">Official source <v-icon icon="mdi-open-in-new" size="13" /></a>
               </div>
               <div class="compact-field-grid compact-field-grid--rates">
-                <v-text-field :model-value="percent(appSettingValues['payroll.pagibig_employee_rate_low'])" label="Lower employee rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" @update:model-value="appSettingValues['payroll.pagibig_employee_rate_low'] = rate($event)" />
-                <v-text-field :model-value="percent(appSettingValues['payroll.pagibig_employee_rate'])" label="Employee rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" @update:model-value="appSettingValues['payroll.pagibig_employee_rate'] = rate($event)" />
-                <v-text-field :model-value="percent(appSettingValues['payroll.pagibig_employer_rate'])" label="Employer rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" @update:model-value="appSettingValues['payroll.pagibig_employer_rate'] = rate($event)" />
-                <v-text-field v-model.number="appSettingValues['payroll.pagibig_rate_threshold']" type="number" label="Rate threshold" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" />
-                <v-text-field v-model.number="appSettingValues['payroll.pagibig_max_salary']" type="number" label="Maximum fund salary" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManageAppSettings" class="span-2" />
+                <v-text-field :model-value="percent(appSettingValues['payroll.pagibig_employee_rate_low'])" label="Lower employee rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" @update:model-value="appSettingValues['payroll.pagibig_employee_rate_low'] = rate($event)" />
+                <v-text-field :model-value="percent(appSettingValues['payroll.pagibig_employee_rate'])" label="Employee rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" @update:model-value="appSettingValues['payroll.pagibig_employee_rate'] = rate($event)" />
+                <v-text-field :model-value="percent(appSettingValues['payroll.pagibig_employer_rate'])" label="Employer rate" suffix="%" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" @update:model-value="appSettingValues['payroll.pagibig_employer_rate'] = rate($event)" />
+                <v-text-field v-model.number="appSettingValues['payroll.pagibig_rate_threshold']" type="number" label="Rate threshold" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" />
+                <v-text-field v-model.number="appSettingValues['payroll.pagibig_max_salary']" type="number" label="Maximum fund salary" prefix="₱" density="compact" variant="outlined" hide-details :disabled="!canManagePayrollSettings" class="span-2" />
               </div>
             </section>
 
@@ -474,7 +474,7 @@
 
           <div class="settings-save-bar">
             <div><div class="text-body-2 font-weight-medium">{{ hasChanges ? "You have unsaved payroll changes" : "Payroll settings are up to date" }}</div><div class="text-caption text-medium-emphasis">Changes apply only to payroll processed after saving.</div></div>
-            <v-btn color="primary" class="text-none" prepend-icon="mdi-content-save-outline" @click="saveGeneralSettings" :loading="saving || appSettingsLoading" :disabled="!hasChanges || !canManageAppSettings">Save payroll settings</v-btn>
+            <v-btn color="primary" class="text-none" prepend-icon="mdi-content-save-outline" @click="saveGeneralSettings" :loading="saving || appSettingsLoading" :disabled="!hasChanges || !canManagePayrollSettings">Save payroll settings</v-btn>
           </div>
         </v-window-item>
 
@@ -576,6 +576,8 @@ import Table from "@/components/Table.vue";
 import Form from "@/components/Form.vue";
 import { ColumnConfig } from "@/types/types";
 import axios from "@/plugins/axios";
+import { formatDateTime } from "@/utils/dateFormatter";
+import { booleanChipColor } from "@/utils/chipColors";
 
 const tab = ref("general");
 
@@ -632,8 +634,31 @@ const settingsReady = ref(
   Boolean(authUser.value) && appSettingsInitialized.value,
 );
 
-const canManageAppSettings = computed(() =>
-  checkPermissions("manage-app-settings"),
+const canManageSetting = (key: string): boolean => {
+  if (checkPermissions("manage-app-settings")) return true;
+
+  const permission = appSettingDefinitions.value[key]?.permission;
+  return typeof permission === "string" && checkPermissions(permission);
+};
+const canManageOrganizationSettings = computed(() =>
+  canManageSetting("organization.company_name"),
+);
+const canManageAttendanceSettings = computed(() =>
+  canManageSetting("attendance.photo_capture_enabled"),
+);
+const canManageFeatureSettings = computed(() =>
+  canManageSetting("leave.attachments_enabled"),
+);
+const canManagePayrollSettings = computed(() =>
+  canManageSetting("payroll.enabled"),
+);
+const canManageAnyAppSettings = computed(() =>
+  [
+    canManageOrganizationSettings.value,
+    canManageAttendanceSettings.value,
+    canManageFeatureSettings.value,
+    canManagePayrollSettings.value,
+  ].some(Boolean),
 );
 const timezoneOptions = computed<string[]>(() =>
   appSettingDefinitions.value["organization.timezone"]?.options ?? ["UTC"],
@@ -669,11 +694,16 @@ const saveGeneralSettings = async () => {
   try {
     applyTheme(theme.value, true);
     await updateSettings({ theme: theme.value });
-    if (canManageAppSettings.value) {
+    if (canManageAnyAppSettings.value) {
       if (!appSettingValues.value["attendance.location_capture_enabled"]) {
         appSettingValues.value["attendance.location_required"] = false;
       }
-      await updateAppSettings({ ...appSettingValues.value });
+      const authorizedUpdates = Object.fromEntries(
+        Object.entries(appSettingValues.value).filter(([key]) =>
+          canManageSetting(key),
+        ),
+      );
+      await updateAppSettings(authorizedUpdates);
     }
     savedSnapshot.value = currentSnapshot.value;
   } finally {
@@ -734,11 +764,6 @@ const monthOptions = [
   { label: "December", value: 12 },
 ];
 
-const formatDateTime = (value: string) => {
-  if (!value) return "—";
-  return new Date(value).toLocaleString();
-};
-
 const formatTaskOutput = (value: string) => {
   if (!value) return "-";
   return value.length > 120 ? `${value.slice(0, 117)}...` : value;
@@ -757,7 +782,7 @@ const taskHeaders: ColumnConfig[] = [
     key: "is_active",
     title: "Status",
     displayAs: "chip",
-    chipColor: "success",
+    chipColor: booleanChipColor,
     formatter: (value: boolean) => (value ? "Active" : "Paused"),
   },
   { key: "last_run_at", title: "Last Run", formatter: formatDateTime },
@@ -972,15 +997,32 @@ onBeforeUnmount(() => {
 
 .settings-tabs {
   width: min(100%, 540px);
+  min-height: 48px;
   padding: 5px;
   border-radius: 12px;
   background: rgba(var(--v-theme-on-surface), 0.055);
 }
 
+.settings-tabs :deep(.v-slide-group__container) {
+  width: 100%;
+}
+
+.settings-tabs :deep(.v-slide-group__content) {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.settings-tabs--two :deep(.v-slide-group__content) {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
 .settings-tabs :deep(.v-tab) {
-  flex: 1 1 0;
+  width: 100%;
   min-width: 0;
   min-height: 38px;
+  justify-content: center;
   padding-inline: 16px;
   border-radius: 8px;
   color: rgb(var(--v-theme-on-surface-variant));
@@ -1380,7 +1422,7 @@ onBeforeUnmount(() => {
   }
 
   .settings-tabs :deep(.v-tab) {
-    flex: 1;
+    width: 100%;
     min-width: 0;
     padding-inline: 9px;
   }

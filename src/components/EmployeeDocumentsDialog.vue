@@ -163,6 +163,7 @@ import { computed, ref, watch } from "vue";
 import axios from "@/plugins/axios";
 import { usePermissions } from "@/composables/usePermissions";
 import { useAppSettings } from "@/composables/useAppSettings";
+import { formatDate } from "@/utils/dateFormatter";
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -248,7 +249,6 @@ const remove = async (document: any) => {
 };
 
 const categoryLabel = (category: string) => categories.value[category] ?? category;
-const formatDate = (date: string) => new Date(`${date}T00:00:00`).toLocaleDateString();
 const isExpired = (date: string) => new Date(`${date}T23:59:59`) < new Date();
 const formatBytes = (bytes: number) => {
   if (!bytes) return "0 KB";

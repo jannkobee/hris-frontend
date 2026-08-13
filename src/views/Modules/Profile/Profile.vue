@@ -101,6 +101,7 @@ import EmployeeDocumentsDialog from "@/components/EmployeeDocumentsDialog.vue";
 import { useAuth } from "@/composables/useAuth";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { useProfilePhoto } from "@/composables/useProfilePhoto";
+import { formatDate } from "@/utils/dateFormatter";
 
 const profile = ref<any>();
 const loading = ref(true);
@@ -156,7 +157,6 @@ const removePhoto = async () => {
   await Promise.all([load(), getUser()]);
 };
 
-const formatDate = (value?: string) => value ? new Date(`${value}T00:00:00`).toLocaleDateString() : "—";
 onMounted(load);
 </script>
 

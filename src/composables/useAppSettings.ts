@@ -39,15 +39,19 @@ const values = ref<AppSettingValues>(readStoredSettings());
 const definitions = ref<Record<string, any>>({});
 const loading = ref(false);
 const initialized = ref(false);
+let loadPromise: Promise<AppSettingValues> | null = null;
 
 const persist = () => {
   localStorage.setItem(storageKey, JSON.stringify(values.value));
 };
 
 export const useAppSettings = () => {
-  const loadAppSettings = async () => {
+  const loadAppSettings = async (force = false): Promise<AppSettingValues> => {
+    if (initialized.value && !force) return values.value;
+    if (loadPromise) return loadPromise;
+
     loading.value = true;
-    try {
+    loadPromise = (async () => {
       const response = await axios.get("/app-settings", {
         headers: { "X-Suppress-Success-Notification": "true" },
       });
@@ -55,7 +59,12 @@ export const useAppSettings = () => {
       definitions.value = response.data.data?.definitions ?? {};
       persist();
       return values.value;
+    })();
+
+    try {
+      return await loadPromise;
     } finally {
+      loadPromise = null;
       loading.value = false;
       initialized.value = true;
     }

@@ -34,6 +34,8 @@ export const fields: ColumnConfig[] = [
     title: "Gender",
     key: "gender",
     inputField: "radio",
+    displayAs: "chip",
+    chipColor: "info",
     inputOptions: [
       { label: "Male", value: "Male" },
       { label: "Female", value: "Female" },
@@ -54,6 +56,8 @@ export const fields: ColumnConfig[] = [
     key: "role.name",
     selectKey: "role_id",
     inputField: "select",
+    displayAs: "chip",
+    chipColor: "primary",
     inputOptions: [],
     nullable: false,
     required: true,

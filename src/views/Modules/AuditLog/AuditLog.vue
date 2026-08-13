@@ -81,6 +81,12 @@
           </v-chip>
         </template>
 
+        <template #item.action="{ item }: { item: AuditLogEntry }">
+          <v-chip size="small" color="info" variant="tonal">
+            {{ item.action }}
+          </v-chip>
+        </template>
+
         <template #item.result="{ item }: { item: AuditLogEntry }">
           <v-chip
             size="small"

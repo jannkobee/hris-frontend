@@ -1,5 +1,6 @@
 import { ColumnConfig } from "@/types/types";
 import { formatDateTime } from "@/utils/dateFormatter";
+import { statusChipColor } from "@/utils/chipColors";
 
 export const fields: ColumnConfig[] = [
   {
@@ -32,6 +33,8 @@ export const fields: ColumnConfig[] = [
     inputField: "text",
     nullable: false,
     required: false,
+    displayAs: "chip",
+    chipColor: "info",
   },
   {
     title: "Result",
@@ -40,7 +43,7 @@ export const fields: ColumnConfig[] = [
     nullable: false,
     required: false,
     displayAs: "chip",
-    chipColor: "success",
+    chipColor: statusChipColor,
   },
   {
     title: "Details",

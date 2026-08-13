@@ -1,5 +1,6 @@
 import { ColumnConfig } from "@/types/types";
 import { formatDate, formatTime } from "@/utils/dateFormatter";
+import { statusChipColor } from "@/utils/chipColors";
 
 export const fields: ColumnConfig[] = [
   {
@@ -61,7 +62,7 @@ export const fields: ColumnConfig[] = [
       { label: "Rejected", value: "rejected" },
     ],
     displayAs: "chip" as const,
-    chipColor: "primary",
+    chipColor: statusChipColor,
     // Statuses only change via the Approve/Reject row actions, not the edit form.
     readOnly: true,
     required: false,

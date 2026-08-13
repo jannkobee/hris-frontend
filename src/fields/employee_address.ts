@@ -13,6 +13,8 @@ export const fields: ColumnConfig[] = [
     ],
     nullable: false,
     required: true,
+    displayAs: "chip",
+    chipColor: "info",
   },
   {
     title: "Address Line 1",

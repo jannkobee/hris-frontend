@@ -88,7 +88,7 @@
       :key="`item.${header.key}`"
       v-slot:[`item.${header.key}`]="{ item }"
     >
-      <v-chip :color="header.chipColor || 'primary'" size="small" label>
+      <v-chip :color="resolveChipColor(header, getNestedValue(item, header.key))" size="small" variant="tonal" label>
         {{ formatCellValue(item, header) }}
       </v-chip>
     </template>
@@ -102,7 +102,7 @@
         <v-chip
           v-for="(label, idx) in formatCellArray(item, header)"
           :key="idx"
-          :color="header.chipColor || 'primary'"
+          :color="resolveChipColor(header, label)"
           size="small"
           label
         >
@@ -119,7 +119,10 @@
 
     <template
       v-for="header in props.headers.filter(
-        (h) => h.formatter && h.displayAs !== 'chip' && h.displayAs !== 'chips',
+        (h) =>
+          (h.formatter || isTemporalColumn(h)) &&
+          h.displayAs !== 'chip' &&
+          h.displayAs !== 'chips',
       )"
       :key="`item.${header.key}`"
       v-slot:[`item.${header.key}`]="{ item }"
@@ -178,6 +181,11 @@ import { ref, watch, onMounted, computed } from "vue";
 import { useAuth } from "@/composables/useAuth";
 import { usePermissions } from "@/composables/usePermissions";
 import debounce from "lodash/debounce";
+import {
+  formatDate,
+  formatDateTime,
+  formatTime,
+} from "@/utils/dateFormatter";
 
 const props = defineProps({
   entity: { type: String, default: "" },
@@ -250,12 +258,32 @@ const getNestedValue = (obj: any, path: string): any => {
   return path.split(".").reduce((current, key) => current?.[key], obj);
 };
 
+const isTemporalColumn = (header: ColumnConfig): boolean =>
+  ["date", "time", "datetime"].includes(header.inputField ?? "");
+
+const resolveChipColor = (header: ColumnConfig, value: any): string =>
+  typeof header.chipColor === "function"
+    ? header.chipColor(value)
+    : header.chipColor || "primary";
+
 const formatCellValue = (item: any, header: ColumnConfig): string => {
   const value = getNestedValue(item, header.key);
 
   if (header.formatter && typeof header.formatter === "function") {
     const result = header.formatter(value);
     return Array.isArray(result) ? result.join(", ") : result;
+  }
+
+  if (header.inputField === "datetime") return formatDateTime(value);
+  if (header.inputField === "date") return formatDate(value);
+  if (header.inputField === "time") return formatTime(value);
+
+  if (header.displayAs === "chip" && typeof value === "string") {
+    const option = header.inputOptions?.find((item: any) => item.value === value);
+    if (option?.label) return option.label;
+
+    const label = value.replace(/[_-]+/g, " ").trim();
+    return label ? label.charAt(0).toUpperCase() + label.slice(1) : "";
   }
 
   return value ?? "";

@@ -34,7 +34,7 @@
       >
         <template #item.coverage="{ item }"><span class="text-no-wrap">{{ date(item.date_from) }} – {{ date(item.date_to) }}</span></template>
         <template #item.payout_date="{ item }">{{ date(item.payout_date) }}</template>
-        <template #item.frequency="{ item }">{{ item.frequency === "semi_monthly" ? "Semi-monthly" : "Monthly" }}</template>
+        <template #item.frequency="{ item }"><v-chip size="small" variant="tonal" color="info">{{ item.frequency === "semi_monthly" ? "Semi-monthly" : "Monthly" }}</v-chip></template>
         <template #item.status="{ item }"><v-chip size="small" variant="tonal" :color="statusColor(item.status)" class="text-capitalize">{{ item.status }}</v-chip></template>
         <template #item.total_net="{ item }">{{ money(item.total_net) }}</template>
         <template #item.action="{ item }">
@@ -146,6 +146,7 @@ import debounce from "lodash/debounce";
 import axios from "@/plugins/axios";
 import { usePermissions } from "@/composables/usePermissions";
 import { useAppSettings } from "@/composables/useAppSettings";
+import { formatDate as date } from "@/utils/dateFormatter";
 
 const { checkPermissions } = usePermissions();
 const { values } = useAppSettings();
@@ -254,7 +255,6 @@ const printRegister = () => {
 };
 const money = (value: any) => new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(Number(value || 0));
 const number = (value: any) => new Intl.NumberFormat("en-PH", { maximumFractionDigits: 2 }).format(Number(value || 0));
-const date = (value?: string) => value ? new Date(`${value}T00:00:00`).toLocaleDateString() : "—";
 const statusColor = (status: string) => ({ draft: "default", processed: "info", approved: "warning", paid: "success" }[status] ?? "default");
 const printPayslip = () => window.print();
 onMounted(load);

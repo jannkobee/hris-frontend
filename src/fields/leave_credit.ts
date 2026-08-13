@@ -16,6 +16,8 @@ export const fields: ColumnConfig[] = [
     selectKey: "leave_type_id",
     inputOptions: [],
     required: true,
+    displayAs: "chip",
+    chipColor: "secondary",
   },
   { title: "Year", key: "year", inputField: "text", required: true },
   { title: "Earned", key: "total_earned", inputField: "text", required: true },

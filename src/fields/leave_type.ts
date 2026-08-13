@@ -1,4 +1,5 @@
 import { ColumnConfig } from "@/types/types";
+import { booleanChipColor } from "@/utils/chipColors";
 
 export const fields: ColumnConfig[] = [
   {
@@ -21,7 +22,7 @@ export const fields: ColumnConfig[] = [
     inputField: "checkbox",
     displayAs: "chip" as const,
     formatter: (v: any) => (v ? "Yes" : "No"),
-    chipColor: "success",
+    chipColor: booleanChipColor,
     nullable: false,
     required: true,
   },

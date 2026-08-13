@@ -1,4 +1,5 @@
 import { ColumnConfig } from "@/types/types";
+import { statusChipColor } from "@/utils/chipColors";
 
 export const fields: ColumnConfig[] = [
   {
@@ -16,6 +17,8 @@ export const fields: ColumnConfig[] = [
     selectKey: "leave_type_id",
     inputOptions: [],
     required: true,
+    displayAs: "chip",
+    chipColor: "secondary",
   },
   {
     title: "Credits Requested",
@@ -43,6 +46,7 @@ export const fields: ColumnConfig[] = [
     key: "status",
     displayAs: "chip" as const,
     inputField: "none",
+    chipColor: statusChipColor,
   },
   {
     title: "Remarks",
