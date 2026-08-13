@@ -67,6 +67,27 @@ export const fields: ColumnConfig[] = [
     required: false,
   },
   {
+    title: "Basic Monthly Salary",
+    key: "basic_monthly_salary",
+    inputField: "text",
+    nullable: true,
+    required: false,
+    visibleInTable: false,
+  },
+  {
+    title: "Pay Schedule",
+    key: "pay_schedule",
+    inputField: "select",
+    selectKey: "pay_schedule",
+    inputOptions: [
+      { label: "Semi-monthly", value: "semi_monthly" },
+      { label: "Monthly", value: "monthly" },
+    ],
+    nullable: false,
+    required: true,
+    visibleInTable: false,
+  },
+  {
     title: "Action",
     key: "action",
     inputField: "none",

@@ -1,4 +1,5 @@
 import { ColumnConfig } from "@/types/types";
+import { formatDate, formatTime } from "@/utils/dateFormatter";
 
 export const fields: ColumnConfig[] = [
   {
@@ -10,6 +11,7 @@ export const fields: ColumnConfig[] = [
     nullable: false,
     required: true,
     sortable: true,
+    formatter: formatDate,
   },
   {
     title: "Date",
@@ -18,6 +20,7 @@ export const fields: ColumnConfig[] = [
     nullable: false,
     required: true,
     sortable: true,
+    formatter: formatTime,
   },
   {
     title: "Time In",
@@ -34,6 +37,7 @@ export const fields: ColumnConfig[] = [
     nullable: true,
     required: false,
     sortable: true,
+    formatter: formatTime,
   },
   {
     title: "Time In Notes",

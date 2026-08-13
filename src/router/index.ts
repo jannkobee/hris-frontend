@@ -28,6 +28,11 @@ const routes: RouteRecordRaw[] = [
         name: "messages",
         component: () => import("@/views/Modules/Messages/Messages.vue"),
       },
+      {
+        path: "profile",
+        name: "profile",
+        component: () => import("@/views/Modules/Profile/Profile.vue"),
+      },
 
       // Management
       {
@@ -56,6 +61,11 @@ const routes: RouteRecordRaw[] = [
         name: "attendance-management",
         component: () =>
           import("@/views/Modules/AttendanceManagement/AttendanceManagement.vue"),
+      },
+      {
+        path: "payroll",
+        name: "payroll-management",
+        component: () => import("@/views/Modules/PayrollManagement/PayrollManagement.vue"),
       },
       {
         path: "leave-management",

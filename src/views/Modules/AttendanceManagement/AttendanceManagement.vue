@@ -149,7 +149,7 @@
       <v-chip color="primary" variant="flat">Attendance</v-chip>
     </div>
 
-    <v-card variant="outlined" class="mb-5 attendance-card">
+    <v-card variant="flat" class="mb-5 attendance-card">
       <v-card-text>
         <div
           v-if="authUser?.employee"
@@ -637,7 +637,11 @@ onMounted(async () => {
 }
 
 .attendance-card {
-  border-left: 4px solid rgb(var(--v-theme-primary));
+  background: transparent;
+}
+
+.attendance-card :deep(.v-card-text) {
+  padding-inline: 0;
 }
 
 .capture-form {

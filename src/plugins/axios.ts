@@ -8,8 +8,50 @@ const successNotification = (title: string, description: string) => {
   showNotification(title, description, "success");
 };
 
-const errorNotification = (title: string, description: string) => {
-  showNotification(title, description, "error");
+const getSuccessTitle = (message: unknown): string => {
+  if (typeof message !== "string") return "Request completed";
+
+  const normalizedMessage = message.toLowerCase();
+
+  if (normalizedMessage.includes("updated") || normalizedMessage.includes("saved")) {
+    return "Changes saved";
+  }
+  if (normalizedMessage.includes("created") || normalizedMessage.includes("added")) {
+    return "Created successfully";
+  }
+  if (normalizedMessage.includes("deleted") || normalizedMessage.includes("removed")) {
+    return "Removed successfully";
+  }
+  if (normalizedMessage.includes("sent")) return "Sent successfully";
+
+  return "Request completed";
+};
+
+const errorNotification = (
+  title: string,
+  description: string,
+  details: string[] = [],
+) => {
+  showNotification(title, description, "error", {
+    details,
+    timeout: details.length > 0 ? 8000 : undefined,
+  });
+};
+
+const getValidationMessages = (errors: unknown): string[] => {
+  if (!errors || typeof errors !== "object") return [];
+
+  return [
+    ...new Set(
+      Object.values(errors)
+        .flatMap((messages) =>
+          Array.isArray(messages) ? messages : [messages],
+        )
+        .filter((message): message is string => typeof message === "string")
+        .map((message) => message.trim())
+        .filter(Boolean),
+    ),
+  ];
 };
 
 const successAlertsEnabled = () => {
@@ -52,8 +94,17 @@ axiosRequest.interceptors.response.use(
       config.headers?.get?.("X-Suppress-Success-Notification") === "true" ||
       config.headers?.["X-Suppress-Success-Notification"] === "true";
 
-    if (successAlertsEnabled() && !suppressSuccessNotification && (status === 201 || (status === 200 && (isLogout || isDelete || isEmailSent)) || status === 202)) {
-      successNotification("Success", data.message);
+    if (
+      successAlertsEnabled() &&
+      !suppressSuccessNotification &&
+      (status === 201 ||
+        (status === 200 && (isLogout || isDelete || isEmailSent)) ||
+      status === 202)
+    ) {
+      successNotification(
+        getSuccessTitle(data.message),
+        data.message || "Your changes were saved successfully.",
+      );
     }
 
     return res;
@@ -69,27 +120,56 @@ axiosRequest.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const { status, data, request } = error.response;
+    const { status, data } = error.response;
 
-    if (status === 500) {
+    const message =
+      typeof data?.message === "string" && data.message.trim()
+        ? data.message
+        : "Something went wrong. Please try again.";
+
+    if (status === 422) {
+      const validationMessages = getValidationMessages(data?.errors);
+
       errorNotification(
-        "Network Error",
-        "Unable to connect to the server. Please check your internet connection.",
+        "Check your input",
+        validationMessages.length > 0
+          ? "Some information needs your attention."
+          : message,
+        validationMessages,
       );
-      router.push({ name: "network-error", params: { type: "2" } });
-    } else if (status === 422) {
-      errorNotification("Validation Error", data.message);
-    } else if (status === 419 && !request.responseURL.endsWith("/auth-user")) {
-      errorNotification("Error", "Server Error");
-    } else if (status === 401 && request.responseURL.endsWith("/auth-user")) {
-      errorNotification("Error", "Authentication Error. Please login again.");
+    } else if (status === 401) {
+      errorNotification(
+        "Session expired",
+        "Please sign in again to continue.",
+      );
       window.localStorage.removeItem("APP_TOKEN");
       router.push("/login");
-    } else {
+    } else if (status === 403) {
       errorNotification(
-        "Error",
-        data.message || "Something went wrong. Please try again.",
+        "Permission denied",
+        message || "You do not have permission to perform this action.",
       );
+    } else if (status === 404) {
+      errorNotification("Not found", message);
+    } else if (status === 409) {
+      errorNotification("Unable to complete request", message);
+    } else if (status === 419) {
+      errorNotification(
+        "Session expired",
+        "Refresh the page and try your request again.",
+      );
+    } else if (status === 429) {
+      errorNotification(
+        "Too many requests",
+        "Please wait a moment before trying again.",
+      );
+    } else if (status >= 500) {
+      errorNotification(
+        "Server error",
+        "The server could not complete your request. Please try again shortly.",
+      );
+    } else {
+      errorNotification("Request failed", message);
     }
 
     return Promise.reject(error);

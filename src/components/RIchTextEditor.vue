@@ -561,10 +561,14 @@ onBeforeUnmount(() => {
 }
 
 .rte-swatch--none {
-  background: repeating-conic-gradient(#ccc 0% 25%, #fff 0% 50%) 50% / 10px 10px;
+  background: repeating-conic-gradient(
+      rgb(var(--v-theme-surface-variant)) 0% 25%,
+      rgb(var(--v-theme-surface)) 0% 50%
+    )
+    50% / 10px 10px;
   font-size: 14px;
   line-height: 1;
-  color: #c0392b;
+  color: rgb(var(--v-theme-error));
 }
 
 .rte-content {

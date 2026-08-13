@@ -457,16 +457,16 @@ props.fields
     135deg,
     transparent 0%,
     transparent 45%,
-    rgba(255, 255, 255, 0.35) 45%,
-    rgba(255, 255, 255, 0.35) 55%,
+    rgba(var(--v-theme-on-surface), 0.35) 45%,
+    rgba(var(--v-theme-on-surface), 0.35) 55%,
     transparent 55%,
     transparent 60%,
-    rgba(255, 255, 255, 0.35) 60%,
-    rgba(255, 255, 255, 0.35) 70%,
+    rgba(var(--v-theme-on-surface), 0.35) 60%,
+    rgba(var(--v-theme-on-surface), 0.35) 70%,
     transparent 70%,
     transparent 75%,
-    rgba(255, 255, 255, 0.35) 75%,
-    rgba(255, 255, 255, 0.35) 85%,
+    rgba(var(--v-theme-on-surface), 0.35) 75%,
+    rgba(var(--v-theme-on-surface), 0.35) 85%,
     transparent 85%
   );
 }

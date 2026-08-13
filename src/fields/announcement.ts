@@ -1,4 +1,5 @@
 import { ColumnConfig } from "@/types/types";
+import { formatDate } from "@/utils/dateFormatter";
 
 const stripHtml = (value: string): string =>
   (value ?? "")
@@ -20,7 +21,12 @@ export const fields: ColumnConfig[] = [
     required: true,
     formatter: (value: string) => excerpt(value),
   },
-  { title: "Publish Date", key: "published_at", inputField: "date" },
+  {
+    title: "Publish Date",
+    key: "published_at",
+    inputField: "date",
+    formatter: formatDate,
+  },
   {
     title: "Active",
     key: "is_active",

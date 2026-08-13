@@ -27,7 +27,8 @@
           >
             <template #prepend>
               <v-avatar color="surface-variant" class="text-on-surface">
-                <span class="text-h6">{{ authUser?.initials }}</span>
+                <v-img v-if="profilePhotoUrl" :src="profilePhotoUrl" cover />
+                <span v-else class="text-h6">{{ authUser?.initials }}</span>
               </v-avatar>
             </template>
             <template #append>
@@ -104,6 +105,7 @@ import { useTheme } from "vuetify";
 import { useAuth } from "@/composables/useAuth";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { usePermissions } from "@/composables/usePermissions";
+import { useProfilePhoto } from "@/composables/useProfilePhoto";
 
 type NavItem = {
   title: string;
@@ -119,6 +121,7 @@ type NavItem = {
 // nothing else in this file needs to change to reflect it in the drawer.
 const navItems: NavItem[] = [
   { title: "Dashboard", icon: "mdi-view-dashboard", routeName: "dashboard" },
+  { title: "My Profile", icon: "mdi-account-circle-outline", routeName: "profile" },
   {
     title: "Messages",
     icon: "mdi-message-text-outline",
@@ -148,6 +151,11 @@ const navItems: NavItem[] = [
     title: "Attendance Management",
     icon: "mdi-calendar-clock",
     routeName: "attendance-management",
+  },
+  {
+    title: "Payroll",
+    icon: "mdi-cash-multiple",
+    routeName: "payroll-management",
   },
   {
     title: "Leave Management",
@@ -244,13 +252,19 @@ const applyTheme = (themeName: string) => {
 };
 
 const { loading, getUser, getSettings, authUser, logout } = useAuth();
-const { loadAppSettings } = useAppSettings();
+const { loadAppSettings, values: appSettings } = useAppSettings();
 const { checkPermissions } = usePermissions();
+const { photoUrl: profilePhotoUrl, loadProfilePhoto } = useProfilePhoto();
 
 // Filters navItems down to what the current user can actually see.
 // A group survives only if at least one of its children is visible.
-const isVisible = (item: NavItem): boolean =>
-  !item.permission || checkPermissions(item.permission);
+const isVisible = (item: NavItem): boolean => {
+  if (item.routeName === "payroll-management" && appSettings.value["payroll.enabled"] === false) {
+    return false;
+  }
+
+  return !item.permission || checkPermissions(item.permission);
+};
 
 const visibleNavItems = computed<NavItem[]>(() =>
   navItems.reduce<NavItem[]>((acc, item) => {
@@ -267,21 +281,27 @@ const visibleNavItems = computed<NavItem[]>(() =>
 
 onMounted(async () => {
   await getUser();
+  await loadProfilePhoto(authUser.value?.profile_photo_url);
 
   const requiredPermission = route.meta.permission as string | undefined;
   if (requiredPermission && !checkPermissions(requiredPermission)) {
     await router.replace({ name: "dashboard" });
   }
-  authReady.value = true;
 
-  const [savedSettings] = await Promise.all([
-    getSettings(),
-    loadAppSettings(),
-  ]);
-  const savedTheme =
-    savedSettings?.theme || localStorage.getItem("APP_THEME") || "light";
+  try {
+    const [savedSettings] = await Promise.all([
+      getSettings(),
+      loadAppSettings(),
+    ]);
+    const savedTheme =
+      savedSettings?.theme || localStorage.getItem("APP_THEME") || "light";
 
-  applyTheme(savedTheme);
+    applyTheme(savedTheme);
+  } finally {
+    // Child routes must only render after personal and company settings have
+    // been resolved; otherwise controls briefly display their fallback values.
+    authReady.value = true;
+  }
 });
 
 watch(

@@ -209,7 +209,7 @@ const emit = defineEmits([
 ]);
 
 const tableHeaders = computed(() =>
-  props.headers.map((header) =>
+  props.headers.filter((header) => header.visibleInTable !== false).map((header) =>
     header.key === "action" ? { ...header, align: "center" as const } : header,
   ),
 );

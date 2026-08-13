@@ -7,7 +7,16 @@ export const formatDate = (dateString: string | null | undefined): string => {
   if (!dateString) return "";
 
   try {
-    const date = new Date(dateString);
+    // JavaScript treats a bare YYYY-MM-DD as UTC. Build calendar-only dates in
+    // local time so users west of UTC do not see the previous day.
+    const dateOnlyMatch = dateString.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    const date = dateOnlyMatch
+      ? new Date(
+          Number(dateOnlyMatch[1]),
+          Number(dateOnlyMatch[2]) - 1,
+          Number(dateOnlyMatch[3]),
+        )
+      : new Date(dateString);
 
     // Check if date is valid
     if (isNaN(date.getTime())) return dateString;

@@ -72,7 +72,7 @@
         @update:options="onOptionsUpdate"
       >
         <template #item.created_at="{ item }: { item: AuditLogEntry }">
-          {{ formatDate(item.created_at) }}
+          {{ formatDateTime(item.created_at) }}
         </template>
 
         <template #item.module="{ item }: { item: AuditLogEntry }">
@@ -129,7 +129,7 @@
           <v-row dense>
             <v-col cols="6">
               <div class="text-caption text-medium-emphasis">Timestamp</div>
-              <div>{{ formatDate(selectedLog.created_at) }}</div>
+              <div>{{ formatDateTime(selectedLog.created_at) }}</div>
             </v-col>
             <v-col cols="6">
               <div class="text-caption text-medium-emphasis">User</div>
@@ -175,7 +175,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useApi } from "@/composables/useApi";
 import { fields as importedFields } from "@/fields/audit_log";
-import { formatDate } from "@/utils/dateFormatter";
+import { formatDateTime } from "@/utils/dateFormatter";
 import type { ColumnConfig } from "@/types/types";
 
 // Shape of a single audit log row, as returned by GET /audit-logs.
@@ -278,7 +278,8 @@ onMounted(async () => {
 
 <style scoped>
 .payload-block {
-  background: rgba(0, 0, 0, 0.04);
+  color: rgb(var(--v-theme-on-surface));
+  background: rgba(var(--v-theme-on-surface), 0.045);
   border-radius: 8px;
   padding: 12px;
   font-size: 12.5px;

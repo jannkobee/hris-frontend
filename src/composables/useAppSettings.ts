@@ -38,6 +38,7 @@ const readStoredSettings = (): AppSettingValues => {
 const values = ref<AppSettingValues>(readStoredSettings());
 const definitions = ref<Record<string, any>>({});
 const loading = ref(false);
+const initialized = ref(false);
 
 const persist = () => {
   localStorage.setItem(storageKey, JSON.stringify(values.value));
@@ -56,6 +57,7 @@ export const useAppSettings = () => {
       return values.value;
     } finally {
       loading.value = false;
+      initialized.value = true;
     }
   };
 
@@ -82,6 +84,7 @@ export const useAppSettings = () => {
     values,
     definitions,
     loading,
+    initialized,
     loadAppSettings,
     updateAppSettings,
     setting,

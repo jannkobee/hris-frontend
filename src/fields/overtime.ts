@@ -1,4 +1,5 @@
 import { ColumnConfig } from "@/types/types";
+import { formatDate, formatTime } from "@/utils/dateFormatter";
 
 export const fields: ColumnConfig[] = [
   {
@@ -20,18 +21,21 @@ export const fields: ColumnConfig[] = [
     key: "date",
     inputField: "date",
     required: true,
+    formatter: formatDate,
   },
   {
     title: "Time Start",
     key: "time_start",
     inputField: "time",
     required: true,
+    formatter: formatTime,
   },
   {
     title: "Time End",
     key: "time_end",
     inputField: "time",
     required: true,
+    formatter: formatTime,
   },
   {
     title: "Hours",

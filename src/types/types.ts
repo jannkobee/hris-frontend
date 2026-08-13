@@ -40,6 +40,7 @@ type BaseColumnConfig = {
   chipColor?: string;
   multiple?: boolean;
   accept?: string;
+  visibleInTable?: boolean;
   // Called whenever this field's bound value changes from real user input
   // (not when the form is populated/reset by opening the dialog). Return a
   // partial object to merge into the form, e.g. to keep a derived field in
@@ -91,6 +92,7 @@ export type User = {
   email: string;
   gender: string;
   birthday: string;
+  profile_photo_url?: string | null;
   role?: RoleWithPermissions;
   settings?: Record<string, any>;
   employee?: {
@@ -98,6 +100,11 @@ export type User = {
     employee_no: string;
     department?: { name: string };
     position?: { name: string };
+    employment_status?: { name: string };
+    job_grade?: { name: string };
+    hire_date?: string;
+    addresses?: Array<Record<string, any>>;
+    contacts?: Array<Record<string, any>>;
   };
 };
 

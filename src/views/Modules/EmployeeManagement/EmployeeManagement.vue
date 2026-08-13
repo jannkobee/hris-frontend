@@ -38,12 +38,31 @@
       @view="view"
       @edit="edit"
       @remove="remove"
-    />
+    >
+      <template #extra-actions="{ item }">
+        <v-btn
+          v-if="documentsEnabled && checkPermissions('view-employee-documents')"
+          color="secondary"
+          variant="tonal"
+          size="small"
+          density="comfortable"
+          icon="mdi-folder-account-outline"
+          title="Open 201 files"
+          @click="openDocuments(item)"
+        />
+      </template>
+    </Table>
   </v-container>
+
+  <EmployeeDocumentsDialog
+    :visible="documentsVisible"
+    :employee="documentsEmployee"
+    @close="documentsVisible = false"
+  />
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
+import { computed, ref, onMounted } from "vue";
 import { useApi } from "@/composables/useApi";
 import { fields as importedFields } from "@/fields/employee";
 import { fields as addressFieldsImported } from "@/fields/employee_address";
@@ -52,6 +71,9 @@ import axios from "@/plugins/axios";
 import type { ColumnConfig } from "@/types/types";
 import EmployeeStepperForm from "@/components/EmployeeStepperForm.vue";
 import Table from "@/components/Table.vue";
+import EmployeeDocumentsDialog from "@/components/EmployeeDocumentsDialog.vue";
+import { usePermissions } from "@/composables/usePermissions";
+import { useAppSettings } from "@/composables/useAppSettings";
 
 // Create a reactive copy of fields with proper typing
 const fields = ref<ColumnConfig[]>([...importedFields] as ColumnConfig[]);
@@ -105,6 +127,8 @@ type EmployeeForm = {
   position_id: string;
   job_grade_id: string;
   meta: Record<string, any>;
+  basic_monthly_salary: number | string;
+  pay_schedule: string;
 };
 
 const initializeForm = (): EmployeeForm => {
@@ -124,12 +148,25 @@ const initializeForm = (): EmployeeForm => {
     position_id: "",
     job_grade_id: "",
     meta: {},
+    basic_monthly_salary: 0,
+    pay_schedule: "semi_monthly",
   };
 };
 
 const form = ref<EmployeeForm>(initializeForm());
 
 const readOnly = () => action.value === "View";
+const documentsVisible = ref(false);
+const documentsEmployee = ref<any>({});
+const { checkPermissions } = usePermissions();
+const { values: appSettings } = useAppSettings();
+const documentsEnabled = computed(
+  () => appSettings.value["employee_documents.enabled"] !== false,
+);
+const openDocuments = (employee: any) => {
+  documentsEmployee.value = employee;
+  documentsVisible.value = true;
+};
 
 // Helper to format date for form input (converts to YYYY-MM-DD)
 const formatDateForInput = (date: any): string => {
@@ -161,7 +198,6 @@ const getEmployeeNumber = async () => {
 
     form.value.employee_no = res.data.data.employee_no;
 
-    console.log("Generated Employee Number:", form.value.employee_no);
   } catch (error) {
     console.error("Error fetching employee number:", error);
   }
@@ -177,15 +213,9 @@ const setSelectOptions = (
     value: o.id,
   }));
 
-  console.log(`Setting options for ${selectKey}:`, mapped);
-
-  // Fixed: Search by selectKey instead of key in the reactive fields
   const field = fields.value.find((f) => f.selectKey === selectKey);
   if (field) {
     field.inputOptions = mapped;
-    console.log(`Field found and updated for ${selectKey}:`, field);
-  } else {
-    console.warn(`No field found with selectKey: ${selectKey}`);
   }
 };
 
@@ -200,12 +230,6 @@ const loadOptions = async () => {
         getJobGrades(),
       ]);
 
-    console.log("Loaded users:", users);
-    console.log("Loaded statuses:", statuses);
-    console.log("Loaded departments:", departments);
-    console.log("Loaded positions:", positions);
-    console.log("Loaded job grades:", jobGrades);
-
     setSelectOptions(
       "user_id",
       users,
@@ -216,7 +240,6 @@ const loadOptions = async () => {
     setSelectOptions("position_id", positions, "name");
     setSelectOptions("job_grade_id", jobGrades, "name");
 
-    console.log("All fields after setting options:", fields.value);
   } catch (error) {
     console.error("Error loading options:", error);
   }
