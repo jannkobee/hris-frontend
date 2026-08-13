@@ -21,6 +21,8 @@ const defaults: AppSettingValues = {
   "attendance.photo_max_size_mb": 5,
   "leave.attachments_enabled": true,
   "messaging.realtime_enabled": true,
+  "messaging.attachments_enabled": true,
+  "messaging.max_attachment_size_mb": 25,
   "notifications.success_alerts_enabled": true,
 };
 

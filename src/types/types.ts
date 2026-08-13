@@ -35,7 +35,7 @@ type BaseColumnConfig = {
   required?: boolean;
   readOnly?: boolean;
   readOnlyOnEdit?: boolean;
-  formatter?: (value: any) => string | string[];
+  formatter?: (value: any, item?: any) => string | string[];
   displayAs?: "chip" | "chips" | "text";
   chipColor?: string | ((value: any) => string);
   multiple?: boolean;

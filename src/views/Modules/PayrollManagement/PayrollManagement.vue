@@ -10,7 +10,6 @@
           </p>
         </div>
       </div>
-      <v-btn v-if="canManage" color="primary" prepend-icon="mdi-calendar-plus" class="text-none" @click="openCreate">New payroll period</v-btn>
     </div>
 
     <div v-if="canViewCompany" class="summary-grid mb-5">
@@ -19,35 +18,45 @@
       <div class="summary-card"><v-icon icon="mdi-check-decagram-outline" color="info" /><span>Awaiting approval</span><strong>{{ processedCount }}</strong></div>
     </div>
 
-    <section class="payroll-table-card">
-      <div class="table-toolbar">
-        <div><strong>Payroll periods</strong><small>Select a period to open its payslips.</small></div>
-        <v-text-field v-model="search" placeholder="Search periods" prepend-inner-icon="mdi-magnify" density="compact" variant="outlined" hide-details clearable class="search-field" @update:model-value="debouncedLoad" />
-      </div>
-      <v-data-table-server
-        :headers="headers"
-        :items="periods"
-        :items-length="pagination.total"
-        :loading="loading"
-        :items-per-page-options="[10, 20, 50]"
-        @update:options="onTableOptions"
-      >
-        <template #item.coverage="{ item }"><span class="text-no-wrap">{{ date(item.date_from) }} – {{ date(item.date_to) }}</span></template>
-        <template #item.payout_date="{ item }">{{ date(item.payout_date) }}</template>
-        <template #item.frequency="{ item }"><v-chip size="small" variant="tonal" color="info">{{ item.frequency === "semi_monthly" ? "Semi-monthly" : "Monthly" }}</v-chip></template>
-        <template #item.status="{ item }"><v-chip size="small" variant="tonal" :color="statusColor(item.status)" class="text-capitalize">{{ item.status }}</v-chip></template>
-        <template #item.total_net="{ item }">{{ money(item.total_net) }}</template>
-        <template #item.action="{ item }">
-          <div class="d-flex justify-end ga-1">
-            <v-btn icon="mdi-eye-outline" size="small" variant="tonal" color="primary" title="View payslips" @click="openPeriod(item)" />
-            <v-btn v-if="canManage && ['draft', 'processed'].includes(item.status)" icon="mdi-calculator-variant-outline" size="small" variant="tonal" color="info" :title="item.status === 'draft' ? 'Generate payroll' : 'Regenerate payroll'" :loading="actingId === item.id" @click="processPeriod(item)" />
-            <v-btn v-if="canApprove && item.status === 'processed'" icon="mdi-check-decagram-outline" size="small" variant="tonal" color="success" title="Approve payroll" :loading="actingId === item.id" @click="approvePeriod(item)" />
-            <v-btn v-if="canMarkPaid && item.status === 'approved'" icon="mdi-bank-check" size="small" variant="tonal" color="success" title="Mark paid" :loading="actingId === item.id" @click="markPaid(item)" />
-            <v-btn v-if="canManage && item.status === 'draft'" icon="mdi-delete-outline" size="small" variant="text" color="error" title="Remove draft" @click="removePeriod(item)" />
-          </div>
-        </template>
-      </v-data-table-server>
-    </section>
+    <Table
+      entity="Payroll"
+      title="Payroll periods"
+      subtitle="Select a period to open its payslips and review its totals."
+      icon="mdi-calendar-cash-outline"
+      search-placeholder="Search payroll periods..."
+      empty-title="No payroll periods found"
+      empty-text="Create a payroll period or adjust your search."
+      :headers="headers"
+      :data="periods"
+      :pagination="pagination"
+      :loading="loading"
+      :items-per-page-options="[10, 20, 50]"
+      :show-create-action="false"
+      :show-view-action="false"
+      :show-edit-action="false"
+      :show-delete-action="false"
+      @filter="load"
+    >
+      <template #toolbar-actions>
+        <v-btn
+          v-if="canManage"
+          color="primary"
+          prepend-icon="mdi-calendar-plus"
+          variant="flat"
+          class="text-none"
+          @click="openCreate"
+        >
+          New payroll period
+        </v-btn>
+      </template>
+      <template #extra-actions="{ item }">
+        <v-btn icon="mdi-eye-outline" size="small" variant="tonal" color="primary" title="View payslips" aria-label="View payslips" @click="openPeriod(item)" />
+        <v-btn v-if="canManage && ['draft', 'processed'].includes(item.status)" icon="mdi-calculator-variant-outline" size="small" variant="tonal" color="info" :title="item.status === 'draft' ? 'Generate payroll' : 'Regenerate payroll'" :aria-label="item.status === 'draft' ? 'Generate payroll' : 'Regenerate payroll'" :loading="actingId === item.id" @click="processPeriod(item)" />
+        <v-btn v-if="canApprove && item.status === 'processed'" icon="mdi-check-decagram-outline" size="small" variant="tonal" color="success" title="Approve payroll" aria-label="Approve payroll" :loading="actingId === item.id" @click="approvePeriod(item)" />
+        <v-btn v-if="canMarkPaid && item.status === 'approved'" icon="mdi-bank-check" size="small" variant="tonal" color="success" title="Mark paid" aria-label="Mark paid" :loading="actingId === item.id" @click="markPaid(item)" />
+        <v-btn v-if="canManage && item.status === 'draft'" icon="mdi-delete-outline" size="small" variant="tonal" color="error" title="Remove draft" aria-label="Remove draft" @click="removePeriod(item)" />
+      </template>
+    </Table>
 
     <v-dialog v-model="createDialog" max-width="610">
       <v-card rounded="xl">
@@ -141,9 +150,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from "vue";
-import debounce from "lodash/debounce";
+import { computed, ref } from "vue";
 import axios from "@/plugins/axios";
+import Table from "@/components/Table.vue";
+import type { ColumnConfig } from "@/types/types";
 import { usePermissions } from "@/composables/usePermissions";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { formatDate as date } from "@/utils/dateFormatter";
@@ -173,10 +183,16 @@ const adjustmentItem = ref<any>();
 const periodForm = ref({ name: "", date_from: "", date_to: "", payout_date: "", frequency: "semi_monthly" });
 const adjustForm = ref({ allowances: 0, other_earnings: 0, other_deductions: 0, notes: "" });
 const frequencyOptions = [{ title: "Semi-monthly", value: "semi_monthly" }, { title: "Monthly", value: "monthly" }];
-const headers = computed(() => [
-  { title: "Period", key: "name" }, { title: "Coverage", key: "coverage", sortable: false },
-  { title: "Pay date", key: "payout_date" }, { title: "Frequency", key: "frequency" },
-  { title: "Status", key: "status" }, ...(canViewCompany.value ? [{ title: "Employees", key: "items_count" }, { title: "Net payroll", key: "total_net" }] : []),
+const headers = computed<ColumnConfig[]>(() => [
+  { title: "Period", key: "name" },
+  { title: "Coverage", key: "date_from", sortable: false, formatter: (_value, item) => `${date(item.date_from)} – ${date(item.date_to)}` },
+  { title: "Pay date", key: "payout_date", inputField: "date" },
+  { title: "Frequency", key: "frequency", displayAs: "chip", chipColor: "info", inputOptions: frequencyOptions.map(({ title, value }) => ({ label: title, value })) },
+  { title: "Status", key: "status", displayAs: "chip", chipColor: statusColor },
+  ...(canViewCompany.value ? [
+    { title: "Employees", key: "items_count", align: "center" as const },
+    { title: "Net payroll", key: "total_net", align: "end" as const, formatter: money },
+  ] : []),
   { title: "", key: "action", sortable: false, align: "end" as const },
 ]);
 const pageNet = computed(() => periods.value.reduce((sum, item) => sum + Number(item.total_net || 0), 0));
@@ -186,7 +202,10 @@ const unacknowledgedExceptionCount = computed(() => selectedPeriod.value?.items?
   (item: any) => item.exceptions?.length && !item.exceptions_acknowledged_at,
 ).length ?? 0);
 
-const load = async () => {
+const load = async (filters: any = {}) => {
+  pagination.value.page = filters.page ?? pagination.value.page;
+  pagination.value.itemsPerPage = filters.itemsPerPage ?? filters.limit ?? pagination.value.itemsPerPage;
+  search.value = filters.search ?? search.value;
   loading.value = true;
   try {
     const response = await axios.get("/payroll-periods", { params: { page: pagination.value.page, limit: pagination.value.itemsPerPage, search: search.value } });
@@ -194,8 +213,6 @@ const load = async () => {
     pagination.value.total = response.data.data.total ?? 0;
   } finally { loading.value = false; }
 };
-const debouncedLoad = debounce(load, 300);
-const onTableOptions = (options: any) => { pagination.value.page = options.page; pagination.value.itemsPerPage = options.itemsPerPage; load(); };
 const openCreate = () => { periodForm.value = { name: "", date_from: "", date_to: "", payout_date: "", frequency: values.value["payroll.default_frequency"] ?? "semi_monthly" }; createDialog.value = true; };
 const createPeriod = async () => { saving.value = true; try { await axios.post("/payroll-periods", periodForm.value); createDialog.value = false; await load(); } finally { saving.value = false; } };
 const openPeriod = async (period: any) => { const response = await axios.get(`/payroll-periods/${period.id}`); selectedPeriod.value = response.data.data; periodDialog.value = true; };
@@ -259,7 +276,6 @@ const money = (value: any) => new Intl.NumberFormat("en-PH", { style: "currency"
 const number = (value: any) => new Intl.NumberFormat("en-PH", { maximumFractionDigits: 2 }).format(Number(value || 0));
 const statusColor = (status: string) => ({ draft: "default", processed: "info", approved: "warning", paid: "success" }[status] ?? "default");
 const printPayslip = () => window.print();
-onMounted(load);
 </script>
 
 <style scoped>
@@ -268,8 +284,7 @@ onMounted(load);
 .summary-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
 .summary-card { display: grid; grid-template-columns: auto 1fr; align-items: center; gap: 4px 11px; padding: 16px; border-radius: 14px; background: rgba(var(--v-theme-on-surface), .04); }
 .summary-card .v-icon { grid-row: span 2; }.summary-card span { color: rgb(var(--v-theme-on-surface-variant)); font-size: .76rem; }.summary-card strong { font-size: 1.1rem; }
-.payroll-table-card { overflow: hidden; border-radius: 16px; background: rgba(var(--v-theme-on-surface), .03); box-shadow: 0 1px 0 rgba(var(--v-theme-on-surface), .06); }
-.table-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 17px; }.table-toolbar > div { display: flex; flex-direction: column; }.table-toolbar small, .dialog-heading small, .employee-copy small { color: rgb(var(--v-theme-on-surface-variant)); }.search-field { max-width: 340px; }
+.dialog-heading small, .employee-copy small { color: rgb(var(--v-theme-on-surface-variant)); }
 .dialog-heading { display: flex; align-items: center; gap: 11px; padding: 18px 20px; }.dialog-heading > div { display: flex; min-width: 0; flex-direction: column; }
 .form-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }.span-2 { grid-column: 1 / -1; }
 .period-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; }.period-totals { display: flex; min-width: 180px; flex-direction: column; }.period-totals span { color: rgb(var(--v-theme-on-surface-variant)); font-size: .75rem; }
@@ -279,7 +294,7 @@ onMounted(load);
 .work-summary-card { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-bottom: 18px; }.work-summary-card > div { display: flex; flex-direction: column; padding: 10px 12px; border-radius: 10px; background: rgba(var(--v-theme-on-surface), .04); }.work-summary-card span { color: rgb(var(--v-theme-on-surface-variant)); font-size: .72rem; }.payslip-exceptions { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; padding: 13px; border-radius: 11px; background: rgba(var(--v-theme-warning), .09); }.payslip-exceptions ul { margin: 0; padding-left: 25px; color: rgb(var(--v-theme-on-surface-variant)); font-size: .82rem; }
 .payslip-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px; }.payslip-columns h3 { margin-bottom: 10px; }.amount-line { display: flex; justify-content: space-between; gap: 15px; padding: 8px 0; }.amount-line--total { margin-top: 5px; border-top: 1px solid rgba(var(--v-theme-on-surface), .12); }.net-pay { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; padding: 17px; border-radius: 12px; background: rgba(var(--v-theme-success), .11); }.net-pay strong { font-size: 1.35rem; color: rgb(var(--v-theme-success)); }.payslip-note { display: flex; flex-direction: column; margin-top: 15px; padding: 12px; border-radius: 10px; background: rgba(var(--v-theme-on-surface), .04); }
 @media (max-width: 1050px) { .payslip-row { grid-template-columns: auto 1fr minmax(140px, auto) auto auto; }.pay-metric { display: none; } }
-@media (max-width: 650px) { .page-heading, .table-toolbar, .period-toolbar, .exception-banner { align-items: stretch; flex-direction: column; }.summary-grid, .form-grid, .payslip-columns, .work-summary-card { grid-template-columns: 1fr; }.payslip-row { grid-template-columns: auto 1fr auto auto; }.work-summary { display: none; }.span-2 { grid-column: 1; }.search-field { max-width: none; } }
+@media (max-width: 650px) { .page-heading, .period-toolbar, .exception-banner { align-items: stretch; flex-direction: column; }.summary-grid, .form-grid, .payslip-columns, .work-summary-card { grid-template-columns: 1fr; }.payslip-row { grid-template-columns: auto 1fr auto auto; }.work-summary { display: none; }.span-2 { grid-column: 1; } }
 </style>
 
 <style>

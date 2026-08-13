@@ -314,6 +314,33 @@
                   </div>
 
                   <div class="policy-row">
+                    <v-icon icon="mdi-paperclip" class="policy-icon" />
+                    <div class="policy-copy">
+                      <strong>Message attachments</strong>
+                      <small>Allow photos, documents, media, and archives in conversations.</small>
+                    </div>
+                    <v-select
+                      v-if="appSettingValues['messaging.attachments_enabled']"
+                      v-model="appSettingValues['messaging.max_attachment_size_mb']"
+                      label="Max size"
+                      suffix="MB"
+                      :items="[5, 10, 15, 25, 50]"
+                      density="compact"
+                      variant="outlined"
+                      hide-details
+                      class="policy-inline-select"
+                      :disabled="!canManageFeatureSettings"
+                    />
+                    <v-switch
+                      v-model="appSettingValues['messaging.attachments_enabled']"
+                      color="primary"
+                      density="compact"
+                      hide-details
+                      :disabled="!canManageFeatureSettings"
+                    />
+                  </div>
+
+                  <div class="policy-row">
                     <v-icon icon="mdi-bell-check-outline" class="policy-icon" />
                     <div class="policy-copy">
                       <strong>Success notifications</strong>
