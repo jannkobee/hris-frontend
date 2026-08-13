@@ -33,18 +33,21 @@ const routes: RouteRecordRaw[] = [
       {
         path: "user-management",
         name: "user-management",
+        meta: { permission: "view-users" },
         component: () =>
           import("@/views/Modules/UserManagement/UserManagement.vue"),
       },
       {
         path: "role-management",
         name: "role-management",
+        meta: { permission: "view-roles" },
         component: () =>
           import("@/views/Modules/RoleManagement/RoleManagement.vue"),
       },
       {
         path: "employee-management",
         name: "employee-management",
+        meta: { permission: "view-employees" },
         component: () =>
           import("@/views/Modules/EmployeeManagement/EmployeeManagement.vue"),
       },
@@ -57,24 +60,28 @@ const routes: RouteRecordRaw[] = [
       {
         path: "leave-management",
         name: "leave-management",
+        meta: { permission: "view-leave-requests" },
         component: () =>
           import("@/views/Modules/LeaveManagement/LeaveManagement.vue"),
       },
       {
         path: "overtime-management",
         name: "overtime-management",
+        meta: { permission: "view-overtimes" },
         component: () =>
           import("@/views/Modules/OvertimeManagement/OvertimeManagement.vue"),
       },
       {
         path: "announcements",
         name: "announcement-management",
+        meta: { permission: "view-announcements" },
         component: () =>
           import("@/views/Modules/AnnouncementManagement/AnnouncementManagement.vue"),
       },
       {
         path: "audit-logs",
         name: "audit-log-management",
+        meta: { permission: "view-audit-logs" },
         component: () => import("@/views/Modules/AuditLog/AuditLog.vue"),
       },
 
@@ -82,30 +89,35 @@ const routes: RouteRecordRaw[] = [
       {
         path: "configuration/employment-statuses",
         name: "employment-status-management",
+        meta: { permission: "view-employment-statuses" },
         component: () =>
           import("@/views/Modules/SubModules/EmploymentStatusManagement/EmploymentStatusManagement.vue"),
       },
       {
         path: "configuration/positions",
         name: "position-management",
+        meta: { permission: "view-positions" },
         component: () =>
           import("@/views/Modules/SubModules/PositionManagement/PositionManagement.vue"),
       },
       {
         path: "configuration/departments",
         name: "department-management",
+        meta: { permission: "view-departments" },
         component: () =>
           import("@/views/Modules/SubModules/DepartmentManagement/DepartmentManagement.vue"),
       },
       {
         path: "configuration/job-grades",
         name: "job-grade-management",
+        meta: { permission: "view-job-grades" },
         component: () =>
           import("@/views/Modules/SubModules/JobGradeManagement/JobGradeManagement.vue"),
       },
       {
         path: "configuration/employee-number-settings",
         name: "employee-number-settings",
+        meta: { permission: "manage-employee-number-settings" },
         component: () =>
           import("@/views/Modules/SubModules/EmployeeNumberSettings/EmployeeNumberSettings.vue"),
       },
@@ -117,12 +129,14 @@ const routes: RouteRecordRaw[] = [
       {
         path: "configuration/leave-types",
         name: "leave-type-management",
+        meta: { permission: "view-leave-types" },
         component: () =>
           import("@/views/Modules/SubModules/LeaveTypeManagement/LeaveTypeManagement.vue"),
       },
       {
         path: "configuration/leave-credit-settings",
         name: "leave-credit-setting-management",
+        meta: { permission: "view-leave-credit-settings" },
         component: () =>
           import("@/views/Modules/SubModules/LeaveCreditManagement/LeaveCreditManagement.vue"),
       },

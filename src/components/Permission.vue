@@ -353,6 +353,8 @@ const formatPermissionLabel = (permission: Permission): string => {
 };
 
 const formatPermissionDescription = (permission: Permission): string => {
+  if (permission.description?.trim()) return permission.description.trim();
+
   const slug = permission.slug?.trim();
 
   if (!slug) {

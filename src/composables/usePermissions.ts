@@ -1,38 +1,42 @@
-// composables/usePermissions.ts
 import { useAuth } from "@/composables/useAuth";
 
 export const usePermissions = () => {
   const { authUser } = useAuth();
 
   const checkPermissions = (permission: string): boolean => {
-    if (!authUser.value?.role?.permissions) {
-      console.log("User not ready, skipping permission check:", permission);
-      return false; // safe fallback
-    }
+    if (authUser.value?.role?.name === "Admin") return true;
+    if (!authUser.value?.role?.permissions) return false;
 
-    const value = authUser.value.role.permissions.some(
-      (perm: { slug: string }) => perm.slug === permission,
+    const assigned = authUser.value.role.permissions.some(
+      (item: { slug: string }) => item.slug === permission,
+    );
+    if (assigned) return true;
+
+    // The API uses one capability-based permission for all write operations.
+    // Normalize legacy table requests so FE and BE share the same contract.
+    const normalized = permission.replace(
+      /^(create|update|delete)-/,
+      "manage-",
     );
 
-    console.log("Checking permissions for:", permission, "→", value);
-    return value;
+    return authUser.value.role.permissions.some(
+      (item: { slug: string }) => item.slug === normalized,
+    );
   };
 
-  // Helper functions for common permission patterns
   const canCreate = (entity: string) =>
-    checkPermissions(`create-${entity.toLowerCase()}s`);
-
+    checkPermissions(`manage-${entity.toLowerCase()}s`);
   const canUpdate = (entity: string) =>
-    checkPermissions(`update-${entity.toLowerCase()}s`);
-
+    checkPermissions(`manage-${entity.toLowerCase()}s`);
   const canDelete = (entity: string) =>
-    checkPermissions(`delete-${entity.toLowerCase()}s`);
-
+    checkPermissions(`manage-${entity.toLowerCase()}s`);
   const canView = (entity: string) =>
     checkPermissions(`view-${entity.toLowerCase()}s`);
 
   return {
     checkPermissions,
+    hasAnyPermission: (permissions: string[]) =>
+      permissions.some(checkPermissions),
     canCreate,
     canUpdate,
     canDelete,

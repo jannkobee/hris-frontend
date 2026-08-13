@@ -75,9 +75,9 @@
           {{ formatDate(item.created_at) }}
         </template>
 
-        <template #item.module_name="{ item }: { item: AuditLogEntry }">
+        <template #item.module="{ item }: { item: AuditLogEntry }">
           <v-chip size="small" color="primary" variant="tonal">
-            {{ formatModuleName(item.module_name) }}
+            {{ formatModuleName(item.module) }}
           </v-chip>
         </template>
 
@@ -137,11 +137,22 @@
             </v-col>
             <v-col cols="6">
               <div class="text-caption text-medium-emphasis">Module</div>
-              <div>{{ formatModuleName(selectedLog.module_name) }}</div>
+              <div>{{ formatModuleName(selectedLog.module) }}</div>
             </v-col>
             <v-col cols="6">
               <div class="text-caption text-medium-emphasis">Action</div>
               <div>{{ selectedLog.action }}</div>
+            </v-col>
+            <v-col v-if="selectedLog.ip_address" cols="6">
+              <div class="text-caption text-medium-emphasis">IP address</div>
+              <div>{{ selectedLog.ip_address }}</div>
+            </v-col>
+            <v-col v-if="selectedLog.http_method || selectedLog.route_name" cols="6">
+              <div class="text-caption text-medium-emphasis">API request</div>
+              <div>
+                {{ selectedLog.http_method || "—" }}
+                {{ selectedLog.route_name || "" }}
+              </div>
             </v-col>
           </v-row>
 
@@ -173,12 +184,15 @@ import type { ColumnConfig } from "@/types/types";
 interface AuditLogEntry {
   id: string;
   created_at: string;
-  module_name: string;
+  module: string;
   action: string;
   result: "Success" | "Failed" | string;
   user_full_name: string;
   action_details?: unknown;
   payload?: string | Record<string, unknown> | null;
+  ip_address?: string | null;
+  http_method?: string | null;
+  route_name?: string | null;
 }
 
 const headers = ref<ColumnConfig[]>([...importedFields] as ColumnConfig[]);

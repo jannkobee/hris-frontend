@@ -15,17 +15,17 @@
   <v-container fluid>
     <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
       <div>
-        <div class="text-h5 font-weight-bold">Employment Status Management</div>
+        <div class="text-h5 font-weight-bold">Position Management</div>
         <p class="text-body-2 text-medium-emphasis mb-0">
-          Manage the employment status types used across employee records.
+          Manage the positions used across employee records.
         </p>
       </div>
-      <v-chip color="primary" variant="flat">Employment Statuses</v-chip>
+      <v-chip color="primary" variant="flat">Positions</v-chip>
     </div>
 
     <Table
       :entity="entity"
-      title="Employment Status Records"
+      title="Position Records"
       :headers="fields"
       :data="items"
       :loading="loading"
@@ -44,7 +44,7 @@ import { ref, onMounted } from "vue";
 import { useApi } from "@/composables/useApi";
 import Table from "@/components/Table.vue";
 import Form from "@/components/Form.vue";
-import { fields } from "@/fields/employment_status";
+import { fields } from "@/fields/position";
 
 const {
   index,
@@ -55,9 +55,9 @@ const {
   store,
   update,
   destroy,
-} = useApi("/employment-statuses");
+} = useApi("/positions");
 
-const entity = ref("Employment_Statuses"); // match your permission slug style if needed
+const entity = ref("Position");
 const action = ref("");
 const data = ref();
 const isFormVisible = ref(false);

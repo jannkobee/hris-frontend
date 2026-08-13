@@ -22,7 +22,7 @@
     <!-- Right side: Template, Import, Search & Filters -->
     <div class="filters-group">
       <v-btn
-        v-if="showImport"
+        v-if="showImport && checkPermissions(`manage-${permissionEntity}`)"
         class="button"
         color="info"
         prepend-icon="mdi-upload"
@@ -33,7 +33,10 @@
       </v-btn>
 
       <v-btn
-        v-if="showDownloadTemplate"
+        v-if="
+          showDownloadTemplate &&
+          checkPermissions(`manage-${permissionEntity}`)
+        "
         class="button"
         color="secondary"
         prepend-icon="mdi-download"
@@ -173,6 +176,7 @@
 import { ColumnConfig, Data } from "@/types/types";
 import { ref, watch, onMounted, computed } from "vue";
 import { useAuth } from "@/composables/useAuth";
+import { usePermissions } from "@/composables/usePermissions";
 import debounce from "lodash/debounce";
 
 const props = defineProps({
@@ -192,6 +196,7 @@ const props = defineProps({
 });
 
 const { authUser, getUser } = useAuth();
+const { checkPermissions } = usePermissions();
 
 const emit = defineEmits([
   "filter",
@@ -273,22 +278,12 @@ const handleTableChange = (options: any) => {
   emitFilter();
 };
 
-const checkPermissions = (permission: string): boolean => {
-  if (!authUser.value?.role?.permissions) {
-    return false;
-  }
-
-  return authUser.value.role.permissions.some(
-    (perm: { slug: string }) => perm.slug === permission,
-  );
-};
-
 const emitFilter = debounce(() => {
   emit("filter", form.value);
 }, 300);
 
 onMounted(async () => {
-  await getUser();
+  if (!authUser.value) await getUser();
 });
 
 watch(

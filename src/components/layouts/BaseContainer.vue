@@ -90,16 +90,20 @@
 
     <v-main>
       <div style="padding: 20px">
-        <router-view />
+        <router-view v-if="authReady" />
+        <v-skeleton-loader v-else type="article, table" />
       </div>
     </v-main>
   </v-layout>
 </template>
 
 <script lang="ts" setup>
-import { computed, ref, onMounted } from "vue";
+import { computed, ref, onMounted, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
 import { useTheme } from "vuetify";
 import { useAuth } from "@/composables/useAuth";
+import { useAppSettings } from "@/composables/useAppSettings";
+import { usePermissions } from "@/composables/usePermissions";
 
 type NavItem = {
   title: string;
@@ -144,7 +148,6 @@ const navItems: NavItem[] = [
     title: "Attendance Management",
     icon: "mdi-calendar-clock",
     routeName: "attendance-management",
-    permission: "view-attendances",
   },
   {
     title: "Leave Management",
@@ -168,7 +171,7 @@ const navItems: NavItem[] = [
     title: "Audit Logs",
     icon: "mdi-clipboard-text-clock-outline",
     routeName: "audit-log-management",
-    // permission: "view-audit-logs",
+    permission: "view-audit-logs",
   },
   {
     title: "Configurations",
@@ -219,13 +222,16 @@ const navItems: NavItem[] = [
         title: "Employee Number Settings",
         icon: "mdi-badge-account-horizontal-outline",
         routeName: "employee-number-settings",
-        permission: "view-employee-number-settings",
+        permission: "manage-employee-number-settings",
       },
     ],
   },
 ];
 
 const rail = ref(false);
+const authReady = ref(false);
+const route = useRoute();
+const router = useRouter();
 
 const showConfirm = ref(false);
 
@@ -238,16 +244,8 @@ const applyTheme = (themeName: string) => {
 };
 
 const { loading, getUser, getSettings, authUser, logout } = useAuth();
-
-const checkPermissions = (permission: string): boolean => {
-  if (!authUser.value?.role?.permissions) {
-    return false;
-  }
-
-  return authUser.value.role.permissions.some(
-    (perm: { slug: string }) => perm.slug === permission,
-  );
-};
+const { loadAppSettings } = useAppSettings();
+const { checkPermissions } = usePermissions();
 
 // Filters navItems down to what the current user can actually see.
 // A group survives only if at least one of its children is visible.
@@ -270,12 +268,32 @@ const visibleNavItems = computed<NavItem[]>(() =>
 onMounted(async () => {
   await getUser();
 
-  const savedSettings = await getSettings();
+  const requiredPermission = route.meta.permission as string | undefined;
+  if (requiredPermission && !checkPermissions(requiredPermission)) {
+    await router.replace({ name: "dashboard" });
+  }
+  authReady.value = true;
+
+  const [savedSettings] = await Promise.all([
+    getSettings(),
+    loadAppSettings(),
+  ]);
   const savedTheme =
     savedSettings?.theme || localStorage.getItem("APP_THEME") || "light";
 
   applyTheme(savedTheme);
 });
+
+watch(
+  () => route.fullPath,
+  async () => {
+    if (!authReady.value) return;
+    const requiredPermission = route.meta.permission as string | undefined;
+    if (requiredPermission && !checkPermissions(requiredPermission)) {
+      await router.replace({ name: "dashboard" });
+    }
+  },
+);
 </script>
 
 <style lang="css" scoped>

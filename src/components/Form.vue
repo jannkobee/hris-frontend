@@ -24,96 +24,156 @@
         <template v-if="props.action === 'Remove'">
           Are you sure you want to delete this item?
         </template>
-        <template v-else v-for="field in formFields" :key="field.key">
-          <h5 v-if="field.inputField != 'none'">
-            {{ field.title }}
-            <span v-if="field.required" class="text-error">*</span>
-          </h5>
+        <template v-else>
+          <div class="form-fields">
+            <div
+              v-for="field in formFields"
+              :key="field.key"
+              class="form-field"
+              :class="{
+                'form-field--wide':
+                  field.inputField === 'richtext' || field.multiple,
+              }"
+            >
+              <h5 v-if="field.inputField != 'none'">
+                {{ field.title }}
+                <span v-if="field.required" class="text-error">*</span>
+              </h5>
 
-          <v-text-field
-            v-if="field.inputField === 'text'"
-            v-model="form[field.key]"
-            :readonly="isFieldReadOnly(field)"
-            :required="field.required"
-            :rules="
-              field.required ? [(v) => !!v || `${field.title} is required`] : []
-            "
-          />
-          <v-text-field
-            v-else-if="field.inputField === 'date'"
-            type="date"
-            v-model="form[field.key]"
-            :readonly="isFieldReadOnly(field)"
-            :required="field.required"
-            :rules="
-              field.required ? [(v) => !!v || `${field.title} is required`] : []
-            "
-          />
-          <v-text-field
-            v-else-if="field.inputField === 'time'"
-            type="time"
-            v-model="form[field.key]"
-            :readonly="isFieldReadOnly(field)"
-            :required="field.required"
-            :rules="
-              field.required ? [(v) => !!v || `${field.title} is required`] : []
-            "
-          />
-          <RichTextEditor
-            v-else-if="field.inputField === 'richtext'"
-            v-model="form[field.key]"
-            :read-only="isFieldReadOnly(field)"
-          />
-          <v-checkbox
-            v-else-if="field.inputField === 'checkbox'"
-            v-model="form[field.key]"
-            :readonly="isFieldReadOnly(field)"
-          />
-          <v-radio-group
-            v-else-if="field.inputField === 'radio'"
-            v-model="form[field.key]"
-            :readonly="isFieldReadOnly(field)"
-          >
-            <v-radio
-              v-for="option in field.inputOptions"
-              :key="option.value"
-              :label="option.label"
-              :value="option.value"
-            />
-          </v-radio-group>
-          <v-autocomplete
-            v-else-if="field.inputField === 'select'"
-            v-model="form[field.selectKey!]"
-            :items="field.inputOptions"
-            :item-title="(item) => getSelectOptionLabel(item)"
-            :item-value="(item) => getSelectOptionValue(item)"
-            :readonly="isFieldReadOnly(field)"
-            :required="field.required"
-            :multiple="field.multiple"
-            :chips="field.multiple"
-            :closable-chips="field.multiple"
-            :rules="
-              field.required
-                ? [
-                    (v) =>
-                      (field.multiple ? !!v?.length : !!v) ||
-                      `${field.title} is required`,
-                  ]
-                : []
-            "
-            clearable
-          >
-            <template #item="{ props, item }">
-              <v-list-item
-                v-bind="props"
-                :title="getSelectOptionLabel(item.raw)"
-                :subtitle="getSelectOptionDescription(item.raw)"
+              <v-text-field
+                v-if="field.inputField === 'text'"
+                v-model="form[field.key]"
+                density="compact"
+                variant="outlined"
+                :readonly="isFieldReadOnly(field)"
+                :required="field.required"
+                :rules="
+                  field.required
+                    ? [(v) => !!v || `${field.title} is required`]
+                    : []
+                "
               />
-            </template>
-          </v-autocomplete>
+              <v-text-field
+                v-else-if="field.inputField === 'date'"
+                type="date"
+                v-model="form[field.key]"
+                density="compact"
+                variant="outlined"
+                :readonly="isFieldReadOnly(field)"
+                :required="field.required"
+                :rules="
+                  field.required
+                    ? [(v) => !!v || `${field.title} is required`]
+                    : []
+                "
+              />
+              <v-text-field
+                v-else-if="field.inputField === 'time'"
+                type="time"
+                v-model="form[field.key]"
+                density="compact"
+                variant="outlined"
+                :readonly="isFieldReadOnly(field)"
+                :required="field.required"
+                :rules="
+                  field.required
+                    ? [(v) => !!v || `${field.title} is required`]
+                    : []
+                "
+              />
+              <v-text-field
+                v-else-if="field.inputField === 'datetime'"
+                type="datetime-local"
+                v-model="form[field.key]"
+                density="compact"
+                variant="outlined"
+                :readonly="isFieldReadOnly(field)"
+                :required="field.required"
+                :rules="
+                  field.required
+                    ? [(v) => !!v || `${field.title} is required`]
+                    : []
+                "
+              />
+              <v-file-input
+                v-else-if="field.inputField === 'file'"
+                v-model="form[field.key]"
+                density="compact"
+                variant="outlined"
+                :readonly="isFieldReadOnly(field)"
+                :required="field.required"
+                :multiple="field.multiple"
+                :accept="field.accept"
+                :show-size="true"
+                clearable
+              />
+              <RichTextEditor
+                v-else-if="field.inputField === 'richtext'"
+                v-model="form[field.key]"
+                :read-only="isFieldReadOnly(field)"
+              />
+              <v-checkbox
+                v-else-if="field.inputField === 'checkbox'"
+                v-model="form[field.key]"
+                density="compact"
+                hide-details
+                :readonly="isFieldReadOnly(field)"
+              />
+              <v-radio-group
+                v-else-if="field.inputField === 'radio'"
+                v-model="form[field.key]"
+                density="compact"
+                :readonly="isFieldReadOnly(field)"
+              >
+                <v-radio
+                  v-for="option in field.inputOptions"
+                  :key="option.value"
+                  :label="option.label"
+                  :value="option.value"
+                  density="compact"
+                />
+              </v-radio-group>
+              <v-autocomplete
+                v-else-if="field.inputField === 'select'"
+                v-model="form[field.selectKey!]"
+                :items="field.inputOptions"
+                :item-title="(item) => getSelectOptionLabel(item)"
+                :item-value="(item) => getSelectOptionValue(item)"
+                density="compact"
+                variant="outlined"
+                :readonly="isFieldReadOnly(field)"
+                :required="field.required"
+                :multiple="field.multiple"
+                :chips="field.multiple"
+                :closable-chips="field.multiple"
+                :rules="
+                  field.required
+                    ? [
+                        (v) =>
+                          (field.multiple ? !!v?.length : !!v) ||
+                          `${field.title} is required`,
+                      ]
+                    : []
+                "
+                clearable
+              >
+                <template #item="{ props, item }">
+                  <v-list-item
+                    v-bind="props"
+                    :title="getSelectOptionLabel(item.raw)"
+                    :subtitle="getSelectOptionDescription(item.raw)"
+                  />
+                </template>
+              </v-autocomplete>
+            </div>
+          </div>
         </template>
         <v-btn
-          v-if="props.entity === 'Role' && props.action !== 'Remove'"
+          v-if="
+            props.showPermissionAction &&
+            props.entity === 'Role' &&
+            props.action !== 'Remove'
+          "
           prepend-icon="mdi-account-lock-outline"
           @click="emit('permission')"
         >
@@ -182,6 +242,7 @@ const props = defineProps({
   form: { type: Object, default: () => {} },
   data: { type: Object, default: () => {} },
   fields: { type: Array as () => ColumnConfig[], default: () => [] },
+  showPermissionAction: { type: Boolean, default: true },
 });
 
 const form = ref<Record<string, any>>({});
@@ -213,7 +274,7 @@ const {
   reset: resetResize,
 } = useResizable(
   cardElement,
-  { minWidth: 320, minHeight: 320, maxWidth: window.innerWidth * 0.95 },
+  { minWidth: 320, minHeight: 240, maxWidth: window.innerWidth * 0.94 },
   () => isFullscreen.value,
 );
 
@@ -374,10 +435,10 @@ props.fields
   align-self: center;
   justify-self: center;
 
-  width: min(1000px, 95vw);
-  max-height: 90vh;
+  width: min(760px, 94vw);
+  max-height: 88vh;
   min-width: 320px;
-  min-height: 320px;
+  min-height: 240px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -424,6 +485,39 @@ props.fields
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  padding: 12px 18px;
+}
+
+.resizable-card :deep(.v-card-title) {
+  padding: 12px 18px 8px;
+  font-size: 1rem;
+}
+
+.resizable-card :deep(.v-card-actions) {
+  min-height: 48px;
+  padding: 6px 14px 10px;
+}
+
+.form-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 14px;
+  row-gap: 2px;
+}
+
+.form-field {
+  min-width: 0;
+}
+
+.form-field--wide {
+  grid-column: 1 / -1;
+}
+
+.form-field h5 {
+  margin: 0 0 4px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: rgb(var(--v-theme-on-surface-variant));
 }
 
 .form-actions {
@@ -433,5 +527,15 @@ props.fields
   gap: 8px;
   width: 100%;
   padding: 4px 0;
+}
+
+@media (max-width: 600px) {
+  .form-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .form-field--wide {
+    grid-column: auto;
+  }
 }
 </style>

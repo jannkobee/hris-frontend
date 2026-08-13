@@ -57,7 +57,7 @@ const {
   destroy,
 } = useApi("/employment-statuses");
 
-const entity = ref("Employment_Statuses"); // match your permission slug style if needed
+const entity = ref("EmploymentStatus");
 const action = ref("");
 const data = ref();
 const isFormVisible = ref(false);

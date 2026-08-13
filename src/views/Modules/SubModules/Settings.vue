@@ -27,38 +27,188 @@
       <v-window v-model="tab">
         <!-- GENERAL TAB -->
         <v-window-item value="general">
-          <v-sheet
-            class="pa-4 mb-5 d-flex align-center"
-            border
-            rounded
-            color="transparent"
+          <v-alert
+            v-if="!canManageAppSettings"
+            type="info"
+            variant="tonal"
+            density="compact"
+            class="mb-4"
           >
-            <v-avatar color="primary" variant="tonal" size="48" class="mr-4">
-              <v-icon icon="mdi-palette-outline" size="large" />
-            </v-avatar>
-            <div>
-              <div class="text-subtitle-1 font-weight-bold">Theme</div>
-              <div class="text-body-2 text-medium-emphasis">
-                Choose the visual appearance for the app.
-              </div>
-            </div>
-          </v-sheet>
+            Company-wide policies are read-only. An administrator can change
+            them here.
+          </v-alert>
 
-          <v-select
-            v-model="theme"
-            label="Application Theme"
-            :items="themeOptions"
-            variant="outlined"
-            prepend-inner-icon="mdi-theme-light-dark"
-          />
+          <v-row>
+            <v-col cols="12" md="6">
+              <v-card variant="outlined" class="settings-card h-100">
+                <v-card-title class="text-subtitle-1">
+                  <v-icon icon="mdi-palette-outline" start />
+                  Your experience
+                </v-card-title>
+                <v-card-text>
+                  <v-select
+                    v-model="theme"
+                    label="Application theme"
+                    :items="themeOptions"
+                    density="compact"
+                    variant="outlined"
+                    prepend-inner-icon="mdi-theme-light-dark"
+                    hide-details
+                  />
+                </v-card-text>
+              </v-card>
+            </v-col>
+
+            <v-col cols="12" md="6">
+              <v-card variant="outlined" class="settings-card h-100">
+                <v-card-title class="text-subtitle-1">
+                  <v-icon icon="mdi-domain" start />
+                  Organization
+                </v-card-title>
+                <v-card-text class="d-flex flex-column ga-3">
+                  <v-text-field
+                    v-model="appSettingValues['organization.company_name']"
+                    label="Company name"
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                    :disabled="!canManageAppSettings"
+                  />
+                  <v-select
+                    v-model="appSettingValues['organization.timezone']"
+                    label="Company timezone"
+                    :items="timezoneOptions"
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                    :disabled="!canManageAppSettings"
+                  />
+                </v-card-text>
+              </v-card>
+            </v-col>
+
+            <v-col cols="12" lg="6">
+              <v-card variant="outlined" class="settings-card h-100">
+                <v-card-title class="text-subtitle-1">
+                  <v-icon icon="mdi-clock-check-outline" start />
+                  Attendance capture
+                </v-card-title>
+                <v-card-subtitle>
+                  Choose what is collected when an employee times in or out.
+                </v-card-subtitle>
+                <v-card-text class="setting-list">
+                  <v-switch
+                    v-model="appSettingValues['attendance.photo_capture_enabled']"
+                    label="Allow optional photos"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    :disabled="!canManageAppSettings"
+                  />
+                  <v-select
+                    v-if="appSettingValues['attendance.photo_capture_enabled']"
+                    v-model="appSettingValues['attendance.photo_max_size_mb']"
+                    label="Photo size limit (MB)"
+                    :items="[1, 2, 5, 10]"
+                    density="compact"
+                    variant="outlined"
+                    hide-details
+                    class="mb-2"
+                    :disabled="!canManageAppSettings"
+                  />
+                  <v-switch
+                    v-model="appSettingValues['attendance.location_capture_enabled']"
+                    label="Capture current location"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    :disabled="!canManageAppSettings"
+                  />
+                  <v-switch
+                    v-model="appSettingValues['attendance.location_required']"
+                    label="Location is required"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    :disabled="
+                      !canManageAppSettings ||
+                      !appSettingValues['attendance.location_capture_enabled']
+                    "
+                  />
+                  <v-switch
+                    v-model="appSettingValues['attendance.notes_enabled']"
+                    label="Allow optional notes"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    :disabled="!canManageAppSettings"
+                  />
+                  <v-switch
+                    v-model="appSettingValues['attendance.capture_ip_enabled']"
+                    label="Record source IP address"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    :disabled="!canManageAppSettings"
+                  />
+                  <v-switch
+                    v-model="appSettingValues['attendance.manual_entries_enabled']"
+                    label="Allow administrator manual entries"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    :disabled="!canManageAppSettings"
+                  />
+                </v-card-text>
+              </v-card>
+            </v-col>
+
+            <v-col cols="12" lg="6">
+              <v-card variant="outlined" class="settings-card h-100">
+                <v-card-title class="text-subtitle-1">
+                  <v-icon icon="mdi-tune-variant" start />
+                  Modules and notifications
+                </v-card-title>
+                <v-card-subtitle>
+                  Company-wide behavior for supporting features.
+                </v-card-subtitle>
+                <v-card-text class="setting-list">
+                  <v-switch
+                    v-model="appSettingValues['leave.attachments_enabled']"
+                    label="Leave request attachments"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    :disabled="!canManageAppSettings"
+                  />
+                  <v-switch
+                    v-model="appSettingValues['messaging.realtime_enabled']"
+                    label="Real-time messaging"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    :disabled="!canManageAppSettings"
+                  />
+                  <v-switch
+                    v-model="appSettingValues['notifications.success_alerts_enabled']"
+                    label="Global success alerts"
+                    color="primary"
+                    density="compact"
+                    hide-details
+                    :disabled="!canManageAppSettings"
+                  />
+                </v-card-text>
+              </v-card>
+            </v-col>
+          </v-row>
 
           <div class="d-flex justify-end mt-6">
             <v-btn
               color="primary"
-              size="large"
               class="text-none"
-              @click="saveTheme"
-              :loading="saving"
+              prepend-icon="mdi-content-save-outline"
+              @click="saveGeneralSettings"
+              :loading="saving || appSettingsLoading"
             >
               Save Changes
             </v-btn>
@@ -114,6 +264,7 @@
           >
             <template #extra-actions="{ item }">
               <v-btn
+                v-if="checkPermissions('run-scheduled-tasks')"
                 color="success"
                 variant="tonal"
                 size="small"
@@ -161,6 +312,7 @@ import { useTheme } from "vuetify";
 import { useAuth } from "@/composables/useAuth";
 import { useApi } from "@/composables/useApi";
 import { usePermissions } from "@/composables/usePermissions";
+import { useAppSettings } from "@/composables/useAppSettings";
 import Table from "@/components/Table.vue";
 import Form from "@/components/Form.vue";
 import { ColumnConfig } from "@/types/types";
@@ -180,6 +332,27 @@ const vuetifyTheme = useTheme();
 // Removed getUser since BaseContainer handles fetching it for the global state
 const { getSettings, updateSettings, authUser } = useAuth();
 const { checkPermissions } = usePermissions();
+const {
+  values: appSettingValues,
+  loading: appSettingsLoading,
+  loadAppSettings,
+  updateAppSettings,
+} = useAppSettings();
+
+const canManageAppSettings = computed(() =>
+  checkPermissions("manage-app-settings"),
+);
+const timezoneOptions = [
+  "Asia/Manila",
+  "Asia/Singapore",
+  "Asia/Tokyo",
+  "Asia/Dubai",
+  "Australia/Sydney",
+  "Europe/London",
+  "America/New_York",
+  "America/Los_Angeles",
+  "UTC",
+];
 
 // Force Vue to reactively track the global permissions array directly!
 const canViewTasks = computed(() => {
@@ -194,11 +367,17 @@ const applyTheme = (themeName: string) => {
   localStorage.setItem("APP_THEME", themeName);
 };
 
-const saveTheme = async () => {
+const saveGeneralSettings = async () => {
   saving.value = true;
   try {
     applyTheme(theme.value);
     await updateSettings({ theme: theme.value });
+    if (canManageAppSettings.value) {
+      if (!appSettingValues.value["attendance.location_capture_enabled"]) {
+        appSettingValues.value["attendance.location_required"] = false;
+      }
+      await updateAppSettings({ ...appSettingValues.value });
+    }
   } finally {
     saving.value = false;
   }
@@ -262,6 +441,11 @@ const formatDateTime = (value: string) => {
   return new Date(value).toLocaleString();
 };
 
+const formatTaskOutput = (value: string) => {
+  if (!value) return "-";
+  return value.length > 120 ? `${value.slice(0, 117)}...` : value;
+};
+
 const taskHeaders: ColumnConfig[] = [
   { key: "name", title: "Name" },
   { key: "command", title: "Command" },
@@ -280,6 +464,7 @@ const taskHeaders: ColumnConfig[] = [
   },
   { key: "last_run_at", title: "Last Run", formatter: formatDateTime },
   { key: "next_run_at", title: "Next Run", formatter: formatDateTime },
+  { key: "last_run_output", title: "Last Result", formatter: formatTaskOutput },
   { key: "action", title: "Actions" },
 ];
 
@@ -315,6 +500,7 @@ const taskFields: ColumnConfig[] = [
     }),
   },
   { key: "run_time", title: "Run Time", inputField: "time" },
+  { key: "timezone", title: "Timezone", inputField: "text" },
   {
     key: "run_days",
     selectKey: "run_days",
@@ -350,6 +536,7 @@ const defaultTaskForm = {
   command: "",
   frequency: "daily",
   run_time: "00:00",
+  timezone: "Asia/Manila",
   run_days: [] as number[],
   run_day_of_month: 1,
   run_months: [] as number[],
@@ -427,11 +614,28 @@ const runTaskNow = async (item: any) => {
 };
 
 onMounted(async () => {
-  // Settings still fetches its own specific config payload if needed
-  const savedSettings = await getSettings();
+  const [savedSettings] = await Promise.all([
+    getSettings(),
+    loadAppSettings(),
+  ]);
   const savedTheme =
     savedSettings?.theme || localStorage.getItem("APP_THEME") || "light";
   theme.value = savedTheme;
   applyTheme(savedTheme);
 });
 </script>
+
+<style scoped>
+.settings-card :deep(.v-card-title) {
+  padding-bottom: 8px;
+}
+
+.settings-card :deep(.v-card-subtitle) {
+  white-space: normal;
+}
+
+.setting-list {
+  display: grid;
+  gap: 4px;
+}
+</style>

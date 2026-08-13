@@ -19,7 +19,7 @@ export const fields: ColumnConfig[] = [
   },
   {
     title: "Module",
-    key: "module_name",
+    key: "module",
     inputField: "text",
     nullable: false,
     required: false,

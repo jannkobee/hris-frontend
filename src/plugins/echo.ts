@@ -4,36 +4,54 @@ import axios from "@/plugins/axios";
 
 window.Pusher = Pusher;
 
+type RealtimeConfig = {
+  enabled: boolean;
+  key: string | null;
+  host: string;
+  port: number;
+  scheme: "http" | "https";
+};
+
 let echo: Echo<"reverb"> | null = null;
+let initializing: Promise<Echo<"reverb"> | null> | null = null;
 
-export const getEcho = (): Echo<"reverb"> | null => {
+export const getEcho = async (): Promise<Echo<"reverb"> | null> => {
   if (echo) return echo;
+  if (initializing) return initializing;
 
-  const key = import.meta.env.VITE_REVERB_APP_KEY;
+  initializing = axios.get("/realtime/config")
+    .then(({ data }) => {
+      const config = (data.data ?? data) as RealtimeConfig;
+      if (!config.enabled || !config.key) {
+        console.warn("Realtime messaging is disabled on the server.");
+        return null;
+      }
 
-  if (!key) {
-    console.warn(
-      "Realtime messaging is disabled: VITE_REVERB_APP_KEY is not configured.",
-    );
+      echo = new Echo({
+        broadcaster: "reverb",
+        key: config.key,
+        wsHost: config.host || window.location.hostname,
+        wsPort: config.port || 8080,
+        wssPort: config.port || 443,
+        forceTLS: config.scheme === "https",
+        enabledTransports: ["ws", "wss"],
+        authEndpoint: `${axios.defaults.baseURL}/broadcasting/auth`,
+        auth: {
+          headers: {
+            Authorization: `Bearer ${window.localStorage.getItem("APP_TOKEN")}`,
+          },
+        },
+      });
 
-    return null;
-  }
+      return echo;
+    })
+    .catch((error) => {
+      console.error("Unable to initialize realtime messaging:", error);
+      return null;
+    })
+    .finally(() => {
+      initializing = null;
+    });
 
-  echo = new Echo({
-    broadcaster: "reverb",
-    key,
-    wsHost: import.meta.env.VITE_REVERB_HOST ?? window.location.hostname,
-    wsPort: Number(import.meta.env.VITE_REVERB_PORT ?? 8080),
-    wssPort: Number(import.meta.env.VITE_REVERB_PORT ?? 443),
-    forceTLS: (import.meta.env.VITE_REVERB_SCHEME ?? "http") === "https",
-    enabledTransports: ["ws", "wss"],
-    authEndpoint: `${axios.defaults.baseURL}/broadcasting/auth`,
-    auth: {
-      headers: {
-        Authorization: `Bearer ${window.localStorage.getItem("APP_TOKEN")}`,
-      },
-    },
-  });
-
-  return echo;
+  return initializing;
 };

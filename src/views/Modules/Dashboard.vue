@@ -159,8 +159,10 @@
 import { computed, onMounted, ref } from "vue";
 import { useApi } from "@/composables/useApi";
 import { useAuth } from "@/composables/useAuth";
+import { usePermissions } from "@/composables/usePermissions";
 
 const { authUser, getUser } = useAuth();
+const { checkPermissions } = usePermissions();
 
 const loading = ref(false);
 const attendanceTab = ref("in");
@@ -175,16 +177,6 @@ const { getOptions: getEmployees } = useApi("/employees");
 const { getOptions: getLeaveRequests } = useApi("/leave-requests");
 const { getOptions: getAttendances } = useApi("/attendances");
 const { getOptions: getAnnouncements } = useApi("/announcements");
-
-const checkPermissions = (permission: string): boolean => {
-  if (!authUser.value?.role?.permissions) {
-    return false;
-  }
-
-  return authUser.value.role.permissions.some(
-    (perm: { slug: string }) => perm.slug === permission,
-  );
-};
 
 // API responses are sometimes a plain array and sometimes a paginated
 // wrapper (e.g. Laravel's `{ data: [...], meta: {...} }`). Normalize
@@ -211,7 +203,9 @@ const toArray = (value: unknown): any[] => {
 // leave count, and attendance tables (HR/admin data) are gated behind
 // permission checks. Announcements stay visible to everyone.
 const canViewEmployeeOverview = computed(() =>
-  checkPermissions("view-employees"),
+  ["view-employees", "view-attendances", "view-leave-requests"].every(
+    checkPermissions,
+  ),
 );
 
 const today = new Date().toLocaleDateString("en-CA");

@@ -8,6 +8,7 @@
     :form="form"
     :data="data"
     :fields="fields"
+    :show-permission-action="canManageRolePermissions"
     @permission="openPermissionModal"
     @close="close"
     @execute="execute"
@@ -39,6 +40,7 @@
   </v-container>
 
   <Permission
+    v-if="canManageRolePermissions"
     :visible="isPermissionVisible"
     :action="action"
     :data="data"
@@ -48,13 +50,19 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useApi } from "@/composables/useApi";
 import { fields } from "@/fields/role";
 import { Role } from "@/types/types";
 import Permission from "@/components/Permission.vue";
 import Table from "@/components/Table.vue";
 import Form from "@/components/Form.vue";
+import { usePermissions } from "@/composables/usePermissions";
+
+const { checkPermissions } = usePermissions();
+const canManageRolePermissions = computed(() =>
+  checkPermissions("manage-role-permissions"),
+);
 
 const {
   index,

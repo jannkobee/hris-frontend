@@ -39,7 +39,7 @@
     >
       <template #extra-actions="{ item }">
         <v-btn
-          v-if="item.status === 'pending'"
+          v-if="canApproveOvertime && item.status === 'pending'"
           size="small"
           color="success"
           variant="text"
@@ -49,7 +49,7 @@
           Approve
         </v-btn>
         <v-btn
-          v-if="item.status === 'pending'"
+          v-if="canApproveOvertime && item.status === 'pending'"
           size="small"
           color="error"
           variant="text"
@@ -64,19 +64,26 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import axios from "@/plugins/axios";
 import { useApi } from "@/composables/useApi";
 import Table from "@/components/Table.vue";
 import Form from "@/components/Form.vue";
 import type { ColumnConfig } from "@/types/types";
 import { fields as overtimeFieldsRaw } from "@/fields/overtime";
+import { useAuth } from "@/composables/useAuth";
+import { usePermissions } from "@/composables/usePermissions";
 
 const entity = ref("Overtime");
 const action = ref("");
 const data = ref();
 const isFormVisible = ref(false);
 const actionLoading = ref<string | null>(null);
+const { authUser } = useAuth();
+const { checkPermissions } = usePermissions();
+const canApproveOvertime = computed(() =>
+  checkPermissions("approve-overtimes"),
+);
 
 const fields = ref<ColumnConfig[]>([...overtimeFieldsRaw]);
 
@@ -87,7 +94,7 @@ const { getOptions: getEmployees } = useApi("/employees");
 
 const emptyForm = () => ({
   id: "",
-  employee_id: "",
+  employee_id: authUser.value?.employee?.id ?? "",
   date: "",
   time_start: "",
   time_end: "",
@@ -114,7 +121,11 @@ const setSelectOptions = (
 };
 
 const loadOptions = async () => {
-  const employees = await getEmployees({ relations: "user" });
+  const employees = checkPermissions("view-employees")
+    ? await getEmployees({ relations: "user" })
+    : authUser.value?.employee
+      ? [{ ...authUser.value.employee, user: authUser.value }]
+      : [];
 
   setSelectOptions(
     "employee_id",
@@ -138,8 +149,17 @@ const close = () => {
 
 const execute = async (payload: any) => {
   try {
-    if (action.value === "Create") await api.store(payload);
-    if (action.value === "Edit") await api.update(payload.id, payload);
+    const {
+      status: _status,
+      approved_by: _approvedBy,
+      approved_at: _approvedAt,
+      approver: _approver,
+      employee: _employee,
+      ...safePayload
+    } = payload;
+
+    if (action.value === "Create") await api.store(safePayload);
+    if (action.value === "Edit") await api.update(payload.id, safePayload);
     if (action.value === "Remove") await api.destroy(payload.id);
 
     isFormVisible.value = false;

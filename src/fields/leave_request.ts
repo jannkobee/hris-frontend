@@ -18,15 +18,15 @@ export const fields: ColumnConfig[] = [
     required: true,
   },
   {
-    title: "Start Date",
-    key: "start_date",
-    inputField: "date",
+    title: "Start",
+    key: "start_at",
+    inputField: "datetime",
     required: true,
   },
   {
-    title: "End Date",
-    key: "end_date",
-    inputField: "date",
+    title: "End",
+    key: "end_at",
+    inputField: "datetime",
     required: true,
   },
   {
@@ -35,6 +35,16 @@ export const fields: ColumnConfig[] = [
     inputField: "text",
     nullable: false,
     required: true,
+  },
+  {
+    title: "Supporting Documents",
+    key: "attachments",
+    inputField: "file",
+    multiple: true,
+    accept: ".pdf,.jpg,.jpeg,.png,.doc,.docx",
+    required: false,
+    formatter: (attachments: any[]) =>
+      attachments?.length ? `${attachments.length} file(s)` : "None",
   },
   {
     title: "Status",

@@ -27,6 +27,7 @@ type BaseColumnConfig = {
     | "date"
     | "time"
     | "datetime"
+    | "file"
     | "richtext"
     | "none";
   inputOptions?: Array<any>;
@@ -37,6 +38,8 @@ type BaseColumnConfig = {
   formatter?: (value: any) => string | string[];
   displayAs?: "chip" | "chips" | "text";
   chipColor?: string;
+  multiple?: boolean;
+  accept?: string;
   // Called whenever this field's bound value changes from real user input
   // (not when the form is populated/reset by opening the dialog). Return a
   // partial object to merge into the form, e.g. to keep a derived field in
@@ -54,6 +57,7 @@ type TextLikeColumn = BaseColumnConfig & {
     | "date"
     | "time"
     | "datetime"
+    | "file"
     | "richtext"
     | "none";
   inputOptions?: Array<{ label: string; value: any }>;
@@ -67,7 +71,6 @@ type SelectColumn = BaseColumnConfig & {
   // When true, the field binds to an array (e.g. run_months: [1, 6]) instead
   // of a single scalar. Needed for any select-type field whose backend
   // validation expects an array.
-  multiple?: boolean;
 };
 
 type RadioColumn = BaseColumnConfig & {
@@ -90,6 +93,12 @@ export type User = {
   birthday: string;
   role?: RoleWithPermissions;
   settings?: Record<string, any>;
+  employee?: {
+    id: string;
+    employee_no: string;
+    department?: { name: string };
+    position?: { name: string };
+  };
 };
 
 export type RoleWithPermissions = Role & {
@@ -106,4 +115,5 @@ export type Permission = {
   model: string;
   name: string;
   slug: string;
+  description?: string | null;
 };

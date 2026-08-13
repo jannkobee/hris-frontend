@@ -35,7 +35,7 @@
               :active="activeConversation?.id === conversation.id"
               :title="conversationTitle(conversation)"
               :subtitle="
-                conversation.latest_message?.[0]?.body ?? 'No messages yet'
+                conversation.latest_message?.body ?? 'No messages yet'
               "
               lines="two"
               @click="selectConversation(conversation)"
@@ -250,6 +250,13 @@ const scrollToBottom = () => {
   });
 };
 
+const appendMessage = (message: any) => {
+  if (messages.value.some((existing) => existing.id === message.id)) return;
+
+  messages.value.push(message);
+  scrollToBottom();
+};
+
 const fetchConversations = async () => {
   loadingConversations.value = true;
   try {
@@ -260,8 +267,8 @@ const fetchConversations = async () => {
   }
 };
 
-const leaveCurrentChannel = () => {
-  const echo = getEcho();
+const leaveCurrentChannel = async () => {
+  const echo = await getEcho();
 
   if (currentChannelName && echo) {
     echo.leave(currentChannelName);
@@ -271,7 +278,7 @@ const leaveCurrentChannel = () => {
 
 const selectConversation = async (conversation: any) => {
   activeConversation.value = conversation;
-  leaveCurrentChannel();
+  await leaveCurrentChannel();
 
   loadingMessages.value = true;
   try {
@@ -287,14 +294,13 @@ const selectConversation = async (conversation: any) => {
     loadingMessages.value = false;
   }
 
-  const echo = getEcho();
+  const echo = await getEcho();
 
   if (!echo) return;
 
   currentChannelName = `conversation.${conversation.id}`;
   echo.private(currentChannelName).listen(".message.sent", (event: any) => {
-    messages.value.push(event);
-    scrollToBottom();
+    appendMessage(event);
   });
 };
 
@@ -307,11 +313,11 @@ const sendMessage = async () => {
     const { data } = await axios.post(
       `/conversations/${activeConversation.value.id}/messages`,
       { body },
+      { headers: { "X-Suppress-Success-Notification": "true" } },
     );
 
-    messages.value.push(data.data ?? data);
+    appendMessage(data.data ?? data);
     newMessageBody.value = "";
-    scrollToBottom();
   } finally {
     sending.value = false;
   }
@@ -353,7 +359,9 @@ const createConversation = async () => {
   }
 };
 
-onBeforeUnmount(() => leaveCurrentChannel());
+onBeforeUnmount(() => {
+  void leaveCurrentChannel();
+});
 
 fetchConversations();
 </script>
