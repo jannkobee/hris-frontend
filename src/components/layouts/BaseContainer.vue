@@ -1,17 +1,4 @@
 <template>
-  <v-dialog v-model="showConfirm" max-width="400">
-    <v-card>
-      <v-card-title class="text-h6">Confirm Logout</v-card-title>
-      <v-card-text>Do you really want to log out of your account?</v-card-text>
-      <v-card-actions>
-        <v-spacer></v-spacer>
-        <v-btn color="grey" @click="showConfirm = false">Cancel</v-btn>
-        <v-btn prepend-icon="mdi-logout" color="red" @click="logout">
-          Logout
-        </v-btn>
-      </v-card-actions>
-    </v-card>
-  </v-dialog>
   <v-layout>
     <v-navigation-drawer :rail="rail" permanent @click="rail = false">
       <v-list>
@@ -91,7 +78,7 @@
             prepend-icon="mdi-logout"
             title="Logout"
             value="logout"
-            @click="showConfirm = true"
+            @click="requestLogout"
           />
         </v-list>
       </template>
@@ -114,6 +101,7 @@ import { useAuth } from "@/composables/useAuth";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { usePermissions } from "@/composables/usePermissions";
 import { useProfilePhoto } from "@/composables/useProfilePhoto";
+import { useAppDialog } from "@/composables/useAppDialog";
 import axios from "@/plugins/axios";
 import { getEcho } from "@/plugins/echo";
 import {
@@ -261,7 +249,6 @@ const authReady = ref(false);
 const route = useRoute();
 const router = useRouter();
 
-const showConfirm = ref(false);
 const navBadges = ref<Record<string, number>>({});
 let badgeRefreshTimer: ReturnType<typeof setInterval> | undefined;
 let notificationChannelName: string | null = null;
@@ -277,6 +264,16 @@ const applyTheme = (themeName: string) => {
 };
 
 const { loading, getUser, getSettings, authUser, logout } = useAuth();
+const { confirm } = useAppDialog();
+const requestLogout = async () => {
+  const accepted = await confirm({
+    title: "Log out?",
+    message: "You will need to sign in again to access your workspace.",
+    confirmText: "Log out",
+    tone: "error",
+  });
+  if (accepted) await logout();
+};
 const { loadAppSettings, values: appSettings } = useAppSettings();
 const { checkPermissions } = usePermissions();
 const { photoUrl: profilePhotoUrl, loadProfilePhoto } = useProfilePhoto();

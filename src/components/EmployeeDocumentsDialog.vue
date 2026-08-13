@@ -164,6 +164,7 @@ import axios from "@/plugins/axios";
 import { usePermissions } from "@/composables/usePermissions";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { formatDate } from "@/utils/dateFormatter";
+import { useAppDialog } from "@/composables/useAppDialog";
 
 const props = defineProps({
   visible: { type: Boolean, default: false },
@@ -196,6 +197,7 @@ const normalizedFile = computed<File | null>(() => {
   if (Array.isArray(selectedFile.value)) return selectedFile.value[0] ?? null;
   return selectedFile.value instanceof File ? selectedFile.value : null;
 });
+const { confirm } = useAppDialog();
 
 const close = () => emit("close");
 const load = async () => {
@@ -243,7 +245,7 @@ const download = async (document: any) => {
 };
 
 const remove = async (document: any) => {
-  if (!window.confirm(`Remove ${document.title}?`)) return;
+  if (!await confirm({ title: "Remove 201 file?", message: `Remove ${document.title}? This file will no longer be available to the employee.`, confirmText: "Remove", tone: "error" })) return;
   await axios.delete(`/employee-documents/${document.id}`);
   await load();
 };

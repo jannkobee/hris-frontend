@@ -1,5 +1,6 @@
 <template>
   <router-view />
+  <AppDialog />
 
   <v-snackbar
     v-model="snackbar"
@@ -69,6 +70,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { useNotification } from "@/composables/useNotification";
+import AppDialog from "@/components/AppDialog.vue";
 
 const { activeNotification, snackbar, dismissNotification } = useNotification();
 
@@ -92,6 +94,26 @@ const remainingDetailCount = computed(() =>
 </script>
 
 <style>
+:root {
+  --app-dialog-radius: 16px;
+}
+
+/* Keep every application modal on the same corner system. */
+.v-dialog > .v-overlay__content > .v-card,
+.v-dialog > .v-overlay__content > .v-sheet,
+.v-dialog > .v-overlay__content > form > .v-card,
+.v-dialog > .v-overlay__content > form > .v-sheet {
+  border-radius: var(--app-dialog-radius) !important;
+}
+
+/* Full-screen dialogs should remain flush with the viewport. */
+.v-dialog--fullscreen > .v-overlay__content > .v-card,
+.v-dialog--fullscreen > .v-overlay__content > .v-sheet,
+.v-dialog--fullscreen > .v-overlay__content > form > .v-card,
+.v-dialog--fullscreen > .v-overlay__content > form > .v-sheet {
+  border-radius: 0 !important;
+}
+
 .v-application,
 .v-application .v-card,
 .v-application .v-sheet,

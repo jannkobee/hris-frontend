@@ -73,6 +73,7 @@ import type { ColumnConfig } from "@/types/types";
 import { fields as overtimeFieldsRaw } from "@/fields/overtime";
 import { useAuth } from "@/composables/useAuth";
 import { usePermissions } from "@/composables/usePermissions";
+import { useAppDialog } from "@/composables/useAppDialog";
 
 const entity = ref("Overtime");
 const action = ref("");
@@ -81,6 +82,7 @@ const isFormVisible = ref(false);
 const actionLoading = ref<string | null>(null);
 const { authUser } = useAuth();
 const { checkPermissions } = usePermissions();
+const { prompt } = useAppDialog();
 const canApproveOvertime = computed(() =>
   checkPermissions("approve-overtimes"),
 );
@@ -184,8 +186,9 @@ const approveOvertime = async (item: any) => {
 };
 
 const rejectOvertime = async (item: any) => {
-  const remarks =
-    window.prompt("Reason for rejecting (optional):") ?? undefined;
+  const response = await prompt({ title: "Reject overtime request?", message: "You may provide a reason for the employee.", inputLabel: "Rejection reason", confirmText: "Reject request", tone: "error" });
+  if (response === null) return;
+  const remarks = response || undefined;
   actionLoading.value = item.id;
 
   try {

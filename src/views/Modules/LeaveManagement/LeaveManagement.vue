@@ -132,6 +132,7 @@ import { useApi } from "@/composables/useApi";
 import { useAuth } from "@/composables/useAuth";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { usePermissions } from "@/composables/usePermissions";
+import { useAppDialog } from "@/composables/useAppDialog";
 import Table from "@/components/Table.vue";
 import Form from "@/components/Form.vue";
 import type { ColumnConfig } from "@/types/types";
@@ -152,6 +153,7 @@ const leaveActionLoading = ref<string | null>(null);
 const { authUser, getUser } = useAuth();
 const { setting, loadAppSettings } = useAppSettings();
 const { checkPermissions, hasAnyPermission } = usePermissions();
+const { prompt } = useAppDialog();
 const canApproveLeaveRequests = computed(() =>
   checkPermissions("approve-leave-requests"),
 );
@@ -307,9 +309,15 @@ const loadOptions = async () => {
 };
 
 const actionLeave = async (item: any, actionName: "approve" | "reject" | "cancel") => {
-  const remarks = actionName === "approve" ? undefined : window.prompt(
-    actionName === "cancel" ? "Reason for cancellation (optional):" : "Reason for rejection (optional):",
-  ) ?? undefined;
+  const response = actionName === "approve" ? "" : await prompt({
+    title: actionName === "cancel" ? "Cancel leave request?" : "Reject leave request?",
+    message: "You may provide a reason for the employee.",
+    inputLabel: actionName === "cancel" ? "Cancellation reason" : "Rejection reason",
+    confirmText: actionName === "cancel" ? "Cancel request" : "Reject request",
+    tone: actionName === "cancel" ? "warning" : "error",
+  });
+  if (response === null) return;
+  const remarks = response || undefined;
   leaveActionLoading.value = item.id;
 
   try {
@@ -399,8 +407,9 @@ const approveConversion = async (item: any) => {
 };
 
 const rejectConversion = async (item: any) => {
-  const remarks =
-    window.prompt("Reason for rejecting (optional):") ?? undefined;
+  const response = await prompt({ title: "Reject conversion request?", message: "You may provide a reason for the employee.", inputLabel: "Rejection reason", confirmText: "Reject request", tone: "error" });
+  if (response === null) return;
+  const remarks = response || undefined;
   conversionActionLoading.value = item.id;
 
   try {

@@ -147,6 +147,7 @@ import axios from "@/plugins/axios";
 import { usePermissions } from "@/composables/usePermissions";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { formatDate as date } from "@/utils/dateFormatter";
+import { useAppDialog } from "@/composables/useAppDialog";
 
 const { checkPermissions } = usePermissions();
 const { values } = useAppSettings();
@@ -154,6 +155,7 @@ const canViewCompany = computed(() => checkPermissions("view-payroll"));
 const canManage = computed(() => checkPermissions("manage-payroll"));
 const canApprove = computed(() => checkPermissions("approve-payroll"));
 const canMarkPaid = computed(() => checkPermissions("mark-payroll-paid"));
+const { confirm } = useAppDialog();
 const periods = ref<any[]>([]);
 const pagination = ref({ total: 0, page: 1, itemsPerPage: 10 });
 const loading = ref(false);
@@ -199,12 +201,12 @@ const createPeriod = async () => { saving.value = true; try { await axios.post("
 const openPeriod = async (period: any) => { const response = await axios.get(`/payroll-periods/${period.id}`); selectedPeriod.value = response.data.data; periodDialog.value = true; };
 const act = async (period: any, action: string) => { actingId.value = period.id; try { await axios.post(`/payroll-periods/${period.id}/${action}`); await load(); if (periodDialog.value) await openPeriod(period); } finally { actingId.value = null; } };
 const processPeriod = async (period: any) => {
-  if (period.status === "processed" && !window.confirm("Regenerate this payroll? Manual adjustments are preserved, but attendance, leave, overtime, and statutory amounts will be recalculated.")) return;
+  if (period.status === "processed" && !await confirm({ title: "Regenerate payroll?", message: "Manual adjustments are preserved, but attendance, leave, overtime, and statutory amounts will be recalculated.", confirmText: "Regenerate", tone: "warning" })) return;
   await act(period, "process");
 };
 const approvePeriod = (period: any) => act(period, "approve");
 const markPaid = (period: any) => act(period, "mark-paid");
-const removePeriod = async (period: any) => { if (!window.confirm(`Remove ${period.name}?`)) return; await axios.delete(`/payroll-periods/${period.id}`); await load(); };
+const removePeriod = async (period: any) => { if (!await confirm({ title: "Remove payroll period?", message: `Remove ${period.name}? This cannot be undone.`, confirmText: "Remove", tone: "error" })) return; await axios.delete(`/payroll-periods/${period.id}`); await load(); };
 const openPayslip = (item: any) => { payslip.value = item; payslipDialog.value = true; };
 const openAdjustment = (item: any) => { adjustmentItem.value = item; adjustForm.value = { allowances: Number(item.allowances), other_earnings: Number(item.other_earnings), other_deductions: Number(item.other_deductions), notes: item.notes ?? "" }; adjustDialog.value = true; };
 const saveAdjustment = async () => { saving.value = true; try { await axios.put(`/payroll-items/${adjustmentItem.value.id}`, adjustForm.value); adjustDialog.value = false; await openPeriod(selectedPeriod.value); await load(); } finally { saving.value = false; } };

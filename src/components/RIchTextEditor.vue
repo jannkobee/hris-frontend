@@ -204,6 +204,7 @@
 
 <script lang="ts" setup>
 import { onBeforeUnmount, onMounted, ref, watch } from "vue";
+import { useAppDialog } from "@/composables/useAppDialog";
 
 const props = defineProps({
   modelValue: { type: String, default: "" },
@@ -219,6 +220,7 @@ const imageMenu = ref(false);
 const imageUrl = ref("");
 const activeCommands = ref<Set<string>>(new Set());
 let savedRange: Range | null = null;
+const { prompt, alert } = useAppDialog();
 
 const rememberSelection = () => {
   const selection = window.getSelection();
@@ -299,8 +301,8 @@ const toolbarButtons = [
   {
     label: "Link",
     icon: "mdi-link-variant",
-    action: () => {
-      const url = window.prompt("URL", "https://");
+    action: async () => {
+      const url = await prompt({ title: "Add link", message: "Enter the destination URL.", inputLabel: "URL", initialValue: "https://", confirmText: "Add link" });
       if (!url) return;
       exec("createLink", url);
     },
@@ -435,9 +437,7 @@ const onFileSelected = (event: Event) => {
   if (!file) return;
 
   if (file.size > MAX_IMAGE_BYTES) {
-    window.alert(
-      "That image is larger than 2MB. Please use a smaller image or an image URL instead.",
-    );
+    void alert({ title: "Image is too large", message: "That image is larger than 2MB. Please use a smaller image or an image URL instead.", tone: "warning" });
     input.value = "";
     return;
   }
