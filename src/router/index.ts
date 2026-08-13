@@ -63,6 +63,13 @@ const routes: RouteRecordRaw[] = [
           import("@/views/Modules/AttendanceManagement/AttendanceManagement.vue"),
       },
       {
+        path: "workforce-calendar",
+        name: "workforce-calendar",
+        meta: { permission: "view-holidays" },
+        component: () =>
+          import("@/views/Modules/WorkforceCalendar/WorkforceCalendar.vue"),
+      },
+      {
         path: "payroll",
         name: "payroll-management",
         component: () => import("@/views/Modules/PayrollManagement/PayrollManagement.vue"),

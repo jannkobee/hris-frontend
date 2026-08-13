@@ -135,7 +135,7 @@ export const useApi = <T>(endpoint: string) => {
     }
   }
 
-  async function destroy(id: number) {
+  async function destroy(id: string | number) {
     loadingActions.value = true;
 
     try {

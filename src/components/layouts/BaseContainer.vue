@@ -155,6 +155,12 @@ const navItems: NavItem[] = [
     routeName: "attendance-management",
   },
   {
+    title: "Workforce Calendar",
+    icon: "mdi-calendar-star",
+    routeName: "workforce-calendar",
+    permission: "view-holidays",
+  },
+  {
     title: "Payroll",
     icon: "mdi-cash-multiple",
     routeName: "payroll-management",

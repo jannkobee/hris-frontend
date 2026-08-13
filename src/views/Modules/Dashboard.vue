@@ -13,10 +13,10 @@
       </div>
     </section>
 
-    <div v-if="canViewEmployeeOverview" class="metric-grid">
-      <article class="metric-card"><v-avatar color="primary" variant="tonal"><v-icon icon="mdi-account-group-outline" /></v-avatar><div><span>Current employees</span><strong>{{ employees.length }}</strong><small>Company headcount</small></div></article>
+    <div class="metric-grid">
+      <article class="metric-card"><v-avatar color="primary" variant="tonal"><v-icon icon="mdi-account-group-outline" /></v-avatar><div><span>Current employees</span><strong>{{ presence.length }}</strong><small>Company headcount</small></div></article>
       <article class="metric-card"><v-avatar color="warning" variant="tonal"><v-icon icon="mdi-calendar-account-outline" /></v-avatar><div><span>On leave today</span><strong>{{ employeesOnLeave }}</strong><small>Approved leave</small></div></article>
-      <article class="metric-card"><v-avatar color="success" variant="tonal"><v-icon icon="mdi-account-check-outline" /></v-avatar><div><span>Clocked in</span><strong>{{ employeesInToday.length }}</strong><small>Recorded today</small></div></article>
+      <article class="metric-card"><v-avatar color="success" variant="tonal"><v-icon icon="mdi-account-check-outline" /></v-avatar><div><span>Currently in</span><strong>{{ employeesInToday.length }}</strong><small>Still clocked in</small></div></article>
       <article class="metric-card"><v-avatar color="info" variant="tonal"><v-icon icon="mdi-calendar-clock-outline" /></v-avatar><div><span>Calendar items</span><strong>{{ todayCalendarEvents.length }}</strong><small>Your schedule today</small></div></article>
     </div>
 
@@ -59,11 +59,11 @@
       </aside>
     </div>
 
-    <section v-if="canViewEmployeeOverview" class="attendance-panel">
-      <header><div><span>Attendance pulse</span><strong>Today’s employee status</strong></div><v-tabs v-model="attendanceTab" color="primary" density="compact"><v-tab value="in">In ({{ employeesInToday.length }})</v-tab><v-tab value="out">Out ({{ employeesOutToday.length }})</v-tab></v-tabs></header>
+    <section class="attendance-panel">
+      <header><div><span>Team presence</span><strong>Who’s in and who’s out today</strong></div><v-tabs v-model="attendanceTab" color="primary" density="compact"><v-tab value="in">In ({{ employeesInToday.length }})</v-tab><v-tab value="out">Out ({{ employeesOutToday.length }})</v-tab></v-tabs></header>
       <v-window v-model="attendanceTab">
-        <v-window-item value="in"><v-data-table :headers="inHeaders" :items="employeesInToday" :items-per-page="10" :loading="loading" no-data-text="No employees have clocked in today." /></v-window-item>
-        <v-window-item value="out"><v-data-table :headers="outHeaders" :items="employeesOutToday" :items-per-page="10" :loading="loading" no-data-text="No employees are out today."><template #item.status="{ item }"><v-chip size="small" variant="tonal" color="warning">{{ item.status }}</v-chip></template></v-data-table></v-window-item>
+        <v-window-item value="in"><v-data-table :headers="inHeaders" :items="employeesInToday" :items-per-page="10" :loading="presenceLoading" no-data-text="No employees are currently clocked in."><template #item.name="{ item }"><div class="presence-person"><UserAvatar :user="item.user" :size="34" /><span><strong>{{ item.name }}</strong><small>{{ item.position || item.department || 'Employee' }}</small></span></div></template><template #item.status="{ item }"><v-chip size="small" variant="tonal" color="success">{{ presenceStatusLabel(item.status) }}</v-chip></template></v-data-table></v-window-item>
+        <v-window-item value="out"><v-data-table :headers="outHeaders" :items="employeesOutToday" :items-per-page="10" :loading="presenceLoading" no-data-text="Everyone is currently clocked in."><template #item.name="{ item }"><div class="presence-person"><UserAvatar :user="item.user" :size="34" /><span><strong>{{ item.name }}</strong><small>{{ item.position || item.department || 'Employee' }}</small></span></div></template><template #item.status="{ item }"><v-chip size="small" variant="tonal" :color="presenceStatusColor(item.status)">{{ presenceStatusLabel(item.status) }}</v-chip></template></v-data-table></v-window-item>
       </v-window>
     </section>
 
@@ -81,18 +81,13 @@
 import { computed, onMounted, ref } from "vue";
 import axios from "@/plugins/axios";
 import MonthlyCalendar, { CalendarEvent } from "@/components/MonthlyCalendar.vue";
-import { useApi } from "@/composables/useApi";
+import UserAvatar from "@/components/UserAvatar.vue";
 import { useAuth } from "@/composables/useAuth";
-import { usePermissions } from "@/composables/usePermissions";
 
 const { authUser, getUser } = useAuth();
-const { checkPermissions } = usePermissions();
-const loading = ref(false);
 const calendarLoading = ref(false);
 const attendanceTab = ref("in");
-const employees = ref<any[]>([]);
-const leaveRequests = ref<any[]>([]);
-const attendances = ref<any[]>([]);
+const presence = ref<any[]>([]);
 const announcements = ref<any[]>([]);
 const calendarEvents = ref<CalendarEvent[]>([]);
 const dailyQuote = ref({ text: "", theme: "" });
@@ -107,25 +102,23 @@ const calendarLegend = [
   { type: "leave", label: "Approved leave", color: "#8b6ccf" },
   { type: "announcement", label: "Announcement", color: "#e49a44" },
 ];
-const { getOptions: getEmployees } = useApi("/employees");
-const { getOptions: getLeaveRequests } = useApi("/leave-requests");
-const { getOptions: getAttendances } = useApi("/attendances");
-const canViewEmployeeOverview = computed(() => ["view-employees", "view-attendances", "view-leave-requests"].every(checkPermissions));
 const longToday = new Intl.DateTimeFormat("en-PH", { weekday: "long", month: "long", day: "numeric" }).format(new Date());
 const greeting = computed(() => { const hour = new Date().getHours(); return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening"; });
 const selectedDayEvents = computed(() => calendarEvents.value.filter((event) => localDate(new Date(event.starts_at)) === selectedDay.value));
 const todayCalendarEvents = computed(() => calendarEvents.value.filter((event) => localDate(new Date(event.starts_at)) === today));
 const selectedDayLabel = computed(() => new Intl.DateTimeFormat("en-PH", { weekday: "long", month: "short", day: "numeric" }).format(new Date(`${selectedDay.value}T12:00:00`)));
-const activeLeaveEmployeeIds = computed(() => new Set(leaveRequests.value.filter((request) => request.status === "approved" && request.start_date <= today && request.end_date >= today).map((request) => request.employee_id)));
-const employeesOnLeave = computed(() => activeLeaveEmployeeIds.value.size);
-const employeesInToday = computed(() => attendances.value.filter((attendance) => attendance.date === today && attendance.time_in).map((attendance) => ({ id: attendance.id, name: attendance.employee?.user?.full_name ?? "Unknown employee", employee_no: attendance.employee?.employee_no ?? "—", time_in: formatTime(attendance.time_in) })));
-const employeesOutToday = computed(() => { const checkedIn = new Set(attendances.value.filter((attendance) => attendance.date === today && attendance.time_in).map((attendance) => attendance.employee_id)); return employees.value.filter((employee) => !checkedIn.has(employee.id) && !activeLeaveEmployeeIds.value.has(employee.id)).map((employee) => ({ id: employee.id, name: employee.user?.full_name ?? "Unknown employee", employee_no: employee.employee_no ?? "—", status: "Out" })); });
-const inHeaders = [{ title: "Employee", key: "name" }, { title: "Employee No.", key: "employee_no" }, { title: "Time In", key: "time_in" }];
-const outHeaders = [{ title: "Employee", key: "name" }, { title: "Employee No.", key: "employee_no" }, { title: "Status", key: "status" }];
+const presenceLoading = computed(() => calendarLoading.value && !presence.value.length);
+const employeesOnLeave = computed(() => presence.value.filter((employee) => employee.status === "on_leave").length);
+const presenceRows = computed(() => presence.value.map((employee) => ({ ...employee, id: employee.employee_id, name: employee.user?.full_name || "Unknown employee", time_in: formatTime(employee.time_in), time_out: formatTime(employee.time_out) })));
+const employeesInToday = computed(() => presenceRows.value.filter((employee) => employee.status === "in"));
+const employeesOutToday = computed(() => presenceRows.value.filter((employee) => employee.status !== "in"));
+const inHeaders = [{ title: "Employee", key: "name" }, { title: "Employee No.", key: "employee_no" }, { title: "Department", key: "department" }, { title: "Time In", key: "time_in" }, { title: "Status", key: "status" }];
+const outHeaders = [{ title: "Employee", key: "name" }, { title: "Employee No.", key: "employee_no" }, { title: "Department", key: "department" }, { title: "Last activity", key: "time_out" }, { title: "Status", key: "status" }];
 
-function toArray(value: unknown): any[] { if (Array.isArray(value)) return value; if (value && typeof value === "object" && Array.isArray((value as any).data)) return (value as any).data; return []; }
 function localDate(date: Date) { return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`; }
-function formatTime(value: string) { return new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }); }
+function formatTime(value?: string | null) { return value ? new Date(value).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"; }
+function presenceStatusLabel(value: string) { return ({ in: "In", clocked_out: "Clocked out", on_leave: "On leave", not_clocked_in: "Not clocked in" } as Record<string, string>)[value] ?? "Out"; }
+function presenceStatusColor(value: string) { return ({ in: "success", clocked_out: "info", on_leave: "warning", not_clocked_in: "secondary" } as Record<string, string>)[value] ?? "secondary"; }
 function formatDate(value: string) { return value ? new Date(`${String(value).slice(0, 10)}T12:00:00`).toLocaleDateString([], { month: "short", day: "numeric" }) : "—"; }
 function eventTime(value: string) { return new Intl.DateTimeFormat("en-PH", { hour: "numeric", minute: "2-digit" }).format(new Date(value)); }
 function announcementExcerpt(html: string, length = 76) { const text = (html ?? "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim(); return text.length > length ? `${text.slice(0, length)}…` : text; }
@@ -135,23 +128,15 @@ function eventColorName(type?: string) { return ({ meeting: "primary", leave: "s
 function eventDateLabel(event: CalendarEvent) { return event.all_day ? new Intl.DateTimeFormat("en-PH", { dateStyle: "full" }).format(new Date(event.starts_at)) : new Intl.DateTimeFormat("en-PH", { dateStyle: "medium", timeStyle: "short" }).format(new Date(event.starts_at)); }
 function openAnnouncement(announcement: any) { selectedAnnouncement.value = announcement; announcementDialog.value = true; }
 function openCalendarEvent(event: CalendarEvent) { if (event.type === "announcement") { const announcement = announcements.value.find((item) => `announcement-${item.id}` === event.id); if (announcement) return openAnnouncement(announcement); } selectedCalendarEvent.value = event; eventDialog.value = true; }
-async function loadCalendar(range: { from: string; to: string }) { calendarLoading.value = true; try { const response = await axios.get("/dashboard/overview", { params: range, headers: { "X-Suppress-Success-Notification": "true" } }); const data = response.data.data; dailyQuote.value = data.quote ?? dailyQuote.value; announcements.value = data.announcements ?? announcements.value; calendarEvents.value = (data.events ?? []).map((event: any) => ({ ...event, raw: event })); } finally { calendarLoading.value = false; } }
+async function loadCalendar(range: { from: string; to: string }) { calendarLoading.value = true; try { const response = await axios.get("/dashboard/overview", { params: range, headers: { "X-Suppress-Success-Notification": "true" } }); const data = response.data.data; dailyQuote.value = data.quote ?? dailyQuote.value; announcements.value = data.announcements ?? announcements.value; presence.value = data.presence ?? presence.value; calendarEvents.value = (data.events ?? []).map((event: any) => ({ ...event, raw: event })); } finally { calendarLoading.value = false; } }
 
-onMounted(async () => {
-  loading.value = true;
-  try {
-    if (!authUser.value) await getUser();
-    if (canViewEmployeeOverview.value) {
-      const [employeeRecords, leaveRecords, attendanceRecords] = await Promise.all([getEmployees({ relations: "user" }), getLeaveRequests(), getAttendances({ relations: "employee.user", date: today })]);
-      employees.value = toArray(employeeRecords); leaveRequests.value = toArray(leaveRecords); attendances.value = toArray(attendanceRecords);
-    }
-  } finally { loading.value = false; }
-});
+onMounted(async () => { if (!authUser.value) await getUser(); });
 </script>
 
 <style scoped>
 .dashboard-page{--panel-border:rgba(var(--v-theme-on-surface),.09);--panel-shadow:0 10px 30px rgba(0,0,0,.055);max-width:1600px;margin-inline:auto}.welcome-panel{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(360px,.8fr);align-items:center;gap:28px;overflow:hidden;margin-bottom:20px;padding:28px 30px;border:1px solid rgba(var(--v-theme-primary),.15);border-radius:22px;background:linear-gradient(120deg,rgba(var(--v-theme-primary),.15),rgba(var(--v-theme-surface),.98) 58%,rgba(var(--v-theme-secondary),.1));box-shadow:var(--panel-shadow)}.welcome-panel:after{position:absolute;right:-80px;bottom:-110px;width:260px;height:260px;border-radius:50%;background:rgba(var(--v-theme-primary),.07);content:"";pointer-events:none}.welcome-copy,.daily-focus{position:relative;z-index:1}.welcome-date{color:rgb(var(--v-theme-primary));font-size:.72rem;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.welcome-copy h1{margin:5px 0 3px;font-size:clamp(1.55rem,2.4vw,2rem);line-height:1.2}.welcome-copy p{margin:0;color:rgb(var(--v-theme-on-surface-variant));font-size:.88rem}.daily-focus{display:flex;align-items:flex-start;gap:12px;padding:17px 18px;border:1px solid var(--panel-border);border-radius:16px;background:rgba(var(--v-theme-surface),.8);backdrop-filter:blur(8px)}.daily-focus>.v-icon{color:rgb(var(--v-theme-primary))}.daily-focus>div{display:flex;min-width:0;flex-direction:column}.daily-focus span{color:rgb(var(--v-theme-primary));font-size:.67rem;font-weight:800;letter-spacing:.04em;text-transform:uppercase}.daily-focus blockquote{margin:4px 0 0;font-size:.9rem;font-weight:600;line-height:1.5}.metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:20px}.metric-card{display:flex;min-width:0;align-items:center;gap:14px;padding:17px 18px;border:1px solid var(--panel-border);border-radius:16px;background:rgb(var(--v-theme-surface));box-shadow:0 5px 18px rgba(0,0,0,.035)}.metric-card>div{display:grid;grid-template-columns:1fr auto;min-width:0;flex:1;align-items:center}.metric-card span,.metric-card small{overflow:hidden;color:rgb(var(--v-theme-on-surface-variant));font-size:.7rem;text-overflow:ellipsis;white-space:nowrap}.metric-card span{font-weight:650}.metric-card strong{grid-row:span 2;font-size:1.55rem;line-height:1}.dashboard-grid{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(310px,.65fr);align-items:start;gap:16px}.calendar-panel,.agenda-card,.announcements-card,.attendance-panel{overflow:hidden;border:1px solid var(--panel-border);border-radius:18px;background:rgb(var(--v-theme-surface));box-shadow:var(--panel-shadow)}.calendar-panel :deep(.calendar-shell){border-radius:0;background:transparent}.dashboard-sidebar{display:grid;gap:16px}.agenda-card>header,.announcements-card>header,.attendance-panel>header{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:18px 19px;border-bottom:1px solid var(--panel-border)}.agenda-card header>div,.announcements-card header>div,.attendance-panel header>div{display:flex;flex-direction:column}.agenda-card header span,.announcements-card header span,.attendance-panel header span{color:rgb(var(--v-theme-on-surface-variant));font-size:.66rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.agenda-list,.announcement-list{display:grid;padding:8px}.agenda-list button,.announcement-list button{display:flex;width:100%;align-items:center;gap:10px;padding:11px;border:0;border-radius:11px;color:inherit;background:transparent;text-align:left;cursor:pointer;transition:background .15s ease}.agenda-list button:hover,.announcement-list button:hover{background:rgba(var(--v-theme-primary),.08)}.agenda-list i{width:5px;height:36px;flex:0 0 auto;border-radius:5px}.agenda-list button>div,.announcement-list button>div{display:flex;min-width:0;flex:1;flex-direction:column}.agenda-list strong,.announcement-list strong{overflow:hidden;font-size:.8rem;text-overflow:ellipsis;white-space:nowrap}.agenda-list span,.announcement-list small{overflow:hidden;color:rgb(var(--v-theme-on-surface-variant));font-size:.69rem;text-overflow:ellipsis;white-space:nowrap}.announcement-list button>span{width:42px;flex:0 0 auto;color:rgb(var(--v-theme-primary));font-size:.66rem;font-weight:750}.agenda-empty{display:flex;min-height:130px;align-items:center;justify-content:center;flex-direction:column;gap:7px;color:rgb(var(--v-theme-on-surface-variant));font-size:.76rem}.agenda-empty .v-icon{opacity:.6}.attendance-panel{margin-top:16px}.dialog-title{display:flex;align-items:center;gap:11px;padding:18px}.dialog-title>div{display:flex;min-width:0;flex-direction:column}.dialog-title small{color:rgb(var(--v-theme-on-surface-variant));font-size:.73rem}.event-detail{display:grid;grid-template-columns:1fr 1fr;gap:10px}.event-detail>div{display:flex;flex-direction:column;padding:13px;border-radius:11px;background:rgba(var(--v-theme-on-surface),.04)}.event-detail span{color:rgb(var(--v-theme-on-surface-variant));font-size:.69rem}.announcement-content :deep(img){max-width:100%;height:auto;border-radius:9px}.announcement-content :deep(ul),.announcement-content :deep(ol){padding-left:24px}
 .metric-card>.v-avatar{display:inline-flex;min-width:40px;max-width:40px;flex:0 0 40px}.metric-card>div:not(.v-avatar){display:grid;grid-template-columns:1fr auto;min-width:0;flex:1;align-items:center}.metric-card span,.metric-card small{font-size:.75rem}
+.presence-person{display:flex;min-width:220px;align-items:center;gap:10px;padding-block:4px}.presence-person>span{display:flex;min-width:0;flex-direction:column}.presence-person strong{overflow:hidden;font-size:.78rem;text-overflow:ellipsis;white-space:nowrap}.presence-person small{overflow:hidden;color:rgb(var(--v-theme-on-surface-variant));font-size:.68rem;text-overflow:ellipsis;white-space:nowrap}.attendance-panel :deep(.v-data-table__td){font-size:.75rem}.attendance-panel :deep(.v-data-table-header__content){font-size:.7rem;font-weight:750}
 @media(max-width:1180px){.metric-grid{grid-template-columns:repeat(2,1fr)}.dashboard-grid{grid-template-columns:1fr}.dashboard-sidebar{grid-template-columns:1fr 1fr}}
 @media(max-width:760px){.welcome-panel{grid-template-columns:1fr;padding:22px}.daily-focus{width:100%}.metric-grid,.dashboard-sidebar{grid-template-columns:1fr}.attendance-panel>header{align-items:flex-start;flex-direction:column}.event-detail{grid-template-columns:1fr}}
 @media(max-width:480px){.welcome-panel{padding:18px;border-radius:18px}.welcome-copy h1{font-size:1.4rem}.metric-card{padding:14px}.dashboard-page{--panel-shadow:none}}
