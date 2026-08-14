@@ -401,8 +401,9 @@
             v-if="imagePreview"
             :src="imagePreview.url"
             :alt="imagePreview.name"
-            max-height="76vh"
+            height="76vh"
             contain
+            eager
           />
         </v-card-text>
       </v-card>
@@ -1596,7 +1597,8 @@ fetchConversations();
 .image-preview-body {
   display: grid;
   min-height: 300px;
-  place-items: center;
+  align-items: stretch;
+  justify-items: stretch;
   padding: 14px;
   background: rgba(var(--v-theme-on-surface), 0.035);
 }
