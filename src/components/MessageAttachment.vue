@@ -1,19 +1,37 @@
 <template>
-  <div class="message-attachment" :class="{ 'message-attachment--image': attachment.is_image }">
+  <div
+    class="message-attachment"
+    :class="{ 'message-attachment--image': attachment.is_image }"
+  >
     <button
       v-if="attachment.is_image"
       type="button"
       class="message-attachment__image"
       :aria-label="`Preview ${attachment.original_name}`"
-      :disabled="!previewUrl"
       @click="openPreview"
     >
-      <v-img v-if="previewUrl" :src="previewUrl" :alt="attachment.original_name" cover />
-      <v-skeleton-loader v-else type="image" />
-      <span class="message-attachment__image-label">{{ attachment.original_name }}</span>
+      <v-img
+        v-if="previewUrl"
+        :src="previewUrl"
+        :alt="attachment.original_name"
+        cover
+      />
+      <v-skeleton-loader v-else-if="previewing" type="image" />
+      <span v-else class="message-attachment__image-fallback">
+        <v-icon icon="mdi-image-outline" size="34" />
+        <small>Click to preview</small>
+      </span>
+      <span class="message-attachment__image-label">{{
+        attachment.original_name
+      }}</span>
     </button>
 
-    <button v-else type="button" class="message-attachment__file" @click="download">
+    <button
+      v-else
+      type="button"
+      class="message-attachment__file"
+      @click="download"
+    >
       <span class="message-attachment__file-icon">
         <v-icon :icon="fileIcon" size="23" />
       </span>
@@ -21,7 +39,12 @@
         <strong>{{ attachment.original_name }}</strong>
         <small>{{ fileType }} · {{ formatFileSize(attachment.size) }}</small>
       </span>
-      <v-progress-circular v-if="downloading" indeterminate size="20" width="2" />
+      <v-progress-circular
+        v-if="downloading"
+        indeterminate
+        size="20"
+        width="2"
+      />
       <v-icon v-else icon="mdi-download-outline" size="20" />
     </button>
   </div>
@@ -34,14 +57,22 @@ import { loadMessageAttachmentPreview } from "@/utils/messageAttachmentCache";
 
 const props = defineProps<{ attachment: Record<string, any> }>();
 const emit = defineEmits<{
-  (event: "preview", value: { url: string; name: string; downloadUrl: string }): void;
+  (
+    event: "preview",
+    value: { url: string; name: string; downloadUrl: string },
+  ): void;
 }>();
 
 const previewUrl = ref<string | null>(null);
+const previewing = ref(false);
 const downloading = ref(false);
 
-const extension = computed(() =>
-  String(props.attachment.original_name ?? "").split(".").pop()?.toLowerCase() ?? "",
+const extension = computed(
+  () =>
+    String(props.attachment.original_name ?? "")
+      .split(".")
+      .pop()
+      ?.toLowerCase() ?? "",
 );
 
 const fileType = computed(() => extension.value.toUpperCase() || "FILE");
@@ -49,11 +80,16 @@ const fileType = computed(() => extension.value.toUpperCase() || "FILE");
 const fileIcon = computed(() => {
   if (extension.value === "pdf") return "mdi-file-pdf-box";
   if (["doc", "docx"].includes(extension.value)) return "mdi-file-word-outline";
-  if (["xls", "xlsx", "csv"].includes(extension.value)) return "mdi-file-excel-outline";
-  if (["ppt", "pptx"].includes(extension.value)) return "mdi-file-powerpoint-outline";
-  if (["zip", "rar", "7z"].includes(extension.value)) return "mdi-folder-zip-outline";
-  if (["mp3", "wav", "m4a"].includes(extension.value)) return "mdi-file-music-outline";
-  if (["mp4", "mov", "webm"].includes(extension.value)) return "mdi-file-video-outline";
+  if (["xls", "xlsx", "csv"].includes(extension.value))
+    return "mdi-file-excel-outline";
+  if (["ppt", "pptx"].includes(extension.value))
+    return "mdi-file-powerpoint-outline";
+  if (["zip", "rar", "7z"].includes(extension.value))
+    return "mdi-folder-zip-outline";
+  if (["mp3", "wav", "m4a"].includes(extension.value))
+    return "mdi-file-music-outline";
+  if (["mp4", "mov", "webm"].includes(extension.value))
+    return "mdi-file-video-outline";
   return "mdi-file-document-outline";
 });
 
@@ -64,10 +100,26 @@ const formatFileSize = (bytes: number): string => {
   return `${(value / (1024 * 1024)).toFixed(1)} MB`;
 };
 
-const openPreview = () => {
-  if (!previewUrl.value) return;
+const loadPreview = async () => {
+  if (previewUrl.value) return previewUrl.value;
+  if (previewing.value) return null;
+  previewing.value = true;
+  try {
+    previewUrl.value = await loadMessageAttachmentPreview(
+      props.attachment.preview_url || props.attachment.download_url,
+      props.attachment.download_url,
+    );
+    return previewUrl.value;
+  } finally {
+    previewing.value = false;
+  }
+};
+
+const openPreview = async () => {
+  const url = await loadPreview();
+  if (!url) return;
   emit("preview", {
-    url: previewUrl.value,
+    url,
     name: props.attachment.original_name,
     downloadUrl: props.attachment.download_url,
   });
@@ -94,9 +146,7 @@ const download = async () => {
 };
 
 onMounted(async () => {
-  if (props.attachment.is_image && props.attachment.preview_url) {
-    previewUrl.value = await loadMessageAttachmentPreview(props.attachment.preview_url);
-  }
+  if (props.attachment.is_image) await loadPreview();
 });
 </script>
 
@@ -125,9 +175,18 @@ onMounted(async () => {
 }
 
 .message-attachment__image :deep(.v-img),
-.message-attachment__image :deep(.v-skeleton-loader) {
+.message-attachment__image :deep(.v-skeleton-loader),
+.message-attachment__image-fallback {
   width: 100%;
   height: 100%;
+}
+
+.message-attachment__image-fallback {
+  display: grid;
+  place-content: center;
+  gap: 5px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  text-align: center;
 }
 
 .message-attachment__image-label {
@@ -156,7 +215,9 @@ onMounted(async () => {
   border-radius: 13px;
   background: rgb(var(--v-theme-surface));
   text-align: left;
-  transition: border-color 150ms ease, background-color 150ms ease;
+  transition:
+    border-color 150ms ease,
+    background-color 150ms ease;
 }
 
 .message-attachment__file:hover {

@@ -31,7 +31,7 @@
             {{ props.action }} {{ displayEntity }}
           </div>
           <div class="text-caption text-medium-emphasis">
-            Profile, work assignment, addresses, and contact details
+            Profile, work assignment, contact details, and 201 files
           </div>
         </div>
         <v-spacer />
@@ -63,7 +63,11 @@
             </v-avatar>
             <div class="text-h6 mt-4">Delete this employee?</div>
             <div class="text-body-2 text-medium-emphasis mt-2">
-              {{ linkedAccountLabel || props.data?.employee_no || "This employee record" }}
+              {{
+                linkedAccountLabel ||
+                props.data?.employee_no ||
+                "This employee record"
+              }}
               will be permanently removed. This cannot be undone.
             </div>
           </div>
@@ -105,9 +109,12 @@
                     <v-icon icon="mdi-badge-account-outline" size="19" />
                   </v-avatar>
                   <div>
-                    <div class="text-subtitle-1 font-weight-bold">Employee profile</div>
+                    <div class="text-subtitle-1 font-weight-bold">
+                      Employee profile
+                    </div>
                     <div class="text-caption text-medium-emphasis">
-                      Link the account and define the employee's work assignment.
+                      Link the account and define the employee's work
+                      assignment.
                     </div>
                   </div>
                 </div>
@@ -123,12 +130,15 @@
                       {{ linkedAccountLabel || "Select a user account" }}
                     </div>
                     <div class="text-caption text-medium-emphasis">
-                      Employee number {{ employeeForm.employee_no || "will be generated" }}
+                      Employee number
+                      {{ employeeForm.employee_no || "will be generated" }}
                     </div>
                   </div>
                   <v-chip
                     size="small"
-                    :color="employeeForm.employment_status_id ? 'success' : 'default'"
+                    :color="
+                      employeeForm.employment_status_id ? 'success' : 'default'
+                    "
                     variant="tonal"
                   >
                     {{ selectedEmploymentStatus || "Status not set" }}
@@ -138,7 +148,8 @@
                 <div class="form-section">
                   <div class="form-section-title">Account and identity</div>
                   <div class="form-section-description">
-                    Connect the login account and verify the employee identifier.
+                    Connect the login account and verify the employee
+                    identifier.
                   </div>
                   <div class="employee-field-grid mt-4">
                     <template v-for="field in accountFields" :key="field.key">
@@ -184,43 +195,60 @@
                     Place the employee in the correct team, role, and grade.
                   </div>
                   <div class="employee-field-grid mt-4">
-                    <template v-for="field in employmentFields" :key="field.key">
-                    <v-text-field
-                      v-if="field.inputField === 'text'"
-                      :required="!field.nullable"
-                      v-model="employeeForm[field.key]"
-                      :label="field.title"
-                      :readonly="isFieldReadOnly(field)"
-                      :rules="field.required ? [(value) => !!value || `${field.title} is required`] : []"
-                      density="compact"
-                      variant="outlined"
-                      hide-details="auto"
-                    />
-                    <v-text-field
-                      v-else-if="field.inputField === 'date'"
-                      type="date"
-                      v-model="employeeForm[field.key]"
-                      :label="field.title"
-                      :readonly="isFieldReadOnly(field)"
-                      density="compact"
-                      variant="outlined"
-                      hide-details="auto"
-                    />
-                    <v-autocomplete
-                      v-else-if="field.inputField === 'select'"
-                      v-model="employeeForm[field.selectKey!]"
-                      :label="field.title"
-                      item-title="label"
-                      item-value="value"
-                      :items="field.inputOptions"
-                      :readonly="isFieldReadOnly(field)"
-                      :rules="field.required ? [(value) => !!value || `${field.title} is required`] : []"
-                      density="compact"
-                      variant="outlined"
-                      hide-details="auto"
-                      clearable
-                    />
-                  </template>
+                    <template
+                      v-for="field in employmentFields"
+                      :key="field.key"
+                    >
+                      <v-text-field
+                        v-if="field.inputField === 'text'"
+                        :required="!field.nullable"
+                        v-model="employeeForm[field.key]"
+                        :label="field.title"
+                        :readonly="isFieldReadOnly(field)"
+                        :rules="
+                          field.required
+                            ? [
+                                (value) =>
+                                  !!value || `${field.title} is required`,
+                              ]
+                            : []
+                        "
+                        density="compact"
+                        variant="outlined"
+                        hide-details="auto"
+                      />
+                      <v-text-field
+                        v-else-if="field.inputField === 'date'"
+                        type="date"
+                        v-model="employeeForm[field.key]"
+                        :label="field.title"
+                        :readonly="isFieldReadOnly(field)"
+                        density="compact"
+                        variant="outlined"
+                        hide-details="auto"
+                      />
+                      <v-autocomplete
+                        v-else-if="field.inputField === 'select'"
+                        v-model="employeeForm[field.selectKey!]"
+                        :label="field.title"
+                        item-title="label"
+                        item-value="value"
+                        :items="field.inputOptions"
+                        :readonly="isFieldReadOnly(field)"
+                        :rules="
+                          field.required
+                            ? [
+                                (value) =>
+                                  !!value || `${field.title} is required`,
+                              ]
+                            : []
+                        "
+                        density="compact"
+                        variant="outlined"
+                        hide-details="auto"
+                        clearable
+                      />
+                    </template>
                   </div>
                 </div>
 
@@ -234,13 +262,27 @@
                       <v-text-field
                         v-if="field.inputField === 'text'"
                         v-model="employeeForm[field.key]"
-                        :type="field.key === 'basic_monthly_salary' ? 'number' : 'text'"
-                        :prefix="field.key === 'basic_monthly_salary' ? '₱' : undefined"
+                        :type="
+                          field.key === 'basic_monthly_salary'
+                            ? 'number'
+                            : 'text'
+                        "
+                        :prefix="
+                          field.key === 'basic_monthly_salary' ? '₱' : undefined
+                        "
                         min="0"
                         step="0.01"
                         :label="field.title"
                         :readonly="isFieldReadOnly(field)"
-                        :rules="field.required ? [(value) => value !== '' && value !== null || `${field.title} is required`] : []"
+                        :rules="
+                          field.required
+                            ? [
+                                (value) =>
+                                  (value !== '' && value !== null) ||
+                                  `${field.title} is required`,
+                              ]
+                            : []
+                        "
                         density="compact"
                         variant="outlined"
                         hide-details="auto"
@@ -266,260 +308,321 @@
             <!-- Step 2: Addresses -->
             <v-window-item :value="2">
               <div class="step-content">
-                  <div class="section-heading justify-space-between">
-                    <div class="d-flex align-center ga-3">
-                      <v-avatar color="primary" variant="tonal" size="34">
-                        <v-icon icon="mdi-map-marker-outline" size="19" />
-                      </v-avatar>
-                      <div>
-                        <div class="text-subtitle-1 font-weight-bold">Addresses</div>
-                        <div class="text-caption text-medium-emphasis">Maintain current and permanent locations.</div>
+                <div class="section-heading justify-space-between">
+                  <div class="d-flex align-center ga-3">
+                    <v-avatar color="primary" variant="tonal" size="34">
+                      <v-icon icon="mdi-map-marker-outline" size="19" />
+                    </v-avatar>
+                    <div>
+                      <div class="text-subtitle-1 font-weight-bold">
+                        Addresses
+                      </div>
+                      <div class="text-caption text-medium-emphasis">
+                        Maintain current and permanent locations.
+                      </div>
+                    </div>
+                  </div>
+                  <v-btn
+                    color="primary"
+                    prepend-icon="mdi-plus"
+                    size="small"
+                    variant="tonal"
+                    class="text-none"
+                    @click="addAddress"
+                    :disabled="props.readOnly"
+                  >
+                    Add Address
+                  </v-btn>
+                </div>
+
+                <section
+                  v-for="(address, index) in addresses"
+                  :key="index"
+                  class="detail-record address-record"
+                >
+                  <div class="detail-record-header">
+                    <div>
+                      <div class="text-subtitle-2 font-weight-bold">
+                        Address {{ index + 1 }}
+                      </div>
+                      <div class="text-caption text-medium-emphasis">
+                        Enter a complete and deliverable address.
                       </div>
                     </div>
                     <v-btn
-                      color="primary"
-                      prepend-icon="mdi-plus"
+                      prepend-icon="mdi-trash-can-outline"
                       size="small"
-                      variant="tonal"
-                      class="text-none"
-                      @click="addAddress"
+                      variant="text"
+                      color="error"
+                      @click="removeAddress(index)"
                       :disabled="props.readOnly"
                     >
-                      Add Address
+                      Remove
                     </v-btn>
                   </div>
 
-                  <section
-                    v-for="(address, index) in addresses"
-                    :key="index"
-                    class="detail-record address-record"
-                  >
-                      <div class="detail-record-header">
-                        <div>
-                          <div class="text-subtitle-2 font-weight-bold">
-                            Address {{ index + 1 }}
-                          </div>
-                          <div class="text-caption text-medium-emphasis">
-                            Enter a complete and deliverable address.
-                          </div>
-                        </div>
-                        <v-btn
-                          prepend-icon="mdi-trash-can-outline"
-                          size="small"
-                          variant="text"
-                          color="error"
-                          @click="removeAddress(index)"
-                          :disabled="props.readOnly"
-                        >
-                          Remove
-                        </v-btn>
-                      </div>
+                  <div class="detail-type-row">
+                    <span class="text-caption font-weight-medium"
+                      >Address type</span
+                    >
+                    <v-btn-toggle
+                      v-model="address.type"
+                      color="primary"
+                      variant="tonal"
+                      density="compact"
+                      divided
+                      mandatory
+                      :disabled="props.readOnly"
+                    >
+                      <v-btn
+                        v-for="option in addressTypeOptions"
+                        :key="option.value"
+                        :value="option.value"
+                        size="small"
+                        class="text-none"
+                      >
+                        {{ option.label }}
+                      </v-btn>
+                    </v-btn-toggle>
+                  </div>
 
-                      <div class="detail-type-row">
-                        <span class="text-caption font-weight-medium">Address type</span>
-                        <v-btn-toggle
-                          v-model="address.type"
-                          color="primary"
-                          variant="tonal"
-                          density="compact"
-                          divided
-                          mandatory
-                          :disabled="props.readOnly"
-                        >
-                          <v-btn
-                            v-for="option in addressTypeOptions"
-                            :key="option.value"
-                            :value="option.value"
-                            size="small"
-                            class="text-none"
-                          >
-                            {{ option.label }}
-                          </v-btn>
-                        </v-btn-toggle>
-                      </div>
+                  <div class="address-lines-grid">
+                    <v-text-field
+                      v-model="address.address_line_1"
+                      label="Address Line 1 *"
+                      :readonly="props.readOnly"
+                      density="compact"
+                      variant="outlined"
+                      hide-details="auto"
+                      prepend-inner-icon="mdi-map-marker-outline"
+                    />
+                    <v-text-field
+                      v-model="address.address_line_2"
+                      label="Unit, floor, building (optional)"
+                      :readonly="props.readOnly"
+                      density="compact"
+                      variant="outlined"
+                      hide-details="auto"
+                    />
+                  </div>
 
-                      <div class="address-lines-grid">
-                          <v-text-field
-                            v-model="address.address_line_1"
-                            label="Address Line 1 *"
-                            :readonly="props.readOnly"
-                            density="compact"
-                          variant="outlined"
-                          hide-details="auto"
-                            prepend-inner-icon="mdi-map-marker-outline"
-                          />
-                          <v-text-field
-                            v-model="address.address_line_2"
-                            label="Unit, floor, building (optional)"
-                            :readonly="props.readOnly"
-                            density="compact"
-                          variant="outlined"
-                          hide-details="auto"
-                          />
-                      </div>
+                  <div class="location-grid">
+                    <v-autocomplete
+                      v-model="address.country_iso2"
+                      label="Country *"
+                      item-title="name"
+                      item-value="iso2"
+                      :items="countryOptions"
+                      :readonly="props.readOnly"
+                      :loading="loadingCountries"
+                      density="compact"
+                      variant="outlined"
+                      hide-details="auto"
+                      @update:model-value="onCountryChange(index, $event)"
+                      prepend-inner-icon="mdi-earth"
+                      clearable
+                    />
+                    <v-autocomplete
+                      v-model="address.province_iso2"
+                      label="Province/State *"
+                      item-title="name"
+                      item-value="iso2"
+                      :items="address.stateOptions || []"
+                      :readonly="props.readOnly"
+                      :loading="address.loadingStates"
+                      :disabled="!address.country_iso2"
+                      density="compact"
+                      variant="outlined"
+                      hide-details="auto"
+                      @update:model-value="onStateChange(index, $event)"
+                      clearable
+                    />
+                    <v-autocomplete
+                      v-model="address.city"
+                      label="City *"
+                      item-title="name"
+                      item-value="name"
+                      :items="address.cityOptions || []"
+                      :readonly="props.readOnly"
+                      :loading="address.loadingCities"
+                      :disabled="!address.province_iso2"
+                      density="compact"
+                      variant="outlined"
+                      hide-details="auto"
+                      clearable
+                    />
+                    <v-text-field
+                      v-model="address.postal_code"
+                      label="Postal Code"
+                      :readonly="props.readOnly"
+                      density="compact"
+                      variant="outlined"
+                      hide-details="auto"
+                    />
+                  </div>
+                </section>
 
-                      <div class="location-grid">
-                          <v-autocomplete
-                            v-model="address.country_iso2"
-                            label="Country *"
-                            item-title="name"
-                            item-value="iso2"
-                            :items="countryOptions"
-                            :readonly="props.readOnly"
-                            :loading="loadingCountries"
-                            density="compact"
-                          variant="outlined"
-                          hide-details="auto"
-                            @update:model-value="onCountryChange(index, $event)"
-                            prepend-inner-icon="mdi-earth"
-                            clearable
-                          />
-                          <v-autocomplete
-                            v-model="address.province_iso2"
-                            label="Province/State *"
-                            item-title="name"
-                            item-value="iso2"
-                            :items="address.stateOptions || []"
-                            :readonly="props.readOnly"
-                            :loading="address.loadingStates"
-                            :disabled="!address.country_iso2"
-                            density="compact"
-                          variant="outlined"
-                          hide-details="auto"
-                            @update:model-value="onStateChange(index, $event)"
-                            clearable
-                          />
-                          <v-autocomplete
-                            v-model="address.city"
-                            label="City *"
-                            item-title="name"
-                            item-value="name"
-                            :items="address.cityOptions || []"
-                            :readonly="props.readOnly"
-                            :loading="address.loadingCities"
-                            :disabled="!address.province_iso2"
-                            density="compact"
-                          variant="outlined"
-                          hide-details="auto"
-                            clearable
-                          />
-                          <v-text-field
-                            v-model="address.postal_code"
-                            label="Postal Code"
-                            :readonly="props.readOnly"
-                            density="compact"
-                          variant="outlined"
-                          hide-details="auto"
-                          />
-                      </div>
-                  </section>
-
-                  <v-sheet
-                    v-if="addresses.length === 0"
-                    rounded="lg"
-                    class="empty-state"
-                  >
-                    <v-icon icon="mdi-map-marker-off-outline" size="28" class="mb-2" />
-                    <div class="text-body-2">No addresses added yet.</div>
-                  </v-sheet>
+                <v-sheet
+                  v-if="addresses.length === 0"
+                  rounded="lg"
+                  class="empty-state"
+                >
+                  <v-icon
+                    icon="mdi-map-marker-off-outline"
+                    size="28"
+                    class="mb-2"
+                  />
+                  <div class="text-body-2">No addresses added yet.</div>
+                </v-sheet>
               </div>
             </v-window-item>
 
             <!-- Step 3: Contacts -->
             <v-window-item :value="3">
               <div class="step-content">
-                  <div class="section-heading justify-space-between">
-                    <div class="d-flex align-center ga-3">
-                      <v-avatar color="primary" variant="tonal" size="34">
-                        <v-icon icon="mdi-card-account-phone-outline" size="19" />
-                      </v-avatar>
-                      <div>
-                        <div class="text-subtitle-1 font-weight-bold">Contact information</div>
-                        <div class="text-caption text-medium-emphasis">Add phone numbers, email addresses, or emergency contacts.</div>
+                <div class="section-heading justify-space-between">
+                  <div class="d-flex align-center ga-3">
+                    <v-avatar color="primary" variant="tonal" size="34">
+                      <v-icon icon="mdi-card-account-phone-outline" size="19" />
+                    </v-avatar>
+                    <div>
+                      <div class="text-subtitle-1 font-weight-bold">
+                        Contact information
+                      </div>
+                      <div class="text-caption text-medium-emphasis">
+                        Add phone numbers, email addresses, or emergency
+                        contacts.
+                      </div>
+                    </div>
+                  </div>
+                  <v-btn
+                    color="primary"
+                    prepend-icon="mdi-plus"
+                    size="small"
+                    variant="tonal"
+                    @click="addContact"
+                    :disabled="props.readOnly"
+                  >
+                    Add Contact
+                  </v-btn>
+                </div>
+
+                <section
+                  v-for="(contact, index) in contacts"
+                  :key="index"
+                  class="detail-record contact-record"
+                >
+                  <div class="detail-record-header">
+                    <div>
+                      <div class="text-subtitle-2 font-weight-bold">
+                        Contact {{ index + 1 }}
+                      </div>
+                      <div class="text-caption text-medium-emphasis">
+                        Add a reliable way to reach this employee.
                       </div>
                     </div>
                     <v-btn
-                      color="primary"
-                      prepend-icon="mdi-plus"
+                      prepend-icon="mdi-trash-can-outline"
                       size="small"
-                      variant="tonal"
-                      @click="addContact"
+                      variant="text"
+                      color="error"
+                      @click="removeContact(index)"
                       :disabled="props.readOnly"
                     >
-                      Add Contact
+                      Remove
                     </v-btn>
                   </div>
 
-                  <section
-                    v-for="(contact, index) in contacts"
-                    :key="index"
-                    class="detail-record contact-record"
-                  >
-                      <div class="detail-record-header">
-                        <div>
-                          <div class="text-subtitle-2 font-weight-bold">
-                            Contact {{ index + 1 }}
-                          </div>
-                          <div class="text-caption text-medium-emphasis">
-                            Add a reliable way to reach this employee.
-                          </div>
-                        </div>
-                        <v-btn
-                          prepend-icon="mdi-trash-can-outline"
-                          size="small"
-                          variant="text"
-                          color="error"
-                          @click="removeContact(index)"
-                          :disabled="props.readOnly"
-                        >
-                          Remove
-                        </v-btn>
-                      </div>
+                  <div class="detail-type-row">
+                    <span class="text-caption font-weight-medium"
+                      >Contact type</span
+                    >
+                    <v-btn-toggle
+                      v-model="contact.type"
+                      color="primary"
+                      variant="tonal"
+                      density="compact"
+                      divided
+                      mandatory
+                      :disabled="props.readOnly"
+                    >
+                      <v-btn
+                        v-for="option in contactTypeOptions"
+                        :key="option.value"
+                        :value="option.value"
+                        size="small"
+                        class="text-none"
+                      >
+                        <v-icon
+                          :icon="contactTypeIcon(option.value)"
+                          start
+                          size="15"
+                        />
+                        {{ option.label }}
+                      </v-btn>
+                    </v-btn-toggle>
+                  </div>
 
-                      <div class="detail-type-row">
-                        <span class="text-caption font-weight-medium">Contact type</span>
-                        <v-btn-toggle
-                          v-model="contact.type"
-                          color="primary"
-                          variant="tonal"
-                          density="compact"
-                          divided
-                          mandatory
-                          :disabled="props.readOnly"
-                        >
-                          <v-btn
-                            v-for="option in contactTypeOptions"
-                            :key="option.value"
-                            :value="option.value"
-                            size="small"
-                            class="text-none"
-                          >
-                            <v-icon :icon="contactTypeIcon(option.value)" start size="15" />
-                            {{ option.label }}
-                          </v-btn>
-                        </v-btn-toggle>
-                      </div>
+                  <v-text-field
+                    v-model="contact.value"
+                    :label="contactValueLabel(contact.type)"
+                    :type="contact.type === 'email' ? 'email' : 'text'"
+                    :prepend-inner-icon="contactTypeIcon(contact.type)"
+                    :readonly="props.readOnly"
+                    density="compact"
+                    variant="outlined"
+                    hide-details="auto"
+                  />
+                </section>
 
-                      <v-text-field
-                        v-model="contact.value"
-                        :label="contactValueLabel(contact.type)"
-                        :type="contact.type === 'email' ? 'email' : 'text'"
-                        :prepend-inner-icon="contactTypeIcon(contact.type)"
-                        :readonly="props.readOnly"
-                        density="compact"
-                        variant="outlined"
-                        hide-details="auto"
-                      />
-                  </section>
+                <v-sheet
+                  v-if="contacts.length === 0"
+                  rounded="lg"
+                  class="empty-state"
+                >
+                  <v-icon
+                    icon="mdi-card-account-phone-outline"
+                    size="28"
+                    class="mb-2"
+                  />
+                  <div class="text-body-2">
+                    No contact information added yet.
+                  </div>
+                </v-sheet>
+              </div>
+            </v-window-item>
 
-                  <v-sheet
-                    v-if="contacts.length === 0"
-                    rounded="lg"
-                    class="empty-state"
-                  >
-                    <v-icon icon="mdi-card-account-phone-outline" size="28" class="mb-2" />
-                    <div class="text-body-2">No contact information added yet.</div>
-                  </v-sheet>
+            <!-- Step 4: Employee 201 Files -->
+            <v-window-item v-if="props.showDocuments" :value="4">
+              <div class="step-content">
+                <div class="section-heading">
+                  <v-avatar color="primary" variant="tonal" size="34">
+                    <v-icon icon="mdi-folder-account-outline" size="19" />
+                  </v-avatar>
+                  <div>
+                    <div class="text-subtitle-1 font-weight-bold">
+                      Employee 201 files
+                    </div>
+                    <div class="text-caption text-medium-emphasis">
+                      Maintain private personnel documents for this employee.
+                    </div>
+                  </div>
+                </div>
+
+                <EmployeeDocumentsPanel
+                  v-if="props.data?.id"
+                  :employee="props.data"
+                  :active="props.visible && currentStep === 4"
+                />
+                <v-alert
+                  v-else
+                  type="info"
+                  variant="tonal"
+                  icon="mdi-content-save-outline"
+                >
+                  Create the employee first, then reopen the employee record to
+                  upload 201 files.
+                </v-alert>
               </div>
             </v-window-item>
           </v-window>
@@ -541,7 +644,7 @@
         <v-spacer />
         <v-btn @click="$emit('close')" variant="text"> Close </v-btn>
         <v-btn
-          v-if="currentStep < 3 && props.action !== 'Remove'"
+          v-if="currentStep < workflowSteps.length && props.action !== 'Remove'"
           color="primary"
           append-icon="mdi-arrow-right"
           variant="flat"
@@ -596,6 +699,7 @@ import { ColumnConfig } from "@/types/types";
 import axios from "@/plugins/axios";
 import { useDraggable } from "@/composables/useDraggable";
 import { useResizable } from "@/composables/useResizable";
+import EmployeeDocumentsPanel from "@/components/EmployeeDocumentsPanel.vue";
 
 const props = defineProps({
   loading: { type: Boolean, default: false },
@@ -608,6 +712,7 @@ const props = defineProps({
   employeeFields: { type: Array as () => ColumnConfig[], default: () => [] },
   addressFields: { type: Array as () => ColumnConfig[], default: () => [] },
   contactFields: { type: Array as () => ColumnConfig[], default: () => [] },
+  showDocuments: { type: Boolean, default: false },
 });
 
 const emit = defineEmits(["close", "execute"]);
@@ -688,11 +793,14 @@ const contactValueLabel = (type: string): string => {
   return "Phone number *";
 };
 
-const workflowSteps = [
+const workflowSteps = computed(() => [
   { value: 1, title: "Profile", description: "Account and assignment" },
   { value: 2, title: "Addresses", description: "Home and mailing details" },
   { value: 3, title: "Contacts", description: "Phone and emergency info" },
-];
+  ...(props.showDocuments
+    ? [{ value: 4, title: "201 Files", description: "Personnel documents" }]
+    : []),
+]);
 
 const displayEntity = computed(() => {
   const raw = (props.entity ?? "").toString().trim();
@@ -768,7 +876,10 @@ const optionLabel = (selectKey: string, value: unknown): string => {
   const field = visibleEmployeeFields.value.find(
     (item: any) => item.selectKey === selectKey,
   ) as any;
-  return field?.inputOptions?.find((option: any) => option.value === value)?.label ?? "";
+  return (
+    field?.inputOptions?.find((option: any) => option.value === value)?.label ??
+    ""
+  );
 };
 
 const linkedAccountLabel = computed(() =>
@@ -776,10 +887,7 @@ const linkedAccountLabel = computed(() =>
 );
 
 const selectedEmploymentStatus = computed(() =>
-  optionLabel(
-    "employment_status_id",
-    employeeForm.value.employment_status_id,
-  ),
+  optionLabel("employment_status_id", employeeForm.value.employment_status_id),
 );
 
 const employeeInitials = computed(() => {
@@ -988,7 +1096,7 @@ const handleSubmit = () => {
     return;
   }
 
-  for (const step of workflowSteps) {
+  for (const step of workflowSteps.value) {
     if (!validateStep(step.value)) {
       currentStep.value = step.value;
       return;
@@ -1215,7 +1323,9 @@ watch(
   background: transparent;
   text-align: left;
   cursor: pointer;
-  transition: background 0.16s ease, color 0.16s ease;
+  transition:
+    background 0.16s ease,
+    color 0.16s ease;
 }
 
 .workflow-step:hover {
@@ -1340,7 +1450,7 @@ watch(
 .detail-record + .detail-record {
   margin-top: 24px;
   padding-top: 24px;
-  box-shadow: 0 -1px rgba(var(--v-border-color), 0.18);
+  border-top: 1px solid rgba(var(--v-border-color), 0.18);
 }
 
 .detail-record-header {
@@ -1432,7 +1542,8 @@ watch(
     padding: 8px;
     overflow-x: auto;
     border-right: 0;
-    border-bottom: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
+    border-bottom: 1px solid
+      rgba(var(--v-border-color), var(--v-border-opacity));
   }
 
   .workflow-step {

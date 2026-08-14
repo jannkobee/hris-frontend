@@ -312,6 +312,11 @@ import { fields as importedFields } from "@/fields/attendance";
 import type { ColumnConfig } from "@/types/types";
 import Form from "@/components/Form.vue";
 import Table from "@/components/Table.vue";
+import {
+  dateKeyInTimeZone,
+  formatTimeInTimeZone,
+  timeInputInTimeZone,
+} from "@/utils/timezone";
 
 const fields = ref<ColumnConfig[]>([...importedFields] as ColumnConfig[]);
 
@@ -329,6 +334,9 @@ const { getOptions: getEmployees } = useApi("/employees");
 const { authUser, getUser } = useAuth();
 const { setting, loadAppSettings } = useAppSettings();
 const { checkPermissions } = usePermissions();
+const companyTimezone = computed(() =>
+  setting("organization.timezone", "Asia/Manila"),
+);
 
 const relations = "employee.user";
 const entity = ref("Attendance");
@@ -382,7 +390,7 @@ const captureMapUrl = computed(
     `https://www.google.com/maps?q=${captureLocation.value.latitude},${captureLocation.value.longitude}`,
 );
 
-const todayIso = () => new Date().toLocaleDateString("en-CA");
+const todayIso = () => dateKeyInTimeZone(new Date(), companyTimezone.value);
 const selectedDate = ref(todayIso());
 
 const fetchAttendance = async (options: any = {}) => {
@@ -419,7 +427,7 @@ const initializeForm = (): AttendanceForm => ({
   id: "",
   employee_id: "",
   date: selectedDate.value,
-  time_in: new Date().toTimeString().slice(0, 5),
+  time_in: timeInputInTimeZone(new Date(), companyTimezone.value),
   time_out: "",
   time_in_notes: "",
   time_out_notes: "",
@@ -432,10 +440,10 @@ const normalizeAttendanceForForm = (item: any) => ({
   ...item,
   date: item.date?.slice?.(0, 10) ?? item.date,
   time_in: item.time_in
-    ? new Date(item.time_in).toTimeString().slice(0, 5)
+    ? timeInputInTimeZone(item.time_in, companyTimezone.value)
     : "",
   time_out: item.time_out
-    ? new Date(item.time_out).toTimeString().slice(0, 5)
+    ? timeInputInTimeZone(item.time_out, companyTimezone.value)
     : "",
 });
 
@@ -589,10 +597,7 @@ const submitCapture = async () => {
 
 const formatTime = (value: string) =>
   value
-    ? new Intl.DateTimeFormat(undefined, {
-        hour: "numeric",
-        minute: "2-digit",
-      }).format(new Date(value))
+    ? formatTimeInTimeZone(value, companyTimezone.value)
     : "—";
 
 const openMap = (latitude: number, longitude: number) => {
@@ -620,7 +625,9 @@ const downloadPhoto = async (item: any, type: "time-in" | "time-out") => {
 
 onMounted(async () => {
   if (!authUser.value) await getUser();
+  const initialDate = selectedDate.value;
   await loadAppSettings();
+  if (selectedDate.value === initialDate) selectedDate.value = todayIso();
   const companyLoads = canViewCompanyAttendance.value
     ? [
         ...(checkPermissions("view-employees") ? [loadOptions()] : []),

@@ -24,7 +24,7 @@
       </v-card-text>
     </v-card>
 
-    <v-card :loading="loading" elevation="2" class="rounded-lg mb-8">
+    <v-card :loading="loading" elevation="0" border class="rounded-lg mb-8">
       <v-form @submit.prevent="execute" ref="formRef">
         <v-card-text class="pa-6">
           <v-select

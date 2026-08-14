@@ -12,7 +12,11 @@
       :class="[
         props.action === 'Remove' ? 'delete-card' : 'resizable-card',
         `action-${props.action.toLowerCase()}`,
-        { 'is-fullscreen': isFullscreen && props.action !== 'Remove', dragging, resizing },
+        {
+          'is-fullscreen': isFullscreen && props.action !== 'Remove',
+          dragging,
+          resizing,
+        },
       ]"
       :style="isFullscreen || props.action === 'Remove' ? undefined : cardStyle"
     >
@@ -21,12 +25,21 @@
         :class="{ 'drag-handle': props.action !== 'Remove' }"
         @mousedown="onTitleMouseDown"
       >
-        <v-avatar :color="actionPresentation.color" variant="tonal" size="38" class="mr-3">
+        <v-avatar
+          :color="actionPresentation.color"
+          variant="tonal"
+          size="38"
+          class="mr-3"
+        >
           <v-icon :icon="actionPresentation.icon" size="21" />
         </v-avatar>
         <div class="crud-dialog-heading">
-          <div class="text-subtitle-1 font-weight-bold">{{ actionPresentation.title }}</div>
-          <div class="text-caption text-medium-emphasis">{{ actionPresentation.description }}</div>
+          <div class="text-subtitle-1 font-weight-bold">
+            {{ actionPresentation.title }}
+          </div>
+          <div class="text-caption text-medium-emphasis">
+            {{ actionPresentation.description }}
+          </div>
         </div>
         <v-spacer />
         <v-btn
@@ -39,7 +52,14 @@
           @click.stop="isFullscreen = !isFullscreen"
           class="mr-2"
         />
-        <v-btn icon="mdi-close" variant="text" size="small" density="comfortable" aria-label="Close dialog" @click.stop="emit('close')" />
+        <v-btn
+          icon="mdi-close"
+          variant="text"
+          size="small"
+          density="comfortable"
+          aria-label="Close dialog"
+          @click.stop="emit('close')"
+        />
       </v-card-title>
 
       <v-card-text class="crud-dialog-body">
@@ -48,22 +68,36 @@
             <v-avatar color="error" variant="tonal" size="58">
               <v-icon icon="mdi-delete-alert-outline" size="29" />
             </v-avatar>
-            <div class="text-h6 mt-4">Delete this {{ displayEntity.toLowerCase() }}?</div>
+            <div class="text-h6 mt-4">
+              Delete this {{ displayEntity.toLowerCase() }}?
+            </div>
             <div class="text-body-2 text-medium-emphasis mt-2">
-              This record will be permanently removed. This action cannot be undone.
+              This record will be permanently removed. This action cannot be
+              undone.
             </div>
           </div>
         </template>
 
-        <v-form v-else ref="formEl" class="crud-workflow" @submit.prevent="execute">
+        <v-form
+          v-else
+          ref="formEl"
+          class="crud-workflow"
+          @submit.prevent="execute"
+        >
           <div class="section-heading">
             <v-avatar color="primary" variant="tonal" size="34">
               <v-icon icon="mdi-file-document-edit-outline" size="19" />
             </v-avatar>
             <div>
-              <div class="text-subtitle-1 font-weight-bold">Record information</div>
+              <div class="text-subtitle-1 font-weight-bold">
+                Record information
+              </div>
               <div class="text-caption text-medium-emphasis">
-                {{ props.action === 'View' ? 'Review the saved information below.' : 'Complete the details for this record.' }}
+                {{
+                  props.action === "View"
+                    ? "Review the saved information below."
+                    : "Complete the details for this record."
+                }}
               </div>
             </div>
             <v-spacer />
@@ -75,30 +109,48 @@
               size="small"
               class="text-none"
               @click="emit('permission')"
-            >Permissions</v-btn>
+              >Permissions</v-btn
+            >
           </div>
 
           <section class="form-section">
             <div class="form-section-title">{{ displayEntity }} details</div>
-            <div class="form-section-description">Fields marked with an asterisk are required.</div>
+            <div class="form-section-description">
+              Fields marked with an asterisk are required.
+            </div>
             <div class="crud-field-grid mt-4">
               <div
                 v-for="field in formFields"
                 :key="field.key"
                 class="crud-field"
-                :class="{ 'crud-field--wide': field.inputField === 'richtext' || field.multiple }"
+                :class="{
+                  'crud-field--wide':
+                    field.inputField === 'richtext' || field.multiple,
+                }"
               >
                 <v-text-field
-                  v-if="['text', 'date', 'time', 'datetime'].includes(field.inputField ?? '')"
+                  v-if="
+                    ['text', 'date', 'time', 'datetime'].includes(
+                      field.inputField ?? '',
+                    )
+                  "
                   v-model="form[field.key]"
-                  :type="field.inputField === 'datetime' ? 'datetime-local' : field.inputField"
+                  :type="
+                    field.inputField === 'datetime'
+                      ? 'datetime-local'
+                      : field.inputField
+                  "
                   :label="field.title"
                   density="compact"
                   variant="outlined"
                   hide-details="auto"
                   :readonly="isFieldReadOnly(field)"
                   :required="field.required"
-                  :rules="field.required ? [(value) => !!value || `${field.title} is required`] : []"
+                  :rules="
+                    field.required
+                      ? [(value) => !!value || `${field.title} is required`]
+                      : []
+                  "
                 />
                 <v-file-input
                   v-else-if="field.inputField === 'file'"
@@ -114,9 +166,18 @@
                   show-size
                   clearable
                 />
-                <div v-else-if="field.inputField === 'richtext'" class="richtext-field">
-                  <div class="field-label">{{ field.title }}<span v-if="field.required" class="text-error"> *</span></div>
-                  <RichTextEditor v-model="form[field.key]" :read-only="isFieldReadOnly(field)" />
+                <div
+                  v-else-if="field.inputField === 'richtext'"
+                  class="richtext-field"
+                >
+                  <div class="field-label">
+                    {{ field.title
+                    }}<span v-if="field.required" class="text-error"> *</span>
+                  </div>
+                  <RichTextEditor
+                    v-model="form[field.key]"
+                    :read-only="isFieldReadOnly(field)"
+                  />
                 </div>
                 <v-checkbox
                   v-else-if="field.inputField === 'checkbox'"
@@ -126,10 +187,32 @@
                   hide-details="auto"
                   :readonly="isFieldReadOnly(field)"
                 />
-                <div v-else-if="field.inputField === 'radio'" class="radio-field">
-                  <div class="field-label">{{ field.title }}<span v-if="field.required" class="text-error"> *</span></div>
-                  <v-radio-group v-model="form[field.key]" density="compact" hide-details="auto" :readonly="isFieldReadOnly(field)" :rules="field.required ? [(value) => !!value || `${field.title} is required`] : []">
-                    <v-radio v-for="option in field.inputOptions" :key="option.value" :label="option.label" :value="option.value" density="compact" />
+                <div
+                  v-else-if="field.inputField === 'radio'"
+                  class="radio-field"
+                >
+                  <div class="field-label">
+                    {{ field.title
+                    }}<span v-if="field.required" class="text-error"> *</span>
+                  </div>
+                  <v-radio-group
+                    v-model="form[field.key]"
+                    density="compact"
+                    hide-details="auto"
+                    :readonly="isFieldReadOnly(field)"
+                    :rules="
+                      field.required
+                        ? [(value) => !!value || `${field.title} is required`]
+                        : []
+                    "
+                  >
+                    <v-radio
+                      v-for="option in field.inputOptions"
+                      :key="option.value"
+                      :label="option.label"
+                      :value="option.value"
+                      density="compact"
+                    />
                   </v-radio-group>
                 </div>
                 <v-autocomplete
@@ -147,31 +230,87 @@
                   :multiple="field.multiple"
                   :chips="field.multiple"
                   :closable-chips="field.multiple"
-                  :rules="field.required ? [(value) => (field.multiple ? !!value?.length : !!value) || `${field.title} is required`] : []"
+                  :rules="
+                    field.required
+                      ? [
+                          (value) =>
+                            (field.multiple ? !!value?.length : !!value) ||
+                            `${field.title} is required`,
+                        ]
+                      : []
+                  "
                   clearable
                 >
                   <template #item="{ props: itemProps, item }">
-                    <v-list-item v-bind="itemProps" :title="getSelectOptionLabel(item.raw)" :subtitle="getSelectOptionDescription(item.raw)" />
+                    <v-list-item
+                      v-bind="itemProps"
+                      :title="getSelectOptionLabel(item.raw)"
+                      :subtitle="getSelectOptionDescription(item.raw)"
+                    />
                   </template>
                 </v-autocomplete>
               </div>
             </div>
           </section>
-          <button type="submit" class="sr-only" tabindex="-1" aria-hidden="true" />
+          <button
+            type="submit"
+            class="sr-only"
+            tabindex="-1"
+            aria-hidden="true"
+          />
         </v-form>
       </v-card-text>
 
       <v-card-actions class="crud-dialog-actions">
         <v-spacer />
-        <v-btn variant="text" class="text-none" :disabled="props.loading" @click="emit('close')">
-          {{ props.action === 'View' ? 'Close' : 'Cancel' }}
+        <v-btn
+          variant="text"
+          class="text-none"
+          :disabled="props.loading"
+          @click="emit('close')"
+        >
+          {{ props.action === "View" ? "Close" : "Cancel" }}
         </v-btn>
-        <v-btn v-if="props.action === 'Create'" prepend-icon="mdi-plus" color="success" variant="flat" class="text-none" :loading="props.loading" :disabled="props.readOnly" @click="execute">Create {{ displayEntity }}</v-btn>
-        <v-btn v-else-if="props.action === 'Edit'" prepend-icon="mdi-pencil" color="info" variant="flat" class="text-none" :loading="props.loading" :disabled="props.readOnly" @click="execute">Save {{ displayEntity }}</v-btn>
-        <v-btn v-else-if="props.action === 'Remove'" prepend-icon="mdi-delete" color="error" variant="flat" class="text-none" :loading="props.loading" :disabled="props.readOnly" @click="execute">Delete {{ displayEntity }}</v-btn>
+        <v-btn
+          v-if="props.action === 'Create'"
+          prepend-icon="mdi-plus"
+          color="success"
+          variant="flat"
+          class="text-none"
+          :loading="props.loading"
+          :disabled="props.readOnly"
+          @click="execute"
+          >Create {{ displayEntity }}</v-btn
+        >
+        <v-btn
+          v-else-if="props.action === 'Edit'"
+          prepend-icon="mdi-pencil"
+          color="info"
+          variant="flat"
+          class="text-none"
+          :loading="props.loading"
+          :disabled="props.readOnly"
+          @click="execute"
+          >Save {{ displayEntity }}</v-btn
+        >
+        <v-btn
+          v-else-if="props.action === 'Remove'"
+          prepend-icon="mdi-delete"
+          color="error"
+          variant="flat"
+          class="text-none"
+          :loading="props.loading"
+          :disabled="props.readOnly"
+          @click="execute"
+          >Delete {{ displayEntity }}</v-btn
+        >
       </v-card-actions>
 
-      <div v-if="!isFullscreen && props.action !== 'Remove'" class="resize-handle" @mousedown="onResizeMouseDown" />
+      <div
+        v-if="!isFullscreen && props.action !== 'Remove'"
+        class="resize-handle"
+        @mousedown="onResizeMouseDown"
+      />
     </v-card>
   </v-dialog>
 </template>
@@ -197,7 +336,9 @@ const props = defineProps({
 
 const form = ref<Record<string, any>>({});
 const isFullscreen = ref(false);
-const formEl = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(null);
+const formEl = ref<{ validate: () => Promise<{ valid: boolean }> } | null>(
+  null,
+);
 
 // Guards the field-linking watchers below from firing when the form is
 // being populated/reset by opening the dialog, rather than by the user
@@ -317,19 +458,44 @@ const displayEntity = computed(() => {
 
 const actionPresentation = computed(() => {
   const entity = displayEntity.value;
-  const presentations: Record<string, { color: string; icon: string; title: string; description: string }> = {
-    Create: { color: "primary", icon: "mdi-plus-circle-outline", title: `Create ${entity}`, description: "Add a new record and complete the required details." },
-    Edit: { color: "info", icon: "mdi-pencil-outline", title: `Edit ${entity}`, description: "Review and update the record details." },
-    View: { color: "primary", icon: "mdi-eye-outline", title: `${entity} details`, description: "Review the complete record information." },
-    Remove: { color: "error", icon: "mdi-delete-alert-outline", title: `Delete ${entity}`, description: "Confirm permanent removal of this record." },
+  const presentations: Record<
+    string,
+    { color: string; icon: string; title: string; description: string }
+  > = {
+    Create: {
+      color: "primary",
+      icon: "mdi-plus-circle-outline",
+      title: `Create ${entity}`,
+      description: "Add a new record and complete the required details.",
+    },
+    Edit: {
+      color: "info",
+      icon: "mdi-pencil-outline",
+      title: `Edit ${entity}`,
+      description: "Review and update the record details.",
+    },
+    View: {
+      color: "primary",
+      icon: "mdi-eye-outline",
+      title: `${entity} details`,
+      description: "Review the complete record information.",
+    },
+    Remove: {
+      color: "error",
+      icon: "mdi-delete-alert-outline",
+      title: `Delete ${entity}`,
+      description: "Confirm permanent removal of this record.",
+    },
   };
 
-  return presentations[props.action] ?? {
-    color: "primary",
-    icon: "mdi-file-document-edit-outline",
-    title: `${props.action} ${entity}`.trim(),
-    description: "Review the record details below.",
-  };
+  return (
+    presentations[props.action] ?? {
+      color: "primary",
+      icon: "mdi-file-document-edit-outline",
+      title: `${props.action} ${entity}`.trim(),
+      description: "Review the record details below.",
+    }
+  );
 });
 
 const execute = async () => {
@@ -454,9 +620,6 @@ props.fields
   position: relative;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
   background: rgb(var(--v-theme-surface));
-  box-shadow:
-    0 24px 70px rgba(0, 0, 0, 0.28),
-    0 5px 18px rgba(0, 0, 0, 0.12) !important;
 }
 
 .resize-handle {
@@ -559,7 +722,8 @@ props.fields
 
 .form-field :deep(input[type="date"]::-webkit-calendar-picker-indicator),
 .form-field :deep(input[type="time"]::-webkit-calendar-picker-indicator),
-.form-field :deep(input[type="datetime-local"]::-webkit-calendar-picker-indicator) {
+.form-field
+  :deep(input[type="datetime-local"]::-webkit-calendar-picker-indicator) {
   position: absolute;
   right: 2px;
   width: 20px;
@@ -715,7 +879,8 @@ props.fields
 
 .crud-field :deep(input[type="date"]::-webkit-calendar-picker-indicator),
 .crud-field :deep(input[type="time"]::-webkit-calendar-picker-indicator),
-.crud-field :deep(input[type="datetime-local"]::-webkit-calendar-picker-indicator) {
+.crud-field
+  :deep(input[type="datetime-local"]::-webkit-calendar-picker-indicator) {
   position: absolute;
   right: 2px;
   width: 20px;

@@ -12,16 +12,26 @@
     @execute="execute"
   />
 
-  <v-container fluid>
-    <div class="d-flex align-center justify-space-between flex-wrap ga-3 mb-4">
+  <v-container fluid class="leave-credit-page">
+    <section class="accrual-hero">
+      <div class="accrual-hero__icon"><v-icon icon="mdi-calendar-plus-outline" size="28" /></div>
       <div>
-        <div class="text-h5 font-weight-bold">Leave Credit Management</div>
-        <p class="text-body-2 text-medium-emphasis mb-0">
-          Configure automatic leave credit accrual rules.
-        </p>
+        <span>Leave credit policy</span>
+        <h1>Leave Credit Accrual Settings</h1>
+        <p>Create one rule for each leave benefit the company grants automatically.</p>
       </div>
-      <v-chip color="primary" variant="flat">Leave Credits</v-chip>
-    </div>
+      <v-chip color="primary" variant="flat">{{ api.pagination.value.total }} rules</v-chip>
+    </section>
+
+    <section class="accrual-guide" aria-label="How leave credit accrual works">
+      <article><v-icon icon="mdi-form-select" color="primary" /><div><strong>1. Choose a leave type</strong><span>For example: Vacation Leave or Sick Leave.</span></div></article>
+      <article><v-icon icon="mdi-calendar-sync-outline" color="primary" /><div><strong>2. Set the amount and months</strong><span>Example: 1.25 days each month, or 15 days every January.</span></div></article>
+      <article><v-icon icon="mdi-account-filter-outline" color="primary" /><div><strong>3. Limit eligibility if needed</strong><span>Leave filters blank to include all active employees with enough service.</span></div></article>
+    </section>
+
+    <v-alert type="info" variant="tonal" class="accrual-note" icon="mdi-information-outline">
+      You do not need to seed these rules. They are company policy, so add only the leave benefits your organization actually provides. Saving an active rule automatically enables the Leave Accrual task; it runs daily and prevents duplicate credits.
+    </v-alert>
 
     <Table
       :entity="entity"
@@ -36,7 +46,15 @@
       @view="(item: any) => openForm('View', item)"
       @edit="(item: any) => openForm('Edit', item)"
       @remove="(item: any) => openForm('Remove', item)"
-    />
+    >
+      <template #empty>
+        <div class="accrual-empty">
+          <v-icon icon="mdi-calendar-plus-outline" size="36" color="primary" />
+          <strong>No accrual rules yet</strong>
+          <span>Start with the leave type, amount granted, and the months when it should be credited.</span>
+        </div>
+      </template>
+    </Table>
   </v-container>
 </template>
 
@@ -127,3 +145,19 @@ onMounted(async () => {
   await Promise.all([loadOptions(), api.index({ relations })]);
 });
 </script>
+
+<style scoped>
+.leave-credit-page { display: grid; gap: 16px; }
+.accrual-hero { display: flex; align-items: center; gap: 14px; padding: 21px 22px; border: 1px solid rgba(var(--v-theme-primary), .18); border-radius: 17px; background: linear-gradient(125deg, rgba(var(--v-theme-primary), .13), rgba(var(--v-theme-surface), .96)); }
+.accrual-hero__icon { display: grid; width: 50px; height: 50px; flex: 0 0 auto; place-items: center; border-radius: 14px; color: rgb(var(--v-theme-primary)); background: rgba(var(--v-theme-primary), .13); }
+.accrual-hero > div:nth-child(2) { min-width: 0; flex: 1; }
+.accrual-hero span { color: rgb(var(--v-theme-primary)); font-size: .7rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.accrual-hero h1 { margin: 3px 0; font-size: 1.35rem; line-height: 1.2; }
+.accrual-hero p { margin: 0; color: rgb(var(--v-theme-on-surface-variant)); font-size: .82rem; }
+.accrual-guide { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.accrual-guide article { display: flex; align-items: flex-start; gap: 10px; padding: 14px; border: 1px solid rgba(var(--v-theme-on-surface), .09); border-radius: 13px; background: rgb(var(--v-theme-surface)); }
+.accrual-guide article > div { display: grid; gap: 3px; }.accrual-guide strong { font-size: .79rem; }.accrual-guide span { color: rgb(var(--v-theme-on-surface-variant)); font-size: .7rem; line-height: 1.4; }
+.accrual-note { margin: 0; font-size: .78rem; }.accrual-empty { display: grid; max-width: 420px; justify-items: center; gap: 8px; margin: 20px auto; text-align: center; }.accrual-empty span { color: rgb(var(--v-theme-on-surface-variant)); font-size: .76rem; }
+@media (max-width: 850px) { .accrual-guide { grid-template-columns: 1fr; } }
+@media (max-width: 560px) { .accrual-hero { align-items: flex-start; flex-wrap: wrap; } .accrual-hero .v-chip { margin-left: 64px; } }
+</style>

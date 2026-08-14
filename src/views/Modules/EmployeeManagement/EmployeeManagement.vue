@@ -10,6 +10,7 @@
     :employeeFields="fields"
     :addressFields="addressFields"
     :contactFields="contactFields"
+    :show-documents="canUseDocuments"
     @close="close"
     @execute="execute"
   />
@@ -38,27 +39,8 @@
       @view="view"
       @edit="edit"
       @remove="remove"
-    >
-      <template #extra-actions="{ item }">
-        <v-btn
-          v-if="documentsEnabled && checkPermissions('view-employee-documents')"
-          color="secondary"
-          variant="tonal"
-          size="small"
-          density="comfortable"
-          icon="mdi-folder-account-outline"
-          title="Open 201 files"
-          @click="openDocuments(item)"
-        />
-      </template>
-    </Table>
+    />
   </v-container>
-
-  <EmployeeDocumentsDialog
-    :visible="documentsVisible"
-    :employee="documentsEmployee"
-    @close="documentsVisible = false"
-  />
 </template>
 
 <script lang="ts" setup>
@@ -71,7 +53,6 @@ import axios from "@/plugins/axios";
 import type { ColumnConfig } from "@/types/types";
 import EmployeeStepperForm from "@/components/EmployeeStepperForm.vue";
 import Table from "@/components/Table.vue";
-import EmployeeDocumentsDialog from "@/components/EmployeeDocumentsDialog.vue";
 import { usePermissions } from "@/composables/usePermissions";
 import { useAppSettings } from "@/composables/useAppSettings";
 
@@ -156,17 +137,14 @@ const initializeForm = (): EmployeeForm => {
 const form = ref<EmployeeForm>(initializeForm());
 
 const readOnly = () => action.value === "View";
-const documentsVisible = ref(false);
-const documentsEmployee = ref<any>({});
 const { checkPermissions } = usePermissions();
 const { values: appSettings } = useAppSettings();
 const documentsEnabled = computed(
   () => appSettings.value["employee_documents.enabled"] !== false,
 );
-const openDocuments = (employee: any) => {
-  documentsEmployee.value = employee;
-  documentsVisible.value = true;
-};
+const canUseDocuments = computed(
+  () => documentsEnabled.value && checkPermissions("view-employee-documents"),
+);
 
 // Helper to format date for form input (converts to YYYY-MM-DD)
 const formatDateForInput = (date: any): string => {
@@ -245,6 +223,24 @@ const loadOptions = async () => {
   }
 };
 
+const ensureCurrentUserOption = (employee: any) => {
+  const user = employee?.user;
+  const userId = employee?.user_id ?? user?.id;
+  if (!userId) return;
+
+  const field = fields.value.find((item) => item.selectKey === "user_id");
+  if (!field || field.inputOptions?.some((option) => option.value === userId)) return;
+
+  field.inputOptions = [
+    ...(field.inputOptions ?? []),
+    {
+      value: userId,
+      label: `${user?.first_name ?? ""} ${user?.last_name ?? ""}`.trim()
+        + (user?.email ? ` - ${user.email}` : ""),
+    },
+  ];
+};
+
 const create = async () => {
   action.value = "Create";
 
@@ -262,12 +258,14 @@ const create = async () => {
 };
 
 const view = (dataParam: any) => {
+  ensureCurrentUserOption(dataParam);
   isFormVisible.value = true;
   action.value = "View";
   data.value = dataParam;
 };
 
 const edit = (dataParam: any) => {
+  ensureCurrentUserOption(dataParam);
   isFormVisible.value = true;
   action.value = "Edit";
 
@@ -315,6 +313,7 @@ const execute = async (payload: any) => {
   try {
     if (action.value === "Create") {
       await store(payload);
+      await loadOptions();
     } else if (action.value === "Edit") {
       await update(payload.id, payload);
     } else if (action.value === "Remove") {

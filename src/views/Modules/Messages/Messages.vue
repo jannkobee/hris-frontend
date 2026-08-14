@@ -869,7 +869,10 @@ const openSharedAttachment = async (attachment: any) => {
 
   try {
     if (attachment.is_image && attachment.preview_url) {
-      const url = await loadMessageAttachmentPreview(attachment.preview_url);
+      const url = await loadMessageAttachmentPreview(
+        attachment.preview_url,
+        attachment.download_url,
+      );
       if (url) {
         openImagePreview({
           url,
@@ -1092,7 +1095,6 @@ fetchConversations();
   border: 1px solid var(--messages-border);
   border-radius: 20px;
   background: rgb(var(--v-theme-surface));
-  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.055);
 }
 .conversation-pane {
   display: flex;
@@ -1328,7 +1330,6 @@ fetchConversations();
   border: 1px solid var(--messages-border);
   border-radius: 6px 15px 15px;
   background: rgb(var(--v-theme-surface));
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.035);
 }
 .message-bubble p {
   margin: 0;
@@ -1349,7 +1350,6 @@ fetchConversations();
   border-radius: 15px 6px 15px 15px;
   color: rgb(var(--v-theme-on-primary));
   background: rgb(var(--v-theme-primary));
-  box-shadow: 0 4px 14px rgba(var(--v-theme-primary), 0.18);
 }
 .message-bubble--own time {
   color: rgba(var(--v-theme-on-primary), 0.72);
@@ -1361,19 +1361,33 @@ fetchConversations();
 }
 .composer {
   display: flex;
-  align-items: flex-end;
+  align-items: center;
   gap: 9px;
   padding: 7px 8px 7px 15px;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.14);
   border-radius: 16px;
   background: rgba(var(--v-theme-on-surface), 0.025);
-  transition:
-    border-color 0.15s ease,
-    box-shadow 0.15s ease;
+  transition: border-color 0.15s ease;
+}
+.composer :deep(.v-input) {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+.composer :deep(.v-field__input) {
+  min-height: 32px;
+  align-items: center;
+  padding-block: 5px;
+}
+.composer :deep(textarea) {
+  align-self: center;
+  line-height: 1.4;
+}
+.composer > .v-btn {
+  flex: 0 0 auto;
+  align-self: center;
 }
 .composer:focus-within {
   border-color: rgba(var(--v-theme-primary), 0.58);
-  box-shadow: 0 0 0 3px rgba(var(--v-theme-primary), 0.08);
 }
 .composer-wrap > span {
   display: block;
@@ -1456,17 +1470,11 @@ fetchConversations();
   transition: background-color 0.15s ease;
 }
 .conversation-item--active {
+  border: 1px solid rgba(var(--v-theme-primary), 0.16);
   background: rgba(var(--v-theme-primary), 0.105);
-  box-shadow: inset 0 0 0 1px rgba(var(--v-theme-primary), 0.09);
 }
 .conversation-item--active:before {
   background: rgb(var(--v-theme-primary));
-}
-.conversation-item :deep(.user-avatar),
-.thread-header :deep(.user-avatar) {
-  box-shadow:
-    0 0 0 2px rgb(var(--v-theme-surface)),
-    0 0 0 3px rgba(var(--v-theme-primary), 0.15);
 }
 .thread-header {
   min-height: 74px;
@@ -1477,7 +1485,8 @@ fetchConversations();
   );
 }
 .thread-body {
-  background: linear-gradient(
+  background:
+    linear-gradient(
       180deg,
       rgba(var(--v-theme-primary), 0.025),
       transparent 25%
@@ -1491,7 +1500,6 @@ fetchConversations();
 .message-bubble {
   padding: 10px 12px 8px;
   border-radius: 7px 17px 17px;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.04);
 }
 .message-bubble--own {
   border-radius: 17px 7px 17px 17px;

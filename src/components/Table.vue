@@ -18,9 +18,11 @@
           <slot name="toolbar-actions" />
 
           <v-btn
-            v-if="showCreateAction && checkPermissions(`create-${permissionEntity}`)"
+            v-if="
+              showCreateAction && checkPermissions(`create-${permissionEntity}`)
+            "
             class="text-none"
-            color="primary"
+            color="success"
             prepend-icon="mdi-plus"
             variant="flat"
             @click="emit('create')"
@@ -40,7 +42,10 @@
           </v-btn>
 
           <v-btn
-            v-if="showDownloadTemplate && checkPermissions(`manage-${permissionEntity}`)"
+            v-if="
+              showDownloadTemplate &&
+              checkPermissions(`manage-${permissionEntity}`)
+            "
             class="text-none"
             color="secondary"
             prepend-icon="mdi-download-outline"
@@ -94,7 +99,9 @@
       @update:options="handleTableChange"
     >
       <template
-        v-for="header in props.headers.filter((column) => column.displayAs === 'chip')"
+        v-for="header in props.headers.filter(
+          (column) => column.displayAs === 'chip',
+        )"
         :key="`item.${header.key}`"
         v-slot:[`item.${header.key}`]="{ item }"
       >
@@ -112,7 +119,9 @@
       </template>
 
       <template
-        v-for="header in props.headers.filter((column) => column.displayAs === 'chips')"
+        v-for="header in props.headers.filter(
+          (column) => column.displayAs === 'chips',
+        )"
         :key="`item.${header.key}`"
         v-slot:[`item.${header.key}`]="{ item }"
       >
@@ -128,7 +137,11 @@
           >
             {{ label }}
           </v-chip>
-          <span v-if="formatCellArray(item, header).length === 0" class="app-table__empty-value">—</span>
+          <span
+            v-if="formatCellArray(item, header).length === 0"
+            class="app-table__empty-value"
+            >—</span
+          >
         </div>
       </template>
 
@@ -148,9 +161,14 @@
       </template>
 
       <template #item.action="{ item }">
-        <div class="app-table__row-actions" :class="`app-table__row-actions--${actionAlignment}`">
+        <div
+          class="app-table__row-actions"
+          :class="`app-table__row-actions--${actionAlignment}`"
+        >
           <v-btn
-            v-if="showViewAction && checkPermissions(`view-${permissionEntity}`)"
+            v-if="
+              showViewAction && checkPermissions(`view-${permissionEntity}`)
+            "
             color="primary"
             variant="tonal"
             size="small"
@@ -161,7 +179,9 @@
             @click="emit('view', item)"
           />
           <v-btn
-            v-if="showEditAction && checkPermissions(`update-${permissionEntity}`)"
+            v-if="
+              showEditAction && checkPermissions(`update-${permissionEntity}`)
+            "
             color="info"
             variant="tonal"
             size="small"
@@ -221,7 +241,10 @@ const props = defineProps({
   icon: { type: String, default: "mdi-table" },
   headers: { type: Array as () => ColumnConfig[], default: () => [] },
   data: { type: Array as () => any[], default: () => [] },
-  pagination: { type: Object as () => Partial<Data>, default: () => ({ total: 0 }) },
+  pagination: {
+    type: Object as () => Partial<Data>,
+    default: () => ({ total: 0 }),
+  },
   relations: { type: String, default: "" },
   loading: { type: Boolean, default: false },
   showCreateAction: { type: Boolean, default: true },
@@ -273,7 +296,8 @@ const tableHeaders = computed(() =>
 );
 
 const actionAlignment = computed(
-  () => props.headers.find((header) => header.key === "action")?.align ?? "center",
+  () =>
+    props.headers.find((header) => header.key === "action")?.align ?? "center",
 );
 
 const permissionEntity = computed(() => {
@@ -311,7 +335,9 @@ const formatCellValue = (item: any, header: ColumnConfig): string => {
   if (header.inputField === "time") return formatTime(value);
 
   if (header.displayAs === "chip" && typeof value === "string") {
-    const option = header.inputOptions?.find((candidate: any) => candidate.value === value);
+    const option = header.inputOptions?.find(
+      (candidate: any) => candidate.value === value,
+    );
     if (option?.label) return option.label;
 
     const label = value.replace(/[_-]+/g, " ").trim();
@@ -341,7 +367,11 @@ const handleSearchChange = () => {
 };
 
 const handleTableChange = (options: any) => {
-  form.value = { ...form.value, ...options, limit: options.itemsPerPage ?? form.value.limit };
+  form.value = {
+    ...form.value,
+    ...options,
+    limit: options.itemsPerPage ?? form.value.limit,
+  };
   emitFilter();
 };
 
@@ -376,7 +406,6 @@ watch(
   border: 1px solid rgba(var(--v-theme-on-surface), 0.09);
   border-radius: 16px;
   background: rgb(var(--v-theme-surface));
-  box-shadow: 0 10px 30px rgba(var(--v-theme-on-surface), 0.045);
 }
 
 .app-table__toolbar {
@@ -525,9 +554,15 @@ watch(
   white-space: nowrap;
 }
 
-.app-table__row-actions--start { justify-content: flex-start; }
-.app-table__row-actions--center { justify-content: center; }
-.app-table__row-actions--end { justify-content: flex-end; }
+.app-table__row-actions--start {
+  justify-content: flex-start;
+}
+.app-table__row-actions--center {
+  justify-content: center;
+}
+.app-table__row-actions--end {
+  justify-content: flex-end;
+}
 
 .app-table__chip-group {
   flex-wrap: wrap;
