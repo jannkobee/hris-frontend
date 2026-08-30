@@ -62,9 +62,171 @@
         <template v-else>
           <div style="flex: 0 0 auto">
             <v-alert type="info" variant="tonal" density="compact" class="mb-4">
-              Choose what this role can do across the system. Each permission is
-              grouped by module and explained in plain language.
+              Templates configure role access only; they do not unlock modules
+              excluded by the company's subscription plan. The protected Admin
+              role always keeps full role-based access.
             </v-alert>
+
+            <div class="mb-4">
+              <div
+                class="d-flex align-center justify-space-between flex-wrap ga-2 mb-3"
+              >
+                <div>
+                  <div class="text-subtitle-1 font-weight-medium">
+                    Role templates
+                  </div>
+                  <div class="text-caption text-medium-emphasis">
+                    Start with a common HR role, then fine-tune its permissions
+                    before saving.
+                  </div>
+                </div>
+                <v-chip
+                  size="small"
+                  :color="activePreset?.color"
+                  :variant="activePreset ? 'tonal' : 'outlined'"
+                >
+                  {{
+                    loadingPermissionPresets
+                      ? "Checking template..."
+                      : (activePreset?.name ?? "Custom")
+                  }}
+                </v-chip>
+              </div>
+
+              <v-progress-linear
+                v-if="loadingPermissionPresets"
+                indeterminate
+                color="primary"
+                class="mb-3"
+              />
+
+              <v-alert
+                v-else-if="permissionPresetError"
+                type="warning"
+                variant="tonal"
+                density="compact"
+                class="mb-3"
+              >
+                <div class="d-flex align-center justify-space-between ga-3">
+                  <span>{{ permissionPresetError }}</span>
+                  <v-btn
+                    size="small"
+                    variant="text"
+                    prepend-icon="mdi-refresh"
+                    @click="loadPermissionPresets"
+                  >
+                    Retry
+                  </v-btn>
+                </div>
+              </v-alert>
+
+              <v-alert
+                v-else-if="!permissionPresets.length"
+                type="info"
+                variant="tonal"
+                density="compact"
+                class="mb-3"
+              >
+                No role templates are available for this company. You can still
+                select permissions manually.
+              </v-alert>
+
+              <v-row v-else dense>
+                <v-col
+                  v-for="preset in permissionPresets"
+                  :key="preset.key"
+                  cols="12"
+                  md="6"
+                >
+                  <v-card
+                    rounded="lg"
+                    :color="
+                      activePresetKey === preset.key ? preset.color : undefined
+                    "
+                    :variant="
+                      activePresetKey === preset.key ? 'tonal' : 'outlined'
+                    "
+                    class="permission-preset-card fill-height"
+                  >
+                    <v-card-text class="pb-2">
+                      <div class="d-flex align-start ga-3">
+                        <v-avatar
+                          :color="preset.color"
+                          variant="tonal"
+                          size="40"
+                        >
+                          <v-icon :icon="preset.icon" size="22" />
+                        </v-avatar>
+                        <div>
+                          <div class="font-weight-bold">{{ preset.name }}</div>
+                          <div class="text-body-2 text-medium-emphasis mt-1">
+                            {{ preset.description }}
+                          </div>
+                          <div
+                            v-if="preset.missing_permission_slugs.length"
+                            class="text-caption text-error mt-2"
+                          >
+                            <v-icon
+                              icon="mdi-alert-circle-outline"
+                              size="small"
+                              class="mr-1"
+                            />
+                            Unavailable permissions:
+                            {{ preset.missing_permission_slugs.join(", ") }}
+                          </div>
+                        </div>
+                      </div>
+                    </v-card-text>
+                    <v-card-actions class="px-4 pb-3">
+                      <span class="text-caption text-medium-emphasis">
+                        <template v-if="preset.missing_permission_slugs.length">
+                          {{ preset.permission_ids.length }} of
+                          {{
+                            preset.permission_ids.length +
+                            preset.missing_permission_slugs.length
+                          }}
+                          permissions available
+                        </template>
+                        <template v-else>
+                          {{ preset.permission_ids.length }}
+                          {{
+                            preset.permission_ids.length === 1
+                              ? "permission"
+                              : "permissions"
+                          }}
+                        </template>
+                      </span>
+                      <v-spacer />
+                      <v-btn
+                        size="small"
+                        :color="preset.color"
+                        :variant="
+                          activePresetKey === preset.key ? 'flat' : 'tonal'
+                        "
+                        :prepend-icon="
+                          activePresetKey === preset.key
+                            ? 'mdi-check'
+                            : 'mdi-auto-fix'
+                        "
+                        :disabled="
+                          props.readOnly ||
+                          loadingPermissions ||
+                          loadingPermissionPresets ||
+                          preset.missing_permission_slugs.length > 0 ||
+                          preset.permission_ids.length === 0 ||
+                          activePresetKey === preset.key
+                        "
+                        @click="applyPreset(preset)"
+                      >
+                        {{
+                          activePresetKey === preset.key ? "Selected" : "Apply"
+                        }}
+                      </v-btn>
+                    </v-card-actions>
+                  </v-card>
+                </v-col>
+              </v-row>
+            </div>
 
             <v-text-field
               v-model="search"
@@ -219,7 +381,9 @@ import { ref, computed, onMounted, watch } from "vue";
 import { useApi } from "@/composables/useApi";
 import { Permission } from "@/types/types";
 import type { PropType } from "vue";
+import { isAxiosError } from "axios";
 import axios from "@/plugins/axios";
+import { useAppDialog } from "@/composables/useAppDialog";
 import { useDraggable } from "@/composables/useDraggable";
 import { useResizable } from "@/composables/useResizable";
 
@@ -241,9 +405,12 @@ const props = defineProps({
 });
 
 const { index, items } = useApi<Permission>("/permissions");
+const { confirm } = useAppDialog();
 
 const loading = ref(false);
 const loadingPermissions = ref(false);
+const loadingPermissionPresets = ref(false);
+const permissionPresetError = ref("");
 const isFullscreen = ref(false);
 
 const cardEl = ref<{ $el: HTMLElement } | null>(null);
@@ -280,11 +447,118 @@ const resetDialogGeometry = () => {
   resetResize();
 };
 
-const emit = defineEmits(["close"]);
+const emit = defineEmits<{
+  (event: "close"): void;
+  (event: "saved", role: RolePermissionData): void;
+}>();
 
-const permissions = ref<any>([]);
+const permissions = ref<string[]>([]);
 const search = ref("");
 const activeModule = ref<string>("");
+
+type RolePermissionData = {
+  id: string;
+  name: string;
+  description: string;
+  permissions: Permission[];
+  [key: string]: unknown;
+};
+
+type PermissionPreset = {
+  key: string;
+  name: string;
+  description: string;
+  icon: string;
+  color: string;
+  permission_ids: string[];
+  permission_slugs: string[];
+  missing_permission_slugs: string[];
+};
+
+const permissionPresets = ref<PermissionPreset[]>([]);
+
+const loadPermissionPresets = async () => {
+  loadingPermissionPresets.value = true;
+  permissionPresetError.value = "";
+
+  try {
+    const response = await axios.get<{ data: PermissionPreset[] }>(
+      "/permission-presets",
+    );
+    const presets = response.data?.data;
+
+    if (!Array.isArray(presets)) {
+      throw new Error("The server returned an invalid role template list.");
+    }
+
+    permissionPresets.value = presets;
+  } catch (error: unknown) {
+    permissionPresets.value = [];
+
+    const responseMessage = isAxiosError<{ message?: string }>(error)
+      ? error.response?.data?.message
+      : undefined;
+
+    permissionPresetError.value =
+      responseMessage ||
+      (error instanceof Error ? error.message : undefined) ||
+      "Role templates could not be loaded. You can still select permissions manually.";
+  } finally {
+    loadingPermissionPresets.value = false;
+  }
+};
+
+const hasSamePermissionIds = (left: string[], right: string[]) => {
+  if (left.length !== right.length) return false;
+
+  const rightIds = new Set(right);
+  return left.every((id) => rightIds.has(id));
+};
+
+const activePresetKey = computed<string | null>(() => {
+  return (
+    permissionPresets.value.find(
+      (preset) =>
+        preset.permission_ids.length > 0 &&
+        preset.missing_permission_slugs.length === 0 &&
+        hasSamePermissionIds(permissions.value, preset.permission_ids),
+    )?.key ?? null
+  );
+});
+
+const activePreset = computed(
+  () =>
+    permissionPresets.value.find(
+      (preset) => preset.key === activePresetKey.value,
+    ) ?? null,
+);
+
+const applyPreset = async (preset: PermissionPreset) => {
+  if (
+    props.readOnly ||
+    !preset.permission_ids.length ||
+    preset.missing_permission_slugs.length
+  ) {
+    return;
+  }
+
+  const replacingCustomSelection =
+    permissions.value.length > 0 && activePresetKey.value === null;
+
+  if (
+    replacingCustomSelection &&
+    !(await confirm({
+      title: `Apply the ${preset.name} preset?`,
+      message: `This will replace your custom selection of ${permissions.value.length} permissions. You can still fine-tune the result before saving.`,
+      confirmText: `Apply ${preset.name}`,
+      tone: "warning",
+    }))
+  ) {
+    return;
+  }
+
+  permissions.value = [...preset.permission_ids];
+};
 
 const groupedPermissions = computed(() => {
   const groups: Record<string, Permission[]> = {};
@@ -409,7 +683,20 @@ const execute = async () => {
   loading.value = true;
 
   try {
-    await axios.put(`/role-permissions/${props.data.id}`, data);
+    const response = await axios.put(
+      `/role-permissions/${props.data.id}`,
+      data,
+    );
+    const updatedRole = response.data?.data as RolePermissionData | undefined;
+
+    if (!updatedRole || !Array.isArray(updatedRole.permissions)) {
+      throw new Error("The saved role was not returned by the server.");
+    }
+
+    permissions.value = updatedRole.permissions.map(
+      (permission) => permission.id,
+    );
+    emit("saved", updatedRole);
     emit("close");
   } finally {
     loading.value = false;
@@ -418,11 +705,13 @@ const execute = async () => {
 
 onMounted(async () => {
   loadingPermissions.value = true;
+  const presetsRequest = loadPermissionPresets();
 
   try {
     await index({ all: true } as any);
   } finally {
     loadingPermissions.value = false;
+    await presetsRequest;
   }
 });
 

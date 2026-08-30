@@ -1,22 +1,11 @@
 <template>
   <v-container fluid class="profile-page">
     <section class="profile-hero">
-      <div class="profile-photo-wrap">
-        <v-avatar size="112" color="primary" class="profile-avatar">
-          <v-img v-if="photoUrl" :src="photoUrl" cover />
-          <span v-else class="text-h4 font-weight-bold">{{
-            profile?.initials
-          }}</span>
-        </v-avatar>
-        <v-btn
-          icon="mdi-camera-outline"
-          color="primary"
-          size="small"
-          class="photo-button"
-          :loading="uploadingPhoto"
-          title="Change profile photo"
-          @click="photoInput?.click()"
-        />
+      <div class="profile-photo">
+        <v-img v-if="photoUrl" :src="photoUrl" cover />
+        <span v-else class="text-h4 font-weight-bold">{{
+          profile?.initials
+        }}</span>
         <input
           ref="photoInput"
           type="file"
@@ -26,11 +15,12 @@
         />
       </div>
       <div class="profile-identity">
-        <div class="d-flex align-center ga-2 flex-wrap">
+        <span class="profile-kicker">My account</span>
+        <div class="d-flex align-center ga-3 flex-wrap">
           <h1>{{ profile?.full_name || "My profile" }}</h1>
-          <v-chip size="small" color="primary" variant="flat">{{
+          <span class="profile-role">{{
             profile?.role?.name || "Team member"
-          }}</v-chip>
+          }}</span>
         </div>
         <p>{{ profile?.email }}</p>
         <div class="profile-meta">
@@ -49,6 +39,23 @@
       </div>
       <div class="profile-actions">
         <v-btn
+          color="primary"
+          variant="flat"
+          prepend-icon="mdi-camera-outline"
+          class="text-none"
+          :loading="uploadingPhoto"
+          @click="photoInput?.click()"
+          >Change photo</v-btn
+        >
+        <v-btn
+          v-if="employee && documentsEnabled"
+          variant="outlined"
+          prepend-icon="mdi-folder-account-outline"
+          class="text-none"
+          @click="documentsVisible = true"
+          >My 201 files</v-btn
+        >
+        <v-btn
           v-if="photoUrl"
           variant="text"
           color="error"
@@ -58,181 +65,206 @@
           @click="removePhoto"
           >Remove photo</v-btn
         >
-        <v-btn
-          v-if="employee && documentsEnabled"
-          color="primary"
-          variant="tonal"
-          prepend-icon="mdi-folder-account-outline"
-          class="text-none"
-          @click="documentsVisible = true"
-          >My 201 files</v-btn
-        >
       </div>
     </section>
 
     <v-skeleton-loader v-if="loading" type="article, article" />
-    <div v-else class="profile-grid">
-      <section class="profile-card profile-card--personal">
-        <div class="card-heading">
-          <v-avatar color="primary" variant="tonal" size="38"
-            ><v-icon icon="mdi-account-edit-outline"
-          /></v-avatar>
-          <div>
-            <strong>Personal information</strong
-            ><small>Keep your personal details accurate.</small>
-          </div>
+    <v-alert
+      v-else-if="loadError"
+      type="error"
+      variant="tonal"
+      class="profile-error"
+      title="Profile could not be loaded"
+    >
+      {{ loadError }}
+      <template #append>
+        <v-btn variant="text" @click="load">Try again</v-btn>
+      </template>
+    </v-alert>
+    <template v-else>
+      <section class="profile-summary" aria-label="Profile summary">
+        <div>
+          <span>Employee ID</span>
+          <strong>{{ employee?.employee_no || "—" }}</strong>
         </div>
-        <div class="form-grid">
-          <v-text-field
-            v-model="form.first_name"
-            label="First name"
-            density="compact"
-            variant="outlined"
-            hide-details="auto"
-          />
-          <v-text-field
-            v-model="form.middle_name"
-            label="Middle name"
-            density="compact"
-            variant="outlined"
-            hide-details="auto"
-          />
-          <v-text-field
-            v-model="form.last_name"
-            label="Last name"
-            density="compact"
-            variant="outlined"
-            hide-details="auto"
-          />
-          <v-select
-            v-model="form.gender"
-            label="Gender"
-            :items="['Male', 'Female', 'Other']"
-            density="compact"
-            variant="outlined"
-            hide-details="auto"
-          />
-          <v-text-field
-            v-model="form.birthday"
-            label="Birthday"
-            type="date"
-            density="compact"
-            variant="outlined"
-            hide-details="auto"
-          />
-          <v-text-field
-            :model-value="profile?.email"
-            label="Email"
-            density="compact"
-            variant="outlined"
-            readonly
-            hide-details="auto"
-          />
+        <div>
+          <span>Department</span>
+          <strong>{{ employee?.department?.name || "Not assigned" }}</strong>
         </div>
-        <div class="d-flex justify-end mt-5">
-          <v-btn
-            color="primary"
-            prepend-icon="mdi-content-save-outline"
-            class="text-none"
-            :loading="saving"
-            @click="save"
-            >Save profile</v-btn
-          >
+        <div>
+          <span>Position</span>
+          <strong>{{ employee?.position?.name || "Not assigned" }}</strong>
+        </div>
+        <div>
+          <span>Access role</span>
+          <strong>{{ profile?.role?.name || "Team member" }}</strong>
         </div>
       </section>
 
-      <section class="profile-card profile-card--employment">
-        <div class="card-heading">
-          <v-avatar color="primary" variant="tonal" size="38"
-            ><v-icon icon="mdi-briefcase-account-outline"
-          /></v-avatar>
-          <div>
-            <strong>Employment</strong
-            ><small>Your current company assignment.</small>
+      <div class="profile-grid">
+        <section class="profile-card profile-card--personal">
+          <div class="card-heading">
+            <v-avatar color="primary" variant="tonal" size="38"
+              ><v-icon icon="mdi-account-edit-outline"
+            /></v-avatar>
+            <div>
+              <strong>Personal information</strong
+              ><small>Keep your personal details accurate.</small>
+            </div>
           </div>
-        </div>
-        <div v-if="employee" class="detail-list">
-          <div>
-            <span>Employee number</span
-            ><strong>{{ employee.employee_no || "—" }}</strong>
+          <div class="form-grid">
+            <v-text-field
+              v-model="form.first_name"
+              label="First name"
+              density="compact"
+              variant="outlined"
+              hide-details="auto"
+            />
+            <v-text-field
+              v-model="form.middle_name"
+              label="Middle name"
+              density="compact"
+              variant="outlined"
+              hide-details="auto"
+            />
+            <v-text-field
+              v-model="form.last_name"
+              label="Last name"
+              density="compact"
+              variant="outlined"
+              hide-details="auto"
+            />
+            <v-select
+              v-model="form.gender"
+              label="Gender"
+              :items="['Male', 'Female', 'Other']"
+              density="compact"
+              variant="outlined"
+              hide-details="auto"
+            />
+            <v-text-field
+              v-model="form.birthday"
+              label="Birthday"
+              type="date"
+              density="compact"
+              variant="outlined"
+              hide-details="auto"
+            />
+            <v-text-field
+              :model-value="profile?.email"
+              label="Email"
+              density="compact"
+              variant="outlined"
+              readonly
+              hide-details="auto"
+            />
           </div>
-          <div>
-            <span>Hire date</span
-            ><strong>{{ formatDate(employee.hire_date) }}</strong>
+          <div class="d-flex justify-end mt-5">
+            <v-btn
+              color="primary"
+              prepend-icon="mdi-content-save-outline"
+              class="text-none"
+              :loading="saving"
+              :disabled="!hasChanges"
+              @click="save"
+              >Save changes</v-btn
+            >
           </div>
-          <div>
-            <span>Status</span
-            ><strong>{{ employee.employment_status?.name || "—" }}</strong>
-          </div>
-          <div>
-            <span>Department</span
-            ><strong>{{ employee.department?.name || "—" }}</strong>
-          </div>
-          <div>
-            <span>Position</span
-            ><strong>{{ employee.position?.name || "—" }}</strong>
-          </div>
-          <div>
-            <span>Job grade</span
-            ><strong>{{ employee.job_grade?.name || "—" }}</strong>
-          </div>
-        </div>
-        <div v-else class="profile-empty">
-          This account is not linked to an employee record.
-        </div>
-      </section>
+        </section>
 
-      <section class="profile-card">
-        <div class="card-heading">
-          <v-avatar color="primary" variant="tonal" size="38"
-            ><v-icon icon="mdi-card-account-phone-outline"
-          /></v-avatar>
-          <div>
-            <strong>Contact details</strong
-            ><small>Managed in your employee record.</small>
+        <section class="profile-card profile-card--employment">
+          <div class="card-heading">
+            <v-avatar color="primary" variant="tonal" size="38"
+              ><v-icon icon="mdi-briefcase-account-outline"
+            /></v-avatar>
+            <div>
+              <strong>Employment</strong
+              ><small>Your current company assignment.</small>
+            </div>
           </div>
-        </div>
-        <div v-if="employee?.contacts?.length" class="detail-list">
-          <div v-for="contact in employee.contacts" :key="contact.id">
-            <span class="text-capitalize">{{ contact.type }}</span
-            ><strong>{{ contact.value }}</strong>
+          <div v-if="employee" class="detail-list">
+            <div>
+              <span>Employee number</span
+              ><strong>{{ employee.employee_no || "—" }}</strong>
+            </div>
+            <div>
+              <span>Hire date</span
+              ><strong>{{ formatDate(employee.hire_date) }}</strong>
+            </div>
+            <div>
+              <span>Status</span
+              ><strong>{{ employee.employment_status?.name || "—" }}</strong>
+            </div>
+            <div>
+              <span>Department</span
+              ><strong>{{ employee.department?.name || "—" }}</strong>
+            </div>
+            <div>
+              <span>Position</span
+              ><strong>{{ employee.position?.name || "—" }}</strong>
+            </div>
+            <div>
+              <span>Job grade</span
+              ><strong>{{ employee.job_grade?.name || "—" }}</strong>
+            </div>
           </div>
-        </div>
-        <div v-else class="profile-empty">No contact details recorded.</div>
-      </section>
+          <div v-else class="profile-empty">
+            This account is not linked to an employee record.
+          </div>
+        </section>
 
-      <section class="profile-card">
-        <div class="card-heading">
-          <v-avatar color="primary" variant="tonal" size="38"
-            ><v-icon icon="mdi-map-marker-outline"
-          /></v-avatar>
-          <div>
-            <strong>Addresses</strong
-            ><small>Current and permanent locations.</small>
+        <section class="profile-card">
+          <div class="card-heading">
+            <v-avatar color="primary" variant="tonal" size="38"
+              ><v-icon icon="mdi-card-account-phone-outline"
+            /></v-avatar>
+            <div>
+              <strong>Contact details</strong
+              ><small>Managed in your employee record.</small>
+            </div>
           </div>
-        </div>
-        <div v-if="employee?.addresses?.length" class="address-list">
-          <div v-for="address in employee.addresses" :key="address.id">
-            <v-chip size="x-small" variant="tonal" class="text-capitalize">{{
-              address.type
-            }}</v-chip>
-            <strong>{{ address.address_line_1 }}</strong>
-            <span>{{
-              [
-                address.address_line_2,
-                address.city,
-                address.province,
-                address.postal_code,
-                address.country,
-              ]
-                .filter(Boolean)
-                .join(", ")
-            }}</span>
+          <div v-if="employee?.contacts?.length" class="detail-list">
+            <div v-for="contact in employee.contacts" :key="contact.id">
+              <span class="text-capitalize">{{ contact.type }}</span
+              ><strong>{{ contact.value }}</strong>
+            </div>
           </div>
-        </div>
-        <div v-else class="profile-empty">No addresses recorded.</div>
-      </section>
-    </div>
+          <div v-else class="profile-empty">No contact details recorded.</div>
+        </section>
+
+        <section class="profile-card">
+          <div class="card-heading">
+            <v-avatar color="primary" variant="tonal" size="38"
+              ><v-icon icon="mdi-map-marker-outline"
+            /></v-avatar>
+            <div>
+              <strong>Addresses</strong
+              ><small>Current and permanent locations.</small>
+            </div>
+          </div>
+          <div v-if="employee?.addresses?.length" class="address-list">
+            <div v-for="address in employee.addresses" :key="address.id">
+              <v-chip size="x-small" variant="tonal" class="text-capitalize">{{
+                address.type
+              }}</v-chip>
+              <strong>{{ address.address_line_1 }}</strong>
+              <span>{{
+                [
+                  address.address_line_2,
+                  address.city,
+                  address.province,
+                  address.postal_code,
+                  address.country,
+                ]
+                  .filter(Boolean)
+                  .join(", ")
+              }}</span>
+            </div>
+          </div>
+          <div v-else class="profile-empty">No addresses recorded.</div>
+        </section>
+      </div>
+    </template>
 
     <EmployeeDocumentsDialog
       :visible="documentsVisible"
@@ -248,32 +280,52 @@ import axios from "@/plugins/axios";
 import EmployeeDocumentsDialog from "@/components/EmployeeDocumentsDialog.vue";
 import { useAuth } from "@/composables/useAuth";
 import { useAppSettings } from "@/composables/useAppSettings";
+import { usePlanEntitlements } from "@/composables/usePlanEntitlements";
 import { useProfilePhoto } from "@/composables/useProfilePhoto";
 import { formatDate } from "@/utils/dateFormatter";
 
+type ProfileForm = {
+  first_name: string;
+  middle_name: string;
+  last_name: string;
+  gender: string;
+  birthday: string;
+};
+
 const profile = ref<any>();
 const loading = ref(true);
+const loadError = ref("");
 const saving = ref(false);
 const uploadingPhoto = ref(false);
 const documentsVisible = ref(false);
 const photoInput = ref<HTMLInputElement | null>(null);
-const form = ref({
+const form = ref<ProfileForm>({
   first_name: "",
   middle_name: "",
   last_name: "",
   gender: "",
   birthday: "",
 });
+const initialForm = ref<ProfileForm>({ ...form.value });
 const { getUser } = useAuth();
 const { values } = useAppSettings();
+const { hasFeature } = usePlanEntitlements();
 const { photoUrl, loadProfilePhoto, clearProfilePhoto } = useProfilePhoto();
 const employee = computed(() => profile.value?.employee);
+const hasChanges = computed(() =>
+  Object.entries(form.value).some(
+    ([key, value]) => value !== initialForm.value[key as keyof ProfileForm],
+  ),
+);
 const documentsEnabled = computed(
-  () => values.value["employee_documents.enabled"] !== false,
+  () =>
+    hasFeature("employee_documents") &&
+    values.value["employee_documents.enabled"] !== false,
 );
 
 const load = async () => {
   loading.value = true;
+  loadError.value = "";
   try {
     const response = await axios.get("/profile");
     profile.value = response.data.data;
@@ -287,7 +339,11 @@ const load = async () => {
         : "",
       birthday: profile.value.birthday ?? "",
     };
+    initialForm.value = { ...form.value };
     await loadProfilePhoto(profile.value.profile_photo_url);
+  } catch {
+    loadError.value =
+      "We couldn't retrieve your account details. Check your connection and try again.";
   } finally {
     loading.value = false;
   }
@@ -330,37 +386,50 @@ onMounted(load);
 
 <style scoped>
 .profile-page {
-  max-width: 1440px;
+  max-width: 1360px;
 }
 .profile-hero {
-  display: flex;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr) auto;
   align-items: center;
   gap: 24px;
-  margin-bottom: 22px;
-  padding: 24px;
-  border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
-  border-radius: 18px;
-  background: rgb(var(--v-theme-surface));
+  margin-bottom: 18px;
+  padding: 4px 0 24px;
+  border-bottom: 2px solid rgb(var(--v-theme-primary));
 }
-.profile-photo-wrap {
-  position: relative;
-  flex: 0 0 auto;
-}
-.profile-avatar {
-  border: 2px solid rgba(var(--v-theme-primary), 0.3);
-}
-.photo-button {
-  position: absolute;
-  right: -2px;
-  bottom: 2px;
+.profile-photo {
+  display: grid;
+  width: 112px;
+  height: 112px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(var(--v-theme-primary), 0.55);
+  color: rgb(var(--v-theme-primary));
+  background: rgba(var(--v-theme-primary), 0.08);
 }
 .profile-identity {
   min-width: 0;
 }
+.profile-kicker {
+  display: block;
+  margin-bottom: 5px;
+  color: rgb(var(--v-theme-primary));
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
 .profile-identity h1 {
   margin: 0;
-  font-size: 1.55rem;
+  font-size: clamp(1.5rem, 2.6vw, 2rem);
   line-height: 1.25;
+}
+.profile-role {
+  padding: 4px 8px;
+  border: 1px solid rgba(var(--v-theme-primary), 0.45);
+  color: rgb(var(--v-theme-primary));
+  font-size: 0.75rem;
+  font-weight: 700;
 }
 .profile-identity p {
   margin: 4px 0 11px;
@@ -375,20 +444,52 @@ onMounted(load);
   display: flex;
   align-items: center;
   gap: 5px;
-  padding: 4px 7px;
-  border-radius: 7px;
-  background: rgba(var(--v-theme-on-surface), 0.04);
+  padding-right: 8px;
+  border-right: 1px solid rgba(var(--v-theme-on-surface), 0.14);
   font-size: 0.76rem;
+}
+.profile-meta span:last-child {
+  border-right: 0;
 }
 .profile-meta .v-icon {
   color: rgb(var(--v-theme-primary));
 }
 .profile-actions {
   display: flex;
-  align-items: flex-end;
-  gap: 6px;
-  margin-left: auto;
+  align-items: stretch;
+  gap: 8px;
   flex-direction: column;
+}
+.profile-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin-bottom: 16px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+  background: rgb(var(--v-theme-surface));
+}
+.profile-summary > div {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  padding: 15px 18px;
+  border-right: 1px solid rgba(var(--v-theme-on-surface), 0.09);
+}
+.profile-summary > div:last-child {
+  border-right: 0;
+}
+.profile-summary span,
+.detail-list span {
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.profile-summary strong {
+  overflow: hidden;
+  font-size: 0.88rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .profile-grid {
   display: grid;
@@ -400,7 +501,6 @@ onMounted(load);
   min-width: 0;
   padding: 20px;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.09);
-  border-radius: 16px;
   background: rgb(var(--v-theme-surface));
 }
 .profile-card--personal {
@@ -443,8 +543,7 @@ onMounted(load);
   border-bottom: 0;
 }
 .detail-list span {
-  color: rgb(var(--v-theme-on-surface-variant));
-  font-size: 0.76rem;
+  font-size: 0.7rem;
 }
 .detail-list strong {
   font-size: 0.82rem;
@@ -460,7 +559,7 @@ onMounted(load);
   flex-direction: column;
   gap: 4px;
   padding: 12px;
-  border-radius: 10px;
+  border-left: 3px solid rgba(var(--v-theme-primary), 0.55);
   background: rgba(var(--v-theme-on-surface), 0.035);
 }
 .address-list span {
@@ -468,6 +567,13 @@ onMounted(load);
   font-size: 0.8rem;
 }
 @media (max-width: 850px) {
+  .profile-hero {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+  .profile-photo {
+    width: 96px;
+    height: 96px;
+  }
   .profile-grid {
     grid-template-columns: 1fr;
   }
@@ -479,18 +585,46 @@ onMounted(load);
     flex-wrap: wrap;
   }
   .profile-actions {
-    width: 100%;
-    align-items: stretch;
-    margin-left: 0;
+    grid-column: 1 / -1;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  .profile-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .profile-summary > div:nth-child(2) {
+    border-right: 0;
+  }
+  .profile-summary > div:nth-child(-n + 2) {
+    border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.09);
   }
 }
 @media (max-width: 560px) {
   .profile-hero {
+    display: flex;
     text-align: center;
     justify-content: center;
   }
   .profile-meta {
     justify-content: center;
+  }
+  .profile-meta span {
+    border-right: 0;
+  }
+  .profile-actions {
+    width: 100%;
+    justify-content: center;
+  }
+  .profile-summary {
+    grid-template-columns: 1fr;
+  }
+  .profile-summary > div,
+  .profile-summary > div:nth-child(2) {
+    border-right: 0;
+    border-bottom: 1px solid rgba(var(--v-theme-on-surface), 0.09);
+  }
+  .profile-summary > div:last-child {
+    border-bottom: 0;
   }
   .form-grid {
     grid-template-columns: 1fr;

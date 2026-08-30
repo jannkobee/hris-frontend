@@ -968,6 +968,7 @@
 
 <script setup lang="ts">
 import { computed, defineComponent, h, onMounted, ref, watch } from "vue";
+import { useRoute } from "vue-router";
 import debounce from "lodash/debounce";
 import axios from "@/plugins/axios";
 import MonthlyCalendar, {
@@ -979,6 +980,7 @@ import { usePermissions } from "@/composables/usePermissions";
 import { useAppDialog } from "@/composables/useAppDialog";
 
 const { authUser } = useAuth();
+const route = useRoute();
 const { checkPermissions } = usePermissions();
 const { confirm: confirmAction } = useAppDialog();
 const canCreate = computed(() => checkPermissions("create-meetings"));
@@ -986,7 +988,7 @@ const canManageRooms = computed(() => checkPermissions("manage-meeting-rooms"));
 const canManageCompany = computed(() =>
   checkPermissions("manage-company-meetings"),
 );
-const tab = ref("today");
+const tab = ref(route.query.tab === "rooms" ? "rooms" : "today");
 const loading = ref(false);
 const roomsLoading = ref(false);
 const roomAvailabilityLoading = ref(false);
@@ -1724,6 +1726,14 @@ watch(tab, () => {
   search.value = "";
   tab.value === "rooms" ? loadRooms() : loadMeetings();
 });
+watch(
+  () => route.query.tab,
+  (value) => {
+    if (["today", "calendar", "upcoming", "rooms"].includes(String(value))) {
+      tab.value = String(value);
+    }
+  },
+);
 watch(
   () => [
     meetingForm.value.starts_at,

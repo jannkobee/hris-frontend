@@ -84,6 +84,7 @@ export type ColumnConfig = TextLikeColumn | SelectColumn | RadioColumn;
 
 export type User = {
   id: string;
+  organization_id?: string;
   role_id: string;
   first_name: string;
   middle_name: string;
@@ -93,6 +94,7 @@ export type User = {
   gender: string;
   birthday: string;
   profile_photo_url?: string | null;
+  organization?: Organization;
   role?: RoleWithPermissions;
   settings?: Record<string, any>;
   employee?: {
@@ -106,6 +108,27 @@ export type User = {
     addresses?: Array<Record<string, any>>;
     contacts?: Array<Record<string, any>>;
   };
+};
+
+export type OrganizationPlan = {
+  code: string;
+  name: string;
+  description?: string | null;
+  features: string[];
+  feature_details?: Record<
+    string,
+    { name: string; description: string }
+  >;
+};
+
+export type Organization = {
+  id: string;
+  slug: string;
+  name: string;
+  timezone: string;
+  plan_code: string;
+  status: string;
+  plan?: OrganizationPlan;
 };
 
 export type RoleWithPermissions = Role & {

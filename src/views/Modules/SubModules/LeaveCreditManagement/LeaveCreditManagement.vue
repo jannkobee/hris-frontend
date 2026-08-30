@@ -30,7 +30,7 @@
     </section>
 
     <v-alert type="info" variant="tonal" class="accrual-note" icon="mdi-information-outline">
-      You do not need to seed these rules. They are company policy, so add only the leave benefits your organization actually provides. Saving an active rule automatically enables the Leave Accrual task; it runs daily and prevents duplicate credits.
+      These rules are company policy. Enable Grant on Hire only for benefits you intentionally give to new employees; otherwise the rule is granted on its scheduled month after the minimum service requirement. Saving an active rule enables the daily Leave Accrual task, which prevents duplicate credits.
     </v-alert>
 
     <Table
@@ -95,6 +95,7 @@ const emptyForm = () => ({
   eligible_position_ids: [],
   eligible_job_grade_ids: [],
   minimum_service_months: 0,
+  grant_on_hire: false,
   is_active: true,
 });
 

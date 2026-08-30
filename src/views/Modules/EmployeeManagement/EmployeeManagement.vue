@@ -55,6 +55,7 @@ import EmployeeStepperForm from "@/components/EmployeeStepperForm.vue";
 import Table from "@/components/Table.vue";
 import { usePermissions } from "@/composables/usePermissions";
 import { useAppSettings } from "@/composables/useAppSettings";
+import { usePlanEntitlements } from "@/composables/usePlanEntitlements";
 
 // Create a reactive copy of fields with proper typing
 const fields = ref<ColumnConfig[]>([...importedFields] as ColumnConfig[]);
@@ -138,12 +139,16 @@ const form = ref<EmployeeForm>(initializeForm());
 
 const readOnly = () => action.value === "View";
 const { checkPermissions } = usePermissions();
+const { hasFeature } = usePlanEntitlements();
 const { values: appSettings } = useAppSettings();
 const documentsEnabled = computed(
   () => appSettings.value["employee_documents.enabled"] !== false,
 );
 const canUseDocuments = computed(
-  () => documentsEnabled.value && checkPermissions("view-employee-documents"),
+  () =>
+    hasFeature("employee_documents") &&
+    documentsEnabled.value &&
+    checkPermissions("view-employee-documents"),
 );
 
 // Helper to format date for form input (converts to YYYY-MM-DD)

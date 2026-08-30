@@ -10,7 +10,7 @@
               ${authUser?.middle_name ? ' ' + authUser?.middle_name : ''}
               ${authUser?.last_name ? ' ' + authUser?.last_name : ''}
             `"
-            :subtitle="authUser?.email"
+            :subtitle="accountSubtitle"
           >
             <template #prepend>
               <v-avatar color="surface-variant" class="text-on-surface">
@@ -48,10 +48,14 @@
               :prepend-icon="child.icon"
               :title="child.title"
               :value="child.routeName"
-              @click="$router.push({ name: child.routeName })"
+              @click="
+                $router.push({ name: child.routeName, query: child.routeQuery })
+              "
             >
               <template v-if="badgeFor(child)" #append>
-                <span class="nav-count">{{ displayBadge(badgeFor(child)) }}</span>
+                <span class="nav-count">{{
+                  displayBadge(badgeFor(child))
+                }}</span>
               </template>
             </v-list-item>
           </v-list-group>
@@ -61,10 +65,16 @@
             :prepend-icon="item.icon"
             :title="item.title"
             :value="item.routeName"
-            @click="$router.push({ name: item.routeName })"
+            @click="
+              $router.push({ name: item.routeName, query: item.routeQuery })
+            "
           >
             <template v-if="badgeFor(item)" #append>
-              <span class="nav-count" :class="{ 'nav-count--message': item.routeName === 'messages' }">{{ displayBadge(badgeFor(item)) }}</span>
+              <span
+                class="nav-count"
+                :class="{ 'nav-count--message': item.routeName === 'messages' }"
+                >{{ displayBadge(badgeFor(item)) }}</span
+              >
             </template>
           </v-list-item>
         </template>
@@ -100,6 +110,7 @@ import { useTheme } from "vuetify";
 import { useAuth } from "@/composables/useAuth";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { usePermissions } from "@/composables/usePermissions";
+import { usePlanEntitlements } from "@/composables/usePlanEntitlements";
 import { useProfilePhoto } from "@/composables/useProfilePhoto";
 import { useAppDialog } from "@/composables/useAppDialog";
 import axios from "@/plugins/axios";
@@ -116,6 +127,10 @@ type NavItem = {
   routeName?: string;
   // Permission slug required to show this item. Omit to always show it.
   permission?: string;
+  // Subscription feature required for this module. Role permissions are
+  // evaluated separately and cannot unlock a feature the company has not bought.
+  planFeature?: string;
+  routeQuery?: Record<string, string>;
   children?: NavItem[];
 };
 
@@ -123,36 +138,46 @@ type NavItem = {
 // nothing else in this file needs to change to reflect it in the drawer.
 const navItems: NavItem[] = [
   { title: "Dashboard", icon: "mdi-view-dashboard", routeName: "dashboard" },
-  { title: "My Profile", icon: "mdi-account-circle-outline", routeName: "profile" },
+  {
+    title: "My Profile",
+    icon: "mdi-account-circle-outline",
+    routeName: "profile",
+  },
   {
     title: "Messages",
     icon: "mdi-message-text-outline",
     routeName: "messages",
-    // No permission slug here since every authenticated user can message
-    // teammates. Add one (e.g. "view-messages") if you want to gate it.
+    // Every authenticated user can message teammates.
   },
   {
-    title: "User Management",
-    icon: "mdi-account-cog-outline",
-    routeName: "user-management",
-    permission: "view-users",
+    title: "My Notes",
+    icon: "mdi-note-edit-outline",
+    routeName: "notes",
+    permission: "view-notes",
+    planFeature: "notes",
   },
   {
-    title: "Role Management",
-    icon: "mdi-head-cog-outline",
-    routeName: "role-management",
-    permission: "view-roles",
-  },
-  {
-    title: "Employee Management",
-    icon: "mdi-account-group-outline",
+    title: "Employees",
+    icon: "mdi-account-multiple-outline",
     routeName: "employee-management",
     permission: "view-employees",
   },
   {
-    title: "Attendance Management",
+    title: "Attendance",
     icon: "mdi-calendar-clock",
     routeName: "attendance-management",
+  },
+  {
+    title: "Leave",
+    icon: "mdi-calendar-account",
+    routeName: "leave-management",
+    permission: "view-leave-requests",
+  },
+  {
+    title: "Overtime",
+    icon: "mdi-clock-plus-outline",
+    routeName: "overtime-management",
+    permission: "view-overtimes",
   },
   {
     title: "Workforce Calendar",
@@ -161,49 +186,33 @@ const navItems: NavItem[] = [
     permission: "view-holidays",
   },
   {
-    title: "Payroll",
-    icon: "mdi-cash-multiple",
-    routeName: "payroll-management",
-  },
-  {
-    title: "Workplace Hub",
-    icon: "mdi-office-building-marker-outline",
-    routeName: "workplace-hub",
-    permission: "view-workplace-hub",
-  },
-  {
-    title: "Leave Management",
-    icon: "mdi-calendar-account",
-    routeName: "leave-management",
-    permission: "view-leave-requests",
-  },
-  {
-    title: "Overtime Management",
-    icon: "mdi-clock-plus-outline",
-    routeName: "overtime-management",
-    permission: "view-overtimes",
-  },
-  {
     title: "Announcements",
     icon: "mdi-bullhorn-outline",
     routeName: "announcement-management",
     permission: "view-announcements",
   },
   {
-    title: "Audit Logs",
-    icon: "mdi-clipboard-text-clock-outline",
-    routeName: "audit-log-management",
-    permission: "view-audit-logs",
+    title: "Workplace Hub",
+    icon: "mdi-office-building-marker-outline",
+    routeName: "workplace-hub",
+    permission: "view-workplace-hub",
+    planFeature: "workplace_hub",
+  },
+  {
+    title: "Payroll",
+    icon: "mdi-cash-multiple",
+    routeName: "payroll-management",
+    planFeature: "payroll",
   },
   {
     title: "Configurations",
-    icon: "mdi-cog-outline",
+    icon: "mdi-tune-variant",
     children: [
       {
-        title: "Employment Statuses",
-        icon: "mdi-list-status",
-        routeName: "employment-status-management",
-        permission: "view-employment-statuses",
+        title: "Departments",
+        icon: "mdi-domain",
+        routeName: "department-management",
+        permission: "view-departments",
       },
       {
         title: "Positions",
@@ -212,10 +221,10 @@ const navItems: NavItem[] = [
         permission: "view-positions",
       },
       {
-        title: "Departments",
-        icon: "mdi-domain",
-        routeName: "department-management",
-        permission: "view-departments",
+        title: "Employment Statuses",
+        icon: "mdi-list-status",
+        routeName: "employment-status-management",
+        permission: "view-employment-statuses",
       },
       {
         title: "Job Grades",
@@ -236,15 +245,48 @@ const navItems: NavItem[] = [
         permission: "view-leave-credit-settings",
       },
       {
+        title: "Employee Number Settings",
+        icon: "mdi-badge-account-horizontal-outline",
+        routeName: "employee-number-settings",
+        permission: "manage-employee-number-settings",
+      },
+    ],
+  },
+  {
+    title: "Administration",
+    icon: "mdi-shield-crown-outline",
+    children: [
+      {
+        title: "Users",
+        icon: "mdi-account-cog-outline",
+        routeName: "user-management",
+        permission: "view-users",
+      },
+      {
+        title: "Roles",
+        icon: "mdi-head-cog-outline",
+        routeName: "role-management",
+        permission: "view-roles",
+      },
+      {
         title: "App Settings",
         icon: "mdi-cog-box",
         routeName: "settings",
       },
       {
-        title: "Employee Number Settings",
-        icon: "mdi-badge-account-horizontal-outline",
-        routeName: "employee-number-settings",
-        permission: "manage-employee-number-settings",
+        title: "Audit Logs",
+        icon: "mdi-clipboard-text-clock-outline",
+        routeName: "audit-log-management",
+        permission: "view-audit-logs",
+        planFeature: "audit_logs",
+      },
+      {
+        title: "Meeting Rooms",
+        icon: "mdi-door-open",
+        routeName: "workplace-hub",
+        routeQuery: { tab: "rooms" },
+        permission: "manage-meeting-rooms",
+        planFeature: "workplace_hub",
       },
     ],
   },
@@ -270,6 +312,16 @@ const applyTheme = (themeName: string) => {
 };
 
 const { loading, getUser, getSettings, authUser, logout } = useAuth();
+const accountSubtitle = computed(() =>
+  [
+    authUser.value?.email,
+    authUser.value?.organization
+      ? `${authUser.value.organization.name} · ${authUser.value.organization.plan?.name ?? authUser.value.organization.plan_code}`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" — "),
+);
 const { confirm } = useAppDialog();
 const requestLogout = async () => {
   const accepted = await confirm({
@@ -282,12 +334,14 @@ const requestLogout = async () => {
 };
 const { loadAppSettings, values: appSettings } = useAppSettings();
 const { checkPermissions } = usePermissions();
+const { hasFeature } = usePlanEntitlements();
 const { photoUrl: profilePhotoUrl, loadProfilePhoto } = useProfilePhoto();
 
 const badgeFor = (item: NavItem): number =>
   item.routeName ? Number(navBadges.value[item.routeName] || 0) : 0;
 
-const displayBadge = (count: number): string => count > 99 ? "99+" : String(count);
+const displayBadge = (count: number): string =>
+  count > 99 ? "99+" : String(count);
 
 const loadNavigationBadges = async (force = false) => {
   if (!force && Date.now() - lastBadgeLoadedAt < 15_000) return;
@@ -322,17 +376,26 @@ const subscribeToMessageNotifications = async () => {
   if (!echo) return;
 
   notificationChannelName = `App.Models.User.${authUser.value.id}`;
-  echo.private(notificationChannelName).listen(".message.sent", async (event: any) => {
-    if (event.sender?.id === authUser.value?.id) return;
-    await playMessageNotificationSound();
-    await loadNavigationBadges(true);
-  });
+  echo
+    .private(notificationChannelName)
+    .listen(".message.sent", async (event: any) => {
+      if (event.sender?.id === authUser.value?.id) return;
+      await playMessageNotificationSound();
+      await loadNavigationBadges(true);
+    });
 };
 
 // Filters navItems down to what the current user can actually see.
 // A group survives only if at least one of its children is visible.
 const isVisible = (item: NavItem): boolean => {
-  if (item.routeName === "payroll-management" && appSettings.value["payroll.enabled"] === false) {
+  if (item.planFeature && !hasFeature(item.planFeature)) {
+    return false;
+  }
+
+  if (
+    item.routeName === "payroll-management" &&
+    appSettings.value["payroll.enabled"] === false
+  ) {
     return false;
   }
 
@@ -359,11 +422,18 @@ onMounted(async () => {
   await loadNavigationBadges();
   await subscribeToMessageNotifications();
   badgeRefreshTimer = setInterval(loadNavigationBadges, 45000);
-  window.addEventListener("navigation-badges:refresh", forceNavigationBadgeRefresh);
+  window.addEventListener(
+    "navigation-badges:refresh",
+    forceNavigationBadgeRefresh,
+  );
   document.addEventListener("visibilitychange", refreshBadgesWhenVisible);
 
   const requiredPermission = route.meta.permission as string | undefined;
-  if (requiredPermission && !checkPermissions(requiredPermission)) {
+  const requiredPlanFeature = route.meta.planFeature as string | undefined;
+  if (
+    (requiredPermission && !checkPermissions(requiredPermission)) ||
+    (requiredPlanFeature && !hasFeature(requiredPlanFeature))
+  ) {
     await router.replace({ name: "dashboard" });
   }
 
@@ -388,7 +458,11 @@ watch(
   async () => {
     if (!authReady.value) return;
     const requiredPermission = route.meta.permission as string | undefined;
-    if (requiredPermission && !checkPermissions(requiredPermission)) {
+    const requiredPlanFeature = route.meta.planFeature as string | undefined;
+    if (
+      (requiredPermission && !checkPermissions(requiredPermission)) ||
+      (requiredPlanFeature && !hasFeature(requiredPlanFeature))
+    ) {
       await router.replace({ name: "dashboard" });
     }
     await loadNavigationBadges();
@@ -397,10 +471,15 @@ watch(
 
 onBeforeUnmount(() => {
   if (badgeRefreshTimer) clearInterval(badgeRefreshTimer);
-  window.removeEventListener("navigation-badges:refresh", forceNavigationBadgeRefresh);
+  window.removeEventListener(
+    "navigation-badges:refresh",
+    forceNavigationBadgeRefresh,
+  );
   document.removeEventListener("visibilitychange", refreshBadgesWhenVisible);
   if (notificationChannelName) {
-    void getEcho().then((echo) => echo?.leave(notificationChannelName as string));
+    void getEcho().then((echo) =>
+      echo?.leave(notificationChannelName as string),
+    );
   }
 });
 </script>
@@ -424,7 +503,7 @@ onBeforeUnmount(() => {
   height: 20px;
   place-items: center;
   padding-inline: 5px;
-  border-radius: 999px;
+  border-radius: 0;
   color: rgb(var(--v-theme-on-warning));
   background: rgb(var(--v-theme-warning));
   font-size: 0.62rem;

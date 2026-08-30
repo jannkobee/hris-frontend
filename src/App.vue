@@ -95,7 +95,15 @@ const remainingDetailCount = computed(() =>
 
 <style>
 :root {
-  --app-dialog-radius: 16px;
+  --app-dialog-radius: 0;
+}
+
+/* Square-corner design system: applies to Vuetify and custom components,
+   including overlays that are mounted outside .v-application. */
+html *,
+html *::before,
+html *::after {
+  border-radius: 0 !important;
 }
 
 /* Keep every application modal on the same corner system. */

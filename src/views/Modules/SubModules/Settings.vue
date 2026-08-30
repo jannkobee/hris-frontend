@@ -46,7 +46,7 @@
           General
         </v-tab>
 
-        <v-tab value="payroll">
+        <v-tab v-if="canUsePayroll" value="payroll">
           <v-icon icon="mdi-cash-multiple" start size="small" />
           Payroll
         </v-tab>
@@ -334,7 +334,7 @@
                     />
                   </div>
 
-                  <div class="policy-row">
+                  <div v-if="canUseEmployeeDocuments" class="policy-row">
                     <v-icon
                       icon="mdi-folder-account-outline"
                       class="policy-icon"
@@ -479,7 +479,7 @@
         </v-window-item>
 
         <!-- PAYROLL TAB -->
-        <v-window-item value="payroll">
+        <v-window-item v-if="canUsePayroll" value="payroll">
           <div class="payroll-settings-intro">
             <div class="d-flex align-center ga-3">
               <v-avatar color="primary" variant="tonal" size="46"
@@ -487,14 +487,23 @@
               /></v-avatar>
               <div>
                 <div class="text-subtitle-1 font-weight-bold">
-                  Philippine payroll policy
+                  Payroll policy — Philippines
                 </div>
                 <div class="text-body-2 text-medium-emphasis">
-                  Current statutory defaults remain editable and are snapshotted
-                  when payroll is processed.
+                  The payroll engine is country-ready, but Philippine statutory
+                  rules are the only supported ruleset today.
                 </div>
               </div>
             </div>
+            <v-select
+              v-model="appSettingValues['payroll.country']"
+              label="Payroll country"
+              :items="[{ title: 'Philippines (currently supported)', value: 'PH' }]"
+              density="compact"
+              variant="outlined"
+              hide-details
+              :disabled="!canManagePayrollSettings"
+            />
             <v-switch
               v-model="appSettingValues['payroll.enabled']"
               label="Payroll enabled"
@@ -1156,6 +1165,7 @@ import { useAuth } from "@/composables/useAuth";
 import { useApi } from "@/composables/useApi";
 import { usePermissions } from "@/composables/usePermissions";
 import { useAppSettings } from "@/composables/useAppSettings";
+import { usePlanEntitlements } from "@/composables/usePlanEntitlements";
 import Table from "@/components/Table.vue";
 import Form from "@/components/Form.vue";
 import { ColumnConfig } from "@/types/types";
@@ -1206,6 +1216,7 @@ const savedSnapshot = ref("");
 // Removed getUser since BaseContainer handles fetching it for the global state
 const { settings, updateSettings, authUser } = useAuth();
 const { checkPermissions } = usePermissions();
+const { hasFeature } = usePlanEntitlements();
 const {
   values: appSettingValues,
   definitions: appSettingDefinitions,
@@ -1219,6 +1230,14 @@ const settingsReady = ref(
 );
 
 const canManageSetting = (key: string): boolean => {
+  if (key.startsWith("payroll.") && !hasFeature("payroll")) return false;
+  if (
+    key.startsWith("employee_documents.") &&
+    !hasFeature("employee_documents")
+  ) {
+    return false;
+  }
+
   if (checkPermissions("manage-app-settings")) return true;
 
   const permission = appSettingDefinitions.value[key]?.permission;
@@ -1234,7 +1253,11 @@ const canManageFeatureSettings = computed(() =>
   canManageSetting("leave.attachments_enabled"),
 );
 const canManagePayrollSettings = computed(() =>
-  canManageSetting("payroll.enabled"),
+  hasFeature("payroll") && canManageSetting("payroll.enabled"),
+);
+const canUsePayroll = computed(() => hasFeature("payroll"));
+const canUseEmployeeDocuments = computed(() =>
+  hasFeature("employee_documents"),
 );
 const canManageAnyAppSettings = computed(() =>
   [
@@ -1262,6 +1285,7 @@ const hasChanges = computed(
 
 // Force Vue to reactively track the global permissions array directly!
 const canViewTasks = computed(() => {
+  if (!hasFeature("automation")) return false;
   if (!authUser.value?.role?.permissions) {
     return false;
   }

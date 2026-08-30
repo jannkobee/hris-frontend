@@ -8,7 +8,9 @@
     :form="form"
     :data="data"
     :fields="fields"
-    :show-permission-action="canManageRolePermissions"
+    :show-permission-action="
+      canManageRolePermissions && action !== 'Create'
+    "
     @permission="openPermissionModal"
     @close="close"
     @execute="execute"
@@ -44,8 +46,9 @@
     :visible="isPermissionVisible"
     :action="action"
     :data="data"
-    :readOnly="readOnly()"
+    :readOnly="readOnly() || data?.name === 'Admin'"
     @close="closePermissionModal"
+    @saved="syncSavedPermissions"
   />
 </template>
 
@@ -53,7 +56,7 @@
 import { ref, onMounted, computed } from "vue";
 import { useApi } from "@/composables/useApi";
 import { fields } from "@/fields/role";
-import { Role } from "@/types/types";
+import { Role, RoleWithPermissions } from "@/types/types";
 import Permission from "@/components/Permission.vue";
 import Table from "@/components/Table.vue";
 import Form from "@/components/Form.vue";
@@ -73,7 +76,9 @@ const {
   store,
   update,
   destroy,
-} = useApi("/roles");
+} = useApi<RoleRecord>("/roles");
+
+type RoleRecord = RoleWithPermissions & { id: string };
 
 const relations = "permissions";
 
@@ -129,14 +134,29 @@ const close = () => {
   isFormVisible.value = false;
 };
 
-const execute = async (data: any) => {
+const execute = async (payload: any) => {
   try {
     if (action.value === "Create") {
-      await store(data);
+      const response = await store(payload);
+      await index({ relations } as any);
+
+      const createdRole = response.data?.data as RoleRecord | undefined;
+      if (createdRole && canManageRolePermissions.value) {
+        data.value =
+          items.value.find((role) => role.id === createdRole.id) ??
+          ({ ...createdRole, permissions: [] } as RoleRecord);
+        action.value = "Edit";
+        isFormVisible.value = false;
+        isPermissionVisible.value = true;
+
+        return;
+      }
     } else if (action.value === "Edit") {
-      await update(data.id, data);
+      await update(payload.id, payload);
+      await index({ relations } as any);
     } else if (action.value === "Remove") {
-      await destroy(data.id);
+      await destroy(payload.id);
+      await index({ relations } as any);
     }
 
     isFormVisible.value = false;
@@ -151,6 +171,20 @@ const openPermissionModal = () => {
 
 const closePermissionModal = () => {
   isPermissionVisible.value = false;
+};
+
+const syncSavedPermissions = (updatedRole: RoleRecord) => {
+  const roleIndex = items.value.findIndex((role) => role.id === updatedRole.id);
+  const syncedRole =
+    roleIndex === -1
+      ? updatedRole
+      : { ...items.value[roleIndex], ...updatedRole };
+
+  if (roleIndex !== -1) {
+    items.value.splice(roleIndex, 1, syncedRole);
+  }
+
+  data.value = syncedRole;
 };
 
 onMounted(async () => {

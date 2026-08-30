@@ -155,6 +155,16 @@ export const fields: ColumnConfig[] = [
     required: false,
   },
   {
+    title: "Grant on Hire",
+    key: "grant_on_hire",
+    inputField: "checkbox",
+    displayAs: "chip" as const,
+    formatter: (v: any) => (v ? "Yes" : "No"),
+    chipColor: booleanChipColor,
+    nullable: false,
+    required: false,
+  },
+  {
     title: "Actions",
     key: "action",
     sortable: false,

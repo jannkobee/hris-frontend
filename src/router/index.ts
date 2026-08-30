@@ -29,35 +29,45 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/Modules/Messages/Messages.vue"),
       },
       {
+        path: "notes",
+        name: "notes",
+        meta: { permission: "view-notes", planFeature: "notes" },
+        component: () => import("@/views/Modules/Notes/Notes.vue"),
+      },
+      {
         path: "profile",
         name: "profile",
         component: () => import("@/views/Modules/Profile/Profile.vue"),
       },
 
-      // Management
+      // Administration
       {
-        path: "user-management",
+        path: "administration/users",
+        alias: ["/user-management", "/administration/user-management"],
         name: "user-management",
         meta: { permission: "view-users" },
         component: () =>
           import("@/views/Modules/UserManagement/UserManagement.vue"),
       },
       {
-        path: "role-management",
+        path: "administration/roles",
+        alias: ["/role-management", "/administration/role-management"],
         name: "role-management",
         meta: { permission: "view-roles" },
         component: () =>
           import("@/views/Modules/RoleManagement/RoleManagement.vue"),
       },
       {
-        path: "employee-management",
+        path: "employees",
+        alias: "/employee-management",
         name: "employee-management",
         meta: { permission: "view-employees" },
         component: () =>
           import("@/views/Modules/EmployeeManagement/EmployeeManagement.vue"),
       },
       {
-        path: "attendance-management",
+        path: "attendance",
+        alias: "/attendance-management",
         name: "attendance-management",
         component: () =>
           import("@/views/Modules/AttendanceManagement/AttendanceManagement.vue"),
@@ -72,23 +82,29 @@ const routes: RouteRecordRaw[] = [
       {
         path: "payroll",
         name: "payroll-management",
+        meta: { planFeature: "payroll" },
         component: () => import("@/views/Modules/PayrollManagement/PayrollManagement.vue"),
       },
       {
         path: "workplace-hub",
         name: "workplace-hub",
-        meta: { permission: "view-workplace-hub" },
+        meta: {
+          permission: "view-workplace-hub",
+          planFeature: "workplace_hub",
+        },
         component: () => import("@/views/Modules/WorkplaceHub/WorkplaceHub.vue"),
       },
       {
-        path: "leave-management",
+        path: "leave",
+        alias: "/leave-management",
         name: "leave-management",
         meta: { permission: "view-leave-requests" },
         component: () =>
           import("@/views/Modules/LeaveManagement/LeaveManagement.vue"),
       },
       {
-        path: "overtime-management",
+        path: "overtime",
+        alias: "/overtime-management",
         name: "overtime-management",
         meta: { permission: "view-overtimes" },
         component: () =>
@@ -102,9 +118,10 @@ const routes: RouteRecordRaw[] = [
           import("@/views/Modules/AnnouncementManagement/AnnouncementManagement.vue"),
       },
       {
-        path: "audit-logs",
+        path: "administration/audit-logs",
+        alias: "/audit-logs",
         name: "audit-log-management",
-        meta: { permission: "view-audit-logs" },
+        meta: { permission: "view-audit-logs", planFeature: "audit_logs" },
         component: () => import("@/views/Modules/AuditLog/AuditLog.vue"),
       },
 
@@ -145,7 +162,8 @@ const routes: RouteRecordRaw[] = [
           import("@/views/Modules/SubModules/EmployeeNumberSettings/EmployeeNumberSettings.vue"),
       },
       {
-        path: "configuration/settings",
+        path: "administration/settings",
+        alias: "/configuration/settings",
         name: "settings",
         component: () => import("@/views/Modules/SubModules/Settings.vue"),
       },
