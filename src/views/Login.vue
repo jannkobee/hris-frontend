@@ -20,7 +20,7 @@
         {{ errorMessage }}
       </v-alert>
 
-      <v-form ref="formRef" v-model="isFormValid" @submit.prevent="handleLogin">
+      <v-form v-if="!mfaChallenge" ref="formRef" v-model="isFormValid" @submit.prevent="handleLogin">
         <v-text-field
           v-model="form.email"
           label="Email"
@@ -55,6 +55,40 @@
         >
           Login
         </v-btn>
+        <div class="text-center mt-4">
+          <RouterLink class="text-body-2" :to="{ name: 'forgot-password' }">
+            Forgot your password?
+          </RouterLink>
+        </div>
+      </v-form>
+
+      <v-form v-else ref="mfaFormRef" v-model="isMfaFormValid" @submit.prevent="handleMfaChallenge">
+        <p class="text-body-2 text-medium-emphasis mb-4">
+          Enter the six-digit code from your authenticator app, or a recovery code.
+        </p>
+        <v-text-field
+          v-model="mfaCode"
+          label="Verification code"
+          prepend-inner-icon="mdi-shield-key-outline"
+          variant="outlined"
+          autocomplete="one-time-code"
+          :rules="mfaRules"
+          autofocus
+        />
+        <v-btn
+          type="submit"
+          class="mt-2"
+          color="primary"
+          size="large"
+          block
+          :loading="loggingIn"
+          :disabled="loggingIn"
+        >
+          Verify and sign in
+        </v-btn>
+        <v-btn class="mt-2" variant="text" block :disabled="loggingIn" @click="resetMfa">
+          Use another account
+        </v-btn>
       </v-form>
     </v-sheet>
   </v-container>
@@ -71,9 +105,13 @@ const form = reactive({
 
 const formRef = ref();
 const isFormValid = ref(false);
+const isMfaFormValid = ref(false);
 const showPassword = ref(false);
 const loggingIn = ref(false);
 const errorMessage = ref("");
+const mfaChallenge = ref("");
+const mfaCode = ref("");
+const mfaFormRef = ref();
 
 const emailRules = [
   (v: string) => !!v || "Email is required",
@@ -81,8 +119,9 @@ const emailRules = [
 ];
 
 const passwordRules = [(v: string) => !!v || "Password is required"];
+const mfaRules = [(v: string) => !!v || "Verification code is required"];
 
-const { login } = useAuth();
+const { login, verifyMfaChallenge } = useAuth();
 
 const handleLogin = async () => {
   const { valid } = await formRef.value.validate();
@@ -91,7 +130,10 @@ const handleLogin = async () => {
   errorMessage.value = "";
   loggingIn.value = true;
   try {
-    await login(form);
+    const result = await login(form);
+    if (result?.mfa_required) {
+      mfaChallenge.value = result.challenge;
+    }
   } catch (err) {
     errorMessage.value =
       err instanceof Error
@@ -100,6 +142,28 @@ const handleLogin = async () => {
   } finally {
     loggingIn.value = false;
   }
+};
+
+const handleMfaChallenge = async () => {
+  const { valid } = await mfaFormRef.value.validate();
+  if (!valid) return;
+
+  errorMessage.value = "";
+  loggingIn.value = true;
+  try {
+    await verifyMfaChallenge({ challenge: mfaChallenge.value, code: mfaCode.value });
+  } catch (err) {
+    errorMessage.value =
+      err instanceof Error ? err.message : "Unable to verify that code. Please try again.";
+  } finally {
+    loggingIn.value = false;
+  }
+};
+
+const resetMfa = () => {
+  mfaChallenge.value = "";
+  mfaCode.value = "";
+  errorMessage.value = "";
 };
 </script>
 

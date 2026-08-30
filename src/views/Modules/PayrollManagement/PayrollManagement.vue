@@ -108,7 +108,19 @@
           @click="approvePeriod(item)"
         />
         <v-btn
-          v-if="canMarkPaid && item.status === 'approved'"
+          v-if="canApprove && item.status === 'approved' && !item.locked_at"
+          icon="mdi-lock-outline"
+          size="small"
+          density="comfortable"
+          variant="tonal"
+          color="warning"
+          title="Lock payroll"
+          aria-label="Lock payroll"
+          :loading="actingId === item.id"
+          @click="lockPeriod(item)"
+        />
+        <v-btn
+          v-if="canMarkPaid && item.status === 'approved' && item.locked_at"
           icon="mdi-bank-check"
           size="small"
           density="comfortable"
@@ -231,7 +243,16 @@
             size="small"
             class="text-capitalize mr-2"
             >{{ selectedPeriod?.status }}</v-chip
-          ><v-btn
+          >
+          <v-chip
+            v-if="selectedPeriod?.locked_at"
+            color="warning"
+            variant="tonal"
+            size="small"
+            prepend-icon="mdi-lock"
+            >Locked</v-chip
+          >
+          <v-btn
             icon="mdi-close"
             variant="text"
             size="small"
@@ -290,6 +311,25 @@
                 :loading="actingId === selectedPeriod?.id"
                 @click="approvePeriod(selectedPeriod)"
                 >Approve</v-btn
+              >
+              <v-btn
+                v-if="canApprove && selectedPeriod?.status === 'approved' && !selectedPeriod?.locked_at"
+                color="warning"
+                variant="tonal"
+                prepend-icon="mdi-lock-outline"
+                class="text-none"
+                :loading="actingId === selectedPeriod?.id"
+                @click="lockPeriod(selectedPeriod)"
+                >Lock payroll</v-btn
+              >
+              <v-btn
+                v-if="canMarkPaid && selectedPeriod?.status === 'approved' && selectedPeriod?.locked_at"
+                color="primary"
+                prepend-icon="mdi-bank-check"
+                class="text-none"
+                :loading="actingId === selectedPeriod?.id"
+                @click="markPaid(selectedPeriod)"
+                >Mark paid</v-btn
               >
             </div>
           </div>
@@ -796,6 +836,19 @@ const processPeriod = async (period: any) => {
   await act(period, "process");
 };
 const approvePeriod = (period: any) => act(period, "approve");
+const lockPeriod = async (period: any) => {
+  if (
+    !(await confirm({
+      title: "Lock payroll?",
+      message:
+        "This permanently freezes the payroll calculations and payslip snapshots. Only locked payroll can be marked as paid.",
+      confirmText: "Lock payroll",
+      tone: "warning",
+    }))
+  )
+    return;
+  await act(period, "lock");
+};
 const markPaid = (period: any) => act(period, "mark-paid");
 const removePeriod = async (period: any) => {
   if (

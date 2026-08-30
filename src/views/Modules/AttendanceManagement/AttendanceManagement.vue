@@ -149,6 +149,14 @@
       <v-chip color="primary" variant="flat">Attendance</v-chip>
     </div>
 
+    <v-tabs v-model="attendanceTab" color="primary" class="mb-4">
+      <v-tab value="records">Attendance Records</v-tab>
+      <v-tab value="corrections">Corrections</v-tab>
+    </v-tabs>
+
+    <v-window v-model="attendanceTab">
+      <v-window-item value="records">
+
     <v-card variant="flat" class="mb-5 attendance-card">
       <v-card-text>
         <div
@@ -266,6 +274,10 @@
         />
       </template>
       <template #extra-actions="{ item }">
+        <v-chip v-if="item.exception_codes?.includes('late')" size="x-small" color="warning">Late {{ item.late_minutes }}m</v-chip>
+        <v-chip v-if="item.exception_codes?.includes('undertime')" size="x-small" color="warning">Undertime {{ item.undertime_minutes }}m</v-chip>
+        <v-chip v-if="item.exception_codes?.includes('missing_clock_out')" size="x-small" color="error">Missing out</v-chip>
+        <v-chip v-if="item.exception_codes?.includes('unscheduled_attendance')" size="x-small" color="info">Unscheduled</v-chip>
         <v-btn
           v-if="item.has_time_in_photo"
           icon="mdi-camera-outline"
@@ -298,6 +310,11 @@
         />
       </template>
     </Table>
+      </v-window-item>
+      <v-window-item value="corrections">
+        <AttendanceCorrections />
+      </v-window-item>
+    </v-window>
   </v-container>
 </template>
 
@@ -312,6 +329,7 @@ import { fields as importedFields } from "@/fields/attendance";
 import type { ColumnConfig } from "@/types/types";
 import Form from "@/components/Form.vue";
 import Table from "@/components/Table.vue";
+import AttendanceCorrections from "@/views/Modules/AttendanceCorrections.vue";
 import {
   dateKeyInTimeZone,
   formatTimeInTimeZone,
@@ -392,6 +410,7 @@ const captureMapUrl = computed(
 
 const todayIso = () => dateKeyInTimeZone(new Date(), companyTimezone.value);
 const selectedDate = ref(todayIso());
+const attendanceTab = ref("records");
 
 const fetchAttendance = async (options: any = {}) => {
   await index({ ...options, relations, date: selectedDate.value });

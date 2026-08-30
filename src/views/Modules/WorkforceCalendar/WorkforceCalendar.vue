@@ -12,6 +12,18 @@
     @execute="execute"
   />
 
+  <v-dialog v-model="importDialog" max-width="460">
+    <v-card>
+      <v-card-title>Import public holidays</v-card-title>
+      <v-card-text>
+        <p class="text-body-2 text-medium-emphasis mb-4">Existing calendar entries are preserved; matching dates will be skipped.</p>
+        <v-text-field v-model="importCountry" label="Country code" hint="ISO 3166-1 alpha-2, e.g. PH" persistent-hint variant="outlined" />
+        <v-select v-model="importYear" :items="yearOptions" label="Year" variant="outlined" />
+      </v-card-text>
+      <v-card-actions><v-spacer /><v-btn @click="importDialog = false">Cancel</v-btn><v-btn color="primary" :loading="importing" @click="importHolidays">Import holidays</v-btn></v-card-actions>
+    </v-card>
+  </v-dialog>
+
   <v-container class="workforce-calendar" fluid>
     <section class="calendar-overview">
       <div class="calendar-overview__copy">
@@ -25,6 +37,7 @@
         <span>Calendar year</span>
         <strong>{{ selectedYear || "All years" }}</strong>
       </div>
+      <v-btn v-if="canManageHolidays" color="primary" variant="flat" prepend-icon="mdi-download" @click="importDialog = true">Import holidays</v-btn>
     </section>
 
     <section class="calendar-metrics" aria-label="Workforce calendar summary">
@@ -100,6 +113,7 @@ import axios from "@/plugins/axios";
 import Form from "@/components/Form.vue";
 import Table from "@/components/Table.vue";
 import { useApi } from "@/composables/useApi";
+import { usePermissions } from "@/composables/usePermissions";
 import { fields, holidayTypeOptions } from "@/fields/holiday";
 import { formatDate } from "@/utils/dateFormatter";
 
@@ -109,6 +123,12 @@ const currentYear = new Date().getFullYear();
 const yearOptions = Array.from({ length: 9 }, (_, index) => currentYear - 3 + index);
 const selectedYear = ref<number | null>(currentYear);
 const selectedType = ref<string | null>(null);
+const importDialog = ref(false);
+const importing = ref(false);
+const importCountry = ref("PH");
+const importYear = ref(currentYear);
+const { checkPermissions } = usePermissions();
+const canManageHolidays = computed(() => checkPermissions("manage-holidays"));
 const lastTableOptions = ref<Record<string, unknown>>({ page: 1, limit: 10 });
 const summaryEntries = ref<Holiday[]>([]);
 const { index, items, loading, loadingActions, pagination, store, update, destroy } = useApi<Holiday>("/holidays");
@@ -142,6 +162,15 @@ const loadSummary = async () => {
 
 const refreshFilters = async () => { lastTableOptions.value.page = 1; await loadEntries(); };
 const refreshYear = async () => { await Promise.all([refreshFilters(), loadSummary()]); };
+const importHolidays = async () => {
+  importing.value = true;
+  try {
+    await axios.post("/holidays/import", { year: importYear.value, country_code: importCountry.value.toUpperCase() });
+    importDialog.value = false;
+    selectedYear.value = importYear.value;
+    await Promise.all([loadEntries(), loadSummary()]);
+  } finally { importing.value = false; }
+};
 const create = () => { action.value = "Create"; formData.value = { ...emptyForm }; isFormVisible.value = true; };
 const view = (entry: Holiday) => { action.value = "View"; formData.value = entry; isFormVisible.value = true; };
 const edit = (entry: Holiday) => { action.value = "Edit"; formData.value = { ...entry }; isFormVisible.value = true; };

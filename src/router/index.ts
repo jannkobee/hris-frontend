@@ -7,6 +7,24 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/Login.vue"),
     meta: { requiresAuth: false },
   },
+  {
+    path: "/forgot-password",
+    name: "forgot-password",
+    component: () => import("@/views/ForgotPassword.vue"),
+    meta: { requiresAuth: false },
+  },
+  {
+    path: "/reset-password",
+    name: "reset-password",
+    component: () => import("@/views/ResetPassword.vue"),
+    meta: { requiresAuth: false },
+  },
+  {
+    path: "/platform/onboarding",
+    name: "platform-organization-onboarding",
+    component: () => import("@/views/PlatformOrganizationOnboarding.vue"),
+    meta: { requiresAuth: false },
+  },
 
   // Authenticated Shell
   {
@@ -27,6 +45,16 @@ const routes: RouteRecordRaw[] = [
         path: "messages",
         name: "messages",
         component: () => import("@/views/Modules/Messages/Messages.vue"),
+      },
+      {
+        path: "notifications",
+        name: "notifications",
+        component: () => import("@/views/Modules/Notifications.vue"),
+      },
+      {
+        path: "approvals",
+        name: "approval-inbox",
+        component: () => import("@/views/Modules/ApprovalInbox.vue"),
       },
       {
         path: "notes",
@@ -73,6 +101,17 @@ const routes: RouteRecordRaw[] = [
           import("@/views/Modules/AttendanceManagement/AttendanceManagement.vue"),
       },
       {
+        path: "attendance-corrections",
+        name: "attendance-corrections",
+        component: () => import("@/views/Modules/AttendanceCorrections.vue"),
+      },
+      {
+        path: "shifts",
+        name: "shift-roster-management",
+        meta: { permission: "view-shifts" },
+        component: () => import("@/views/Modules/ShiftRosterManagement.vue"),
+      },
+      {
         path: "workforce-calendar",
         name: "workforce-calendar",
         meta: { permission: "view-holidays" },
@@ -84,6 +123,12 @@ const routes: RouteRecordRaw[] = [
         name: "payroll-management",
         meta: { planFeature: "payroll" },
         component: () => import("@/views/Modules/PayrollManagement/PayrollManagement.vue"),
+      },
+      {
+        path: "reports",
+        name: "reports",
+        meta: { permission: "view-reports" },
+        component: () => import("@/views/Modules/Reports.vue"),
       },
       {
         path: "workplace-hub",
@@ -125,7 +170,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/Modules/AuditLog/AuditLog.vue"),
       },
 
-      // ✅ SubModules (Configurations)
+      // SubModules (Configurations)
       {
         path: "configuration/employment-statuses",
         name: "employment-status-management",
@@ -180,6 +225,13 @@ const routes: RouteRecordRaw[] = [
         meta: { permission: "view-leave-credit-settings" },
         component: () =>
           import("@/views/Modules/SubModules/LeaveCreditManagement/LeaveCreditManagement.vue"),
+      },
+      {
+        path: "configuration/overtime-policies",
+        name: "overtime-policy-management",
+        meta: { permission: "manage-overtimes" },
+        component: () =>
+          import("@/views/Modules/SubModules/OvertimePolicyManagement/OvertimePolicyManagement.vue"),
       },
     ],
   },

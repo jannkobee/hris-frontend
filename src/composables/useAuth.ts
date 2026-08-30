@@ -13,10 +13,27 @@ export const useAuth = () => {
 
   async function login(payload: any) {
     const response = await axios.post("/auth/login", payload);
+    const authPayload = response.data.data;
 
-    window.localStorage.setItem("APP_TOKEN", response.data.token);
+    if (authPayload.mfa_required) {
+      return authPayload;
+    }
+
+    window.localStorage.setItem("APP_TOKEN", authPayload.token);
 
     window.location.href = "/dashboard";
+
+    return authPayload;
+  }
+
+  async function verifyMfaChallenge(payload: { challenge: string; code: string }) {
+    const response = await axios.post("/auth/mfa/challenge", payload);
+    const authPayload = response.data.data;
+
+    window.localStorage.setItem("APP_TOKEN", authPayload.token);
+    window.location.href = "/dashboard";
+
+    return authPayload;
   }
 
   async function logout() {
@@ -80,19 +97,19 @@ export const useAuth = () => {
   }
 
   async function forgot_password(payload: any) {
-    const response = await axios.post("/forgot-password", payload);
+    const response = await axios.post("/auth/forgot-password", payload);
 
     return response;
   }
 
   async function reset_password(payload: any) {
-    const response = await axios.post("/reset-password", payload);
+    const response = await axios.post("/auth/reset-password", payload);
 
     return response;
   }
 
   async function update_password(payload: any) {
-    const res = await axios.post(`update_password`, payload);
+    const res = await axios.post("/auth/password", payload);
 
     return res;
   }
@@ -102,6 +119,7 @@ export const useAuth = () => {
     authUser,
     settings,
     login,
+    verifyMfaChallenge,
     logout,
     getUser,
     getSettings,

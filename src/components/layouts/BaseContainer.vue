@@ -5,13 +5,18 @@
         <v-skeleton-loader :loading="loading" type="avatar, list-item-two-line">
           <v-list-item
             prepend-avatar="https://www.gravatar.com/avatar/00000000000000000000000000000000?d=mp"
-            :title="`
-              ${authUser?.first_name}
-              ${authUser?.middle_name ? ' ' + authUser?.middle_name : ''}
-              ${authUser?.last_name ? ' ' + authUser?.last_name : ''}
-            `"
+            :title="displayName"
             :subtitle="accountSubtitle"
           >
+            <v-tooltip
+              v-if="accountSubtitle"
+              activator="parent"
+              location="end"
+              open-on-click
+            >
+              <div class="font-weight-medium">{{ displayName }}</div>
+              <div>{{ accountSubtitle }}</div>
+            </v-tooltip>
             <template #prepend>
               <v-avatar color="surface-variant" class="text-on-surface">
                 <v-img v-if="profilePhotoUrl" :src="profilePhotoUrl" cover />
@@ -27,6 +32,46 @@
             </template>
           </v-list-item>
         </v-skeleton-loader>
+        <v-menu location="end" :close-on-content-click="false" max-width="420">
+          <template #activator="{ props }"
+            ><v-list-item
+              v-bind="props"
+              prepend-icon="mdi-bell-outline"
+              title="Notifications"
+              @click="loadNotifications"
+              ><template #append
+                ><span
+                  v-if="notificationCount"
+                  class="nav-count nav-count--message"
+                  >{{ displayBadge(notificationCount) }}</span
+                ></template
+              ></v-list-item
+            ></template
+          >
+          <v-card min-width="360"
+            ><v-card-title class="d-flex align-center"
+              >Notifications <v-spacer /><v-btn
+                size="small"
+                variant="text"
+                @click="router.push({ name: 'notifications' })"
+                >View all</v-btn
+              ></v-card-title
+            ><v-divider /><v-list
+              lines="two"
+              max-height="420"
+              class="overflow-y-auto"
+              ><v-list-item
+                v-for="notification in notifications"
+                :key="notification.id"
+                :class="{ 'notification-unread': !notification.read_at }"
+                :title="notification.title"
+                :subtitle="notification.body"
+                @click="openNotification(notification)" /><v-list-item
+                v-if="!notifications.length"
+                title="You are all caught up"
+                subtitle="No notifications yet." /></v-list
+          ></v-card>
+        </v-menu>
       </v-list>
 
       <v-divider></v-divider>
@@ -150,6 +195,11 @@ const navItems: NavItem[] = [
     // Every authenticated user can message teammates.
   },
   {
+    title: "Approvals",
+    icon: "mdi-clipboard-check-outline",
+    routeName: "approval-inbox",
+  },
+  {
     title: "My Notes",
     icon: "mdi-note-edit-outline",
     routeName: "notes",
@@ -166,6 +216,12 @@ const navItems: NavItem[] = [
     title: "Attendance",
     icon: "mdi-calendar-clock",
     routeName: "attendance-management",
+  },
+  {
+    title: "Shifts & Roster",
+    icon: "mdi-calendar-multiselect-outline",
+    routeName: "shift-roster-management",
+    permission: "view-shifts",
   },
   {
     title: "Leave",
@@ -203,6 +259,12 @@ const navItems: NavItem[] = [
     icon: "mdi-cash-multiple",
     routeName: "payroll-management",
     planFeature: "payroll",
+  },
+  {
+    title: "Reports",
+    icon: "mdi-chart-box-outline",
+    routeName: "reports",
+    permission: "view-reports",
   },
   {
     title: "Configurations",
@@ -243,6 +305,12 @@ const navItems: NavItem[] = [
         icon: "mdi-calendar-plus",
         routeName: "leave-credit-setting-management",
         permission: "view-leave-credit-settings",
+      },
+      {
+        title: "Overtime Policies",
+        icon: "mdi-clock-plus-outline",
+        routeName: "overtime-policy-management",
+        permission: "manage-overtimes",
       },
       {
         title: "Employee Number Settings",
@@ -298,6 +366,7 @@ const route = useRoute();
 const router = useRouter();
 
 const navBadges = ref<Record<string, number>>({});
+const notifications = ref<any[]>([]);
 let badgeRefreshTimer: ReturnType<typeof setInterval> | undefined;
 let notificationChannelName: string | null = null;
 let badgeRequest: Promise<void> | null = null;
@@ -312,6 +381,15 @@ const applyTheme = (themeName: string) => {
 };
 
 const { loading, getUser, getSettings, authUser, logout } = useAuth();
+const displayName = computed(() =>
+  [
+    authUser.value?.first_name,
+    authUser.value?.middle_name,
+    authUser.value?.last_name,
+  ]
+    .filter(Boolean)
+    .join(" "),
+);
 const accountSubtitle = computed(() =>
   [
     authUser.value?.email,
@@ -339,6 +417,23 @@ const { photoUrl: profilePhotoUrl, loadProfilePhoto } = useProfilePhoto();
 
 const badgeFor = (item: NavItem): number =>
   item.routeName ? Number(navBadges.value[item.routeName] || 0) : 0;
+const notificationCount = computed(() =>
+  Number(navBadges.value.notifications || 0),
+);
+const loadNotifications = async () => {
+  const response = await axios.get("/notifications", {
+    params: { limit: 8 },
+    headers: { "X-Suppress-Success-Notification": "true" },
+  });
+  notifications.value = response.data.data?.data ?? [];
+};
+const openNotification = async (notification: any) => {
+  if (!notification.read_at)
+    await axios.patch(`/notifications/${notification.id}/read`);
+  await loadNavigationBadges(true);
+  if (notification.type?.includes("attendance_correction"))
+    await router.push({ name: "attendance-management" });
+};
 
 const displayBadge = (count: number): string =>
   count > 99 ? "99+" : String(count);
@@ -420,6 +515,7 @@ onMounted(async () => {
   await getUser();
   await loadProfilePhoto(authUser.value?.profile_photo_url);
   await loadNavigationBadges();
+  await loadNotifications();
   await subscribeToMessageNotifications();
   badgeRefreshTimer = setInterval(loadNavigationBadges, 45000);
   window.addEventListener(
@@ -514,5 +610,9 @@ onBeforeUnmount(() => {
 .nav-count--message {
   color: rgb(var(--v-theme-on-primary));
   background: rgb(var(--v-theme-primary));
+}
+
+.notification-unread {
+  background: rgba(var(--v-theme-primary), 0.08);
 }
 </style>

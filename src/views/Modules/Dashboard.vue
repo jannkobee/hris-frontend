@@ -59,6 +59,26 @@
       </article>
     </div>
 
+    <section v-if="canViewReports" class="analytics-panel mb-5">
+      <header><div><span>Last 30 days</span><strong>Workforce analytics</strong></div><v-btn size="small" variant="tonal" prepend-icon="mdi-file-chart-outline" @click="$router.push({ name: 'reports' })">Open reports</v-btn></header>
+      <div class="analytics-grid">
+        <div><span>Headcount</span><strong>{{ analytics.headcount }}</strong></div>
+        <div><span>Attendance exceptions</span><strong>{{ analytics.attendance_exceptions }}</strong></div>
+        <div><span>Approved leave days</span><strong>{{ analytics.leave_days }}</strong></div>
+        <div><span>Premium overtime hours</span><strong>{{ analytics.overtime_premium_hours }}</strong></div>
+        <div><span>Approved payroll</span><strong>{{ formatMoney(analytics.payroll_net) }}</strong></div>
+      </div>
+      <div v-if="analytics.trends.length" class="trend-wrap">
+        <div class="trend-legend"><span><i class="exceptions" /> Attendance exceptions</span><span><i class="overtime" /> Premium overtime hours</span></div>
+        <div class="trend-chart">
+          <div v-for="point in analytics.trends" :key="point.date" class="trend-day" :title="`${point.label}: ${point.attendance_exceptions} exceptions, ${point.overtime_hours} overtime hours`">
+            <div class="trend-bars"><i class="exceptions" :style="{ height: trendHeight(point.attendance_exceptions) }" /><i class="overtime" :style="{ height: trendHeight(point.overtime_hours) }" /></div>
+            <small>{{ point.label }}</small>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <div class="dashboard-grid">
       <section class="calendar-panel">
         <MonthlyCalendar
@@ -282,9 +302,15 @@ import MonthlyCalendar, {
 import UserAvatar from "@/components/UserAvatar.vue";
 import { useAuth } from "@/composables/useAuth";
 import { useAppSettings } from "@/composables/useAppSettings";
+import { usePermissions } from "@/composables/usePermissions";
 import { dateKeyInTimeZone, formatTimeInTimeZone } from "@/utils/timezone";
 
 const { authUser, getUser } = useAuth();
+const { checkPermissions } = usePermissions();
+const canViewReports = computed(() => checkPermissions("view-reports"));
+const analytics = ref<any>({ headcount: 0, attendance_exceptions: 0, leave_days: 0, overtime_premium_hours: 0, payroll_net: 0, trends: [] });
+const trendMaximum = computed(() => Math.max(1, ...analytics.value.trends.flatMap((point: any) => [Number(point.attendance_exceptions), Number(point.overtime_hours)])));
+const trendHeight = (value: number) => Number(value) ? `${Math.max(6, (Number(value) / trendMaximum.value) * 100)}%` : "0";
 const { setting, loadAppSettings } = useAppSettings();
 const companyTimezone = computed(() =>
   setting("organization.timezone", "Asia/Manila"),
@@ -423,6 +449,9 @@ function formatDate(value: string) {
       )
     : "—";
 }
+function formatMoney(value: number) {
+  return new Intl.NumberFormat("en-PH", { style: "currency", currency: "PHP" }).format(Number(value || 0));
+}
 function eventTime(value: string) {
   return formatTimeInTimeZone(value, companyTimezone.value, "en-PH");
 }
@@ -515,12 +544,19 @@ async function loadCalendar(range: { from: string; to: string }) {
   }
 }
 
+async function loadAnalytics() {
+  if (!canViewReports.value) return;
+  const response = await axios.get("/dashboard/analytics", { headers: { "X-Suppress-Success-Notification": "true" } });
+  analytics.value = response.data.data ?? analytics.value;
+}
+
 onMounted(async () => {
   const initialDay = selectedDay.value;
   await Promise.all([
     !authUser.value ? getUser() : Promise.resolve(),
     loadAppSettings(),
   ]);
+  await loadAnalytics();
   if (selectedDay.value === initialDay) selectedDay.value = today.value;
 });
 </script>
@@ -549,6 +585,24 @@ onMounted(async () => {
     rgba(var(--v-theme-secondary), 0.1)
   );
 }
+.analytics-panel { border: 1px solid var(--panel-border); border-radius: 18px; padding: 20px; background: rgb(var(--v-theme-surface)); }
+.analytics-panel > header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.analytics-panel header span, .analytics-grid span { display: block; font-size: .75rem; color: rgba(var(--v-theme-on-surface), .65); }
+.analytics-panel header strong { display: block; font-size: 1.05rem; }
+.analytics-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.analytics-grid > div { padding: 14px; border-radius: 12px; background: rgba(var(--v-theme-primary), .06); }
+.analytics-grid strong { display: block; margin-top: 5px; font-size: 1.22rem; }
+.trend-wrap { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--panel-border); }
+.trend-legend { display: flex; gap: 18px; justify-content: flex-end; font-size: .72rem; color: rgba(var(--v-theme-on-surface), .68); }
+.trend-legend span { display: flex; align-items: center; gap: 5px; }
+.trend-legend i { width: 8px; height: 8px; border-radius: 50%; }
+.trend-chart { height: 145px; display: grid; grid-template-columns: repeat(14, minmax(20px, 1fr)); gap: 7px; align-items: end; margin-top: 10px; }
+.trend-day { height: 100%; display: flex; flex-direction: column; justify-content: flex-end; min-width: 0; }
+.trend-bars { height: 112px; display: flex; align-items: flex-end; justify-content: center; gap: 3px; }
+.trend-bars i { width: min(10px, 38%); border-radius: 4px 4px 0 0; transition: height .2s ease; }
+.trend-day small { margin-top: 5px; font-size: .62rem; text-align: center; white-space: nowrap; overflow: hidden; }
+.exceptions { background: rgb(var(--v-theme-warning)); }
+.overtime { background: rgb(var(--v-theme-primary)); }
 .welcome-panel:after {
   position: absolute;
   right: -80px;
@@ -874,6 +928,7 @@ onMounted(async () => {
   .dashboard-sidebar {
     grid-template-columns: 1fr 1fr;
   }
+  .analytics-grid { grid-template-columns: repeat(3, 1fr); }
 }
 @media (max-width: 760px) {
   .welcome-panel {
@@ -887,6 +942,7 @@ onMounted(async () => {
   .dashboard-sidebar {
     grid-template-columns: 1fr;
   }
+  .analytics-grid { grid-template-columns: repeat(2, 1fr); }
   .attendance-panel > header {
     align-items: flex-start;
     flex-direction: column;

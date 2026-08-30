@@ -263,6 +263,32 @@
           </div>
           <div v-else class="profile-empty">No addresses recorded.</div>
         </section>
+
+        <section class="profile-card">
+          <div class="card-heading">
+            <v-avatar color="primary" variant="tonal" size="38"><v-icon icon="mdi-shield-lock-outline" /></v-avatar>
+            <div>
+              <strong>Account security</strong>
+              <small>Protect your account with two-factor authentication.</small>
+            </div>
+          </div>
+          <div class="detail-list">
+            <div>
+              <span>Two-factor authentication</span>
+              <v-chip :color="mfaStatus.enabled ? 'success' : 'warning'" size="small" variant="tonal">
+                {{ mfaStatus.enabled ? "Enabled" : "Not enabled" }}
+              </v-chip>
+            </div>
+          </div>
+          <div class="d-flex flex-wrap ga-2 mt-5">
+            <v-btn color="primary" class="text-none" :loading="mfaBusy" @click="openMfaDialog">
+              {{ mfaStatus.enabled ? "Manage MFA" : "Set up MFA" }}
+            </v-btn>
+            <v-btn variant="outlined" class="text-none" :loading="sessionBusy" @click="signOutOtherSessions">
+              Sign out other devices
+            </v-btn>
+          </div>
+        </section>
       </div>
     </template>
 
@@ -271,6 +297,39 @@
       :employee="employee"
       @close="documentsVisible = false"
     />
+
+    <v-dialog v-model="mfaDialog" max-width="520">
+      <v-card>
+        <v-card-title>Two-factor authentication</v-card-title>
+        <v-card-text>
+          <template v-if="mfaMode === 'setup' && !mfaSecret">
+            <p class="mb-4">Confirm your password before setting up an authenticator app.</p>
+            <v-text-field v-model="securityPassword" label="Current password" type="password" autocomplete="current-password" variant="outlined" />
+          </template>
+          <template v-else-if="mfaMode === 'setup' && mfaSecret">
+            <p>In your authenticator app, add a new account using this setup key, then enter its six-digit code.</p>
+            <v-alert type="info" variant="tonal" class="my-4"><code class="security-secret">{{ mfaSecret }}</code></v-alert>
+            <v-text-field v-model="mfaCode" label="Verification code" autocomplete="one-time-code" variant="outlined" />
+          </template>
+          <template v-else-if="mfaMode === 'recovery'">
+            <v-alert type="warning" variant="tonal" class="mb-4">Save these recovery codes in a secure place. Each code works once and will not be shown again.</v-alert>
+            <div class="recovery-codes"><code v-for="code in recoveryCodes" :key="code">{{ code }}</code></div>
+          </template>
+          <template v-else>
+            <p class="mb-4">To disable MFA, confirm your password and a current authenticator or recovery code.</p>
+            <v-text-field v-model="securityPassword" label="Current password" type="password" autocomplete="current-password" variant="outlined" />
+            <v-text-field v-model="mfaCode" label="Authenticator or recovery code" autocomplete="one-time-code" variant="outlined" />
+          </template>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer />
+          <v-btn :disabled="mfaBusy" @click="mfaDialog = false">{{ mfaMode === 'recovery' ? "Done" : "Cancel" }}</v-btn>
+          <v-btn v-if="mfaMode === 'setup' && !mfaSecret" color="primary" :loading="mfaBusy" @click="startMfaSetup">Continue</v-btn>
+          <v-btn v-else-if="mfaMode === 'setup'" color="primary" :loading="mfaBusy" @click="confirmMfa">Enable MFA</v-btn>
+          <v-btn v-else-if="mfaMode === 'disable'" color="error" :loading="mfaBusy" @click="disableMfa">Disable MFA</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-dialog>
   </v-container>
 </template>
 
@@ -298,6 +357,15 @@ const loadError = ref("");
 const saving = ref(false);
 const uploadingPhoto = ref(false);
 const documentsVisible = ref(false);
+const mfaDialog = ref(false);
+const mfaBusy = ref(false);
+const sessionBusy = ref(false);
+const securityPassword = ref("");
+const mfaCode = ref("");
+const mfaSecret = ref("");
+const recoveryCodes = ref<string[]>([]);
+const mfaMode = ref<"setup" | "disable" | "recovery">("setup");
+const mfaStatus = ref({ enabled: false, confirmed_at: null as string | null, recovery_codes_remaining: 0 });
 const photoInput = ref<HTMLInputElement | null>(null);
 const form = ref<ProfileForm>({
   first_name: "",
@@ -349,6 +417,63 @@ const load = async () => {
   }
 };
 
+const loadMfaStatus = async () => {
+  const response = await axios.get("/auth/mfa", { headers: { "X-Suppress-Success-Notification": "true" } });
+  mfaStatus.value = response.data.data;
+};
+
+const openMfaDialog = () => {
+  securityPassword.value = "";
+  mfaCode.value = "";
+  mfaSecret.value = "";
+  recoveryCodes.value = [];
+  mfaMode.value = mfaStatus.value.enabled ? "disable" : "setup";
+  mfaDialog.value = true;
+};
+
+const startMfaSetup = async () => {
+  mfaBusy.value = true;
+  try {
+    const response = await axios.post("/auth/mfa/setup", { current_password: securityPassword.value });
+    mfaSecret.value = response.data.data.secret;
+    securityPassword.value = "";
+  } finally {
+    mfaBusy.value = false;
+  }
+};
+
+const confirmMfa = async () => {
+  mfaBusy.value = true;
+  try {
+    const response = await axios.post("/auth/mfa/confirm", { code: mfaCode.value });
+    recoveryCodes.value = response.data.data.recovery_codes;
+    mfaMode.value = "recovery";
+    await loadMfaStatus();
+  } finally {
+    mfaBusy.value = false;
+  }
+};
+
+const disableMfa = async () => {
+  mfaBusy.value = true;
+  try {
+    await axios.delete("/auth/mfa", { data: { current_password: securityPassword.value, code: mfaCode.value } });
+    mfaDialog.value = false;
+    await loadMfaStatus();
+  } finally {
+    mfaBusy.value = false;
+  }
+};
+
+const signOutOtherSessions = async () => {
+  sessionBusy.value = true;
+  try {
+    await axios.delete("/auth/sessions/others");
+  } finally {
+    sessionBusy.value = false;
+  }
+};
+
 const save = async () => {
   saving.value = true;
   try {
@@ -381,7 +506,9 @@ const removePhoto = async () => {
   await Promise.all([load(), getUser()]);
 };
 
-onMounted(load);
+onMounted(async () => {
+  await Promise.all([load(), loadMfaStatus()]);
+});
 </script>
 
 <style scoped>
@@ -566,6 +693,9 @@ onMounted(load);
   color: rgb(var(--v-theme-on-surface-variant));
   font-size: 0.8rem;
 }
+.security-secret { font-size: 1rem; letter-spacing: 0.08em; word-break: break-all; }
+.recovery-codes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.recovery-codes code { padding: 8px; background: rgba(var(--v-theme-on-surface), 0.06); text-align: center; }
 @media (max-width: 850px) {
   .profile-hero {
     grid-template-columns: 96px minmax(0, 1fr);

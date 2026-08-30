@@ -25,12 +25,12 @@
 
     <section class="accrual-guide" aria-label="How leave credit accrual works">
       <article><v-icon icon="mdi-form-select" color="primary" /><div><strong>1. Choose a leave type</strong><span>For example: Vacation Leave or Sick Leave.</span></div></article>
-      <article><v-icon icon="mdi-calendar-sync-outline" color="primary" /><div><strong>2. Set the amount and months</strong><span>Example: 1.25 days each month, or 15 days every January.</span></div></article>
+      <article><v-icon icon="mdi-calendar-sync-outline" color="primary" /><div><strong>2. Set recurring and initial credits</strong><span>For example: 1.25 days monthly plus 5 days when an employee is hired.</span></div></article>
       <article><v-icon icon="mdi-account-filter-outline" color="primary" /><div><strong>3. Limit eligibility if needed</strong><span>Leave filters blank to include all active employees with enough service.</span></div></article>
     </section>
 
     <v-alert type="info" variant="tonal" class="accrual-note" icon="mdi-information-outline">
-      These rules are company policy. Enable Grant on Hire only for benefits you intentionally give to new employees; otherwise the rule is granted on its scheduled month after the minimum service requirement. Saving an active rule enables the daily Leave Accrual task, which prevents duplicate credits.
+      These rules are company policy. Enable Grant Initial Credit on Hire and set its amount only for benefits you intentionally give to new employees. This initial grant is separate from the recurring credit amount and can be issued in the same month. Saving an active rule enables the daily Leave Accrual task, which prevents duplicate credits.
     </v-alert>
 
     <Table
@@ -88,6 +88,7 @@ const emptyForm = () => ({
   name: "",
   description: "",
   credit_amount: 0,
+  initial_credit_amount: 0,
   frequency: "monthly",
   run_months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
   eligible_employment_status_ids: [],

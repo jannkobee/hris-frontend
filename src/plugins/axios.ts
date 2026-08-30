@@ -77,7 +77,6 @@ const axiosRequest = axios.create({
   baseURL: api,
   withCredentials: true,
   headers: {
-    Authorization: `Bearer ${window.localStorage.getItem("APP_TOKEN")}`,
     Accept: "application/json",
   },
 });
@@ -121,6 +120,7 @@ axiosRequest.interceptors.response.use(
     }
 
     const { status, data } = error.response;
+    const config = error.config;
 
     const message =
       typeof data?.message === "string" && data.message.trim()
@@ -138,6 +138,15 @@ axiosRequest.interceptors.response.use(
         validationMessages,
       );
     } else if (status === 401) {
+      const isPlatformRequest =
+        config.headers?.get?.("X-Platform-Provisioning-Key") ||
+        config.headers?.["X-Platform-Provisioning-Key"];
+
+      if (isPlatformRequest) {
+        errorNotification("Platform authorization failed", message);
+        return Promise.reject(error);
+      }
+
       errorNotification(
         "Session expired",
         "Please sign in again to continue.",
@@ -180,6 +189,13 @@ axiosRequest.interceptors.response.use(
 // app-wide JSON default is correct for normal API calls but prevents Laravel
 // from receiving uploaded files when it is retained on this request.
 axiosRequest.interceptors.request.use((config) => {
+  const token = window.localStorage.getItem("APP_TOKEN");
+  if (token) {
+    config.headers.set("Authorization", `Bearer ${token}`);
+  } else {
+    config.headers.delete("Authorization");
+  }
+
   if (config.data instanceof FormData) {
     config.headers.setContentType(false);
   }
