@@ -3,10 +3,16 @@
     <v-sheet class="sheet" rounded="lg" elevation="4">
       <h1 class="text-h5 font-weight-bold mb-2">Reset your password</h1>
       <p class="text-body-2 text-medium-emphasis mb-6">
-        Enter your work email and we will send a password reset link if an account exists.
+        Enter your work email and we will send a password reset link if an
+        account exists.
       </p>
 
-      <v-alert v-if="successMessage" type="success" variant="tonal" class="mb-4">
+      <v-alert
+        v-if="successMessage"
+        type="success"
+        variant="tonal"
+        class="mb-4"
+      >
         {{ successMessage }}
       </v-alert>
       <v-alert v-if="errorMessage" type="error" variant="tonal" class="mb-4">
@@ -22,13 +28,21 @@
           variant="outlined"
           :rules="emailRules"
         />
-        <v-btn type="submit" color="primary" block :loading="submitting" :disabled="submitting">
+        <v-btn
+          type="submit"
+          color="primary"
+          block
+          :loading="submitting"
+          :disabled="submitting"
+        >
           Send reset link
         </v-btn>
       </v-form>
 
       <div class="text-center mt-4">
-        <RouterLink class="text-body-2" :to="{ name: 'login' }">Back to sign in</RouterLink>
+        <RouterLink class="text-body-2" :to="{ name: 'login' }"
+          >Back to sign in</RouterLink
+        >
       </div>
     </v-sheet>
   </v-container>
@@ -60,7 +74,8 @@ const submit = async () => {
     const response = await forgot_password({ email: email.value });
     successMessage.value = response.data.message;
   } catch (error) {
-    errorMessage.value = error instanceof Error ? error.message : "Unable to send a reset link.";
+    errorMessage.value =
+      error instanceof Error ? error.message : "Unable to send a reset link.";
   } finally {
     submitting.value = false;
   }
@@ -68,6 +83,16 @@ const submit = async () => {
 </script>
 
 <style scoped>
-.container { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.sheet { width: 100%; max-width: 420px; padding: 32px; }
+.container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+.sheet {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px;
+}
 </style>

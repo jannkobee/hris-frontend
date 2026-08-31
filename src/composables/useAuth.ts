@@ -36,6 +36,22 @@ export const useAuth = () => {
     return authPayload;
   }
 
+  async function exchangeOidcLogin(exchangeCode: string) {
+    const response = await axios.post("/auth/oidc/exchange", {
+      exchange_code: exchangeCode,
+    });
+    const authPayload = response.data.data;
+
+    if (authPayload.mfa_required) {
+      return authPayload;
+    }
+
+    window.localStorage.setItem("APP_TOKEN", authPayload.token);
+    window.location.href = "/dashboard";
+
+    return authPayload;
+  }
+
   async function logout() {
     try {
       await axios.post("/auth/logout");
@@ -120,6 +136,7 @@ export const useAuth = () => {
     settings,
     login,
     verifyMfaChallenge,
+    exchangeOidcLogin,
     logout,
     getUser,
     getSettings,

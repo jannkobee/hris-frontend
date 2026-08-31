@@ -60,6 +60,12 @@
             Forgot your password?
           </RouterLink>
         </div>
+
+        <v-divider class="my-5" />
+        <v-btn variant="tonal" block :disabled="loggingIn" @click="ssoDialog = true">
+          <v-icon start icon="mdi-domain" />
+          Sign in with Enterprise SSO
+        </v-btn>
       </v-form>
 
       <v-form v-else ref="mfaFormRef" v-model="isMfaFormValid" @submit.prevent="handleMfaChallenge">
@@ -90,12 +96,40 @@
           Use another account
         </v-btn>
       </v-form>
+
+      <v-dialog v-model="ssoDialog" max-width="420">
+        <v-card>
+          <v-card-title>Enterprise SSO</v-card-title>
+          <v-card-text>
+            <p class="text-body-2 text-medium-emphasis mb-4">
+              Enter your organization slug to continue with your company identity provider.
+            </p>
+            <v-text-field
+              v-model="organizationSlug"
+              label="Organization slug"
+              hint="Example: acme"
+              prepend-inner-icon="mdi-office-building-outline"
+              variant="outlined"
+              autocomplete="organization"
+              @keyup.enter="startOidcLogin"
+            />
+          </v-card-text>
+          <v-card-actions class="px-6 pb-5">
+            <v-spacer />
+            <v-btn variant="text" @click="ssoDialog = false">Cancel</v-btn>
+            <v-btn color="primary" :disabled="!organizationSlug.trim()" @click="startOidcLogin">
+              Continue
+            </v-btn>
+          </v-card-actions>
+        </v-card>
+      </v-dialog>
     </v-sheet>
   </v-container>
 </template>
 
 <script lang="ts" setup>
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
+import { useRoute } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
 
 const form = reactive({
@@ -112,6 +146,9 @@ const errorMessage = ref("");
 const mfaChallenge = ref("");
 const mfaCode = ref("");
 const mfaFormRef = ref();
+const ssoDialog = ref(false);
+const organizationSlug = ref("");
+const route = useRoute();
 
 const emailRules = [
   (v: string) => !!v || "Email is required",
@@ -121,7 +158,7 @@ const emailRules = [
 const passwordRules = [(v: string) => !!v || "Password is required"];
 const mfaRules = [(v: string) => !!v || "Verification code is required"];
 
-const { login, verifyMfaChallenge } = useAuth();
+const { login, verifyMfaChallenge, exchangeOidcLogin } = useAuth();
 
 const handleLogin = async () => {
   const { valid } = await formRef.value.validate();
@@ -165,6 +202,33 @@ const resetMfa = () => {
   mfaCode.value = "";
   errorMessage.value = "";
 };
+
+const startOidcLogin = () => {
+  const slug = organizationSlug.value.trim().toLowerCase();
+  if (!slug) return;
+
+  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/backend/api/v1";
+  window.location.assign(`${apiUrl}/auth/oidc/${encodeURIComponent(slug)}/redirect`);
+};
+
+onMounted(async () => {
+  const exchangeCode = route.query.oidc_exchange;
+  if (typeof exchangeCode !== "string" || !exchangeCode) return;
+
+  errorMessage.value = "";
+  loggingIn.value = true;
+  try {
+    const result = await exchangeOidcLogin(exchangeCode);
+    if (result?.mfa_required) {
+      mfaChallenge.value = result.challenge;
+    }
+  } catch (err) {
+    errorMessage.value =
+      err instanceof Error ? err.message : "Unable to complete your SSO sign-in. Please try again.";
+  } finally {
+    loggingIn.value = false;
+  }
+});
 </script>
 
 <style scoped>

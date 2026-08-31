@@ -126,6 +126,7 @@ export type Organization = {
   slug: string;
   name: string;
   timezone: string;
+  country_code?: string;
   plan_code: string;
   status: string;
   plan?: OrganizationPlan;

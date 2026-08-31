@@ -1,6 +1,18 @@
-import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+﻿import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 
 const routes: RouteRecordRaw[] = [
+  {
+    path: "/saas",
+    name: "saas-showcase",
+    component: () => import("@/views/SaasShowcase.vue"),
+    meta: { requiresAuth: false },
+  },
+  {
+    path: "/start-trial",
+    name: "start-trial",
+    component: () => import("@/views/StartTrial.vue"),
+    meta: { requiresAuth: false },
+  },
   {
     path: "/login",
     name: "login",
@@ -19,17 +31,56 @@ const routes: RouteRecordRaw[] = [
     component: () => import("@/views/ResetPassword.vue"),
     meta: { requiresAuth: false },
   },
+  { path: "/platform", redirect: { name: "platform-console-login" } },
   {
-    path: "/platform/onboarding",
-    name: "platform-organization-onboarding",
-    component: () => import("@/views/PlatformOrganizationOnboarding.vue"),
+    path: "/platform/login",
+    name: "platform-console-login",
+    component: () => import("@/views/PlatformConsole/Login.vue"),
     meta: { requiresAuth: false },
+  },
+  {
+    path: "/platform-console",
+    component: () =>
+      import("@/components/layouts/PlatformConsole/PlatformConsoleLayout.vue"),
+    meta: { requiresAuth: false, requiresPlatformAuth: true },
+    children: [
+      { path: "", redirect: { name: "platform-overview" } },
+      {
+        path: "overview",
+        name: "platform-overview",
+        component: () => import("@/views/PlatformConsole/Overview.vue"),
+        meta: { platformTitle: "Overview" },
+      },
+      {
+        path: "organizations",
+        alias: "/platform/organizations",
+        name: "platform-organizations",
+        component: () => import("@/views/PlatformConsole/Organizations.vue"),
+        meta: { platformTitle: "Organizations" },
+      },
+      {
+        path: "organizations/new",
+        alias: "/platform/onboarding",
+        name: "platform-organization-onboarding",
+        component: () =>
+          import("@/views/PlatformConsole/OrganizationOnboarding.vue"),
+        meta: { platformTitle: "Create organization" },
+      },
+      {
+        path: "organizations/:id",
+        alias: "/platform/organizations/:id",
+        name: "platform-organization-detail",
+        component: () =>
+          import("@/views/PlatformConsole/OrganizationDetail.vue"),
+        meta: { platformTitle: "Organization details" },
+      },
+    ],
   },
 
   // Authenticated Shell
   {
     path: "/",
-    component: () => import("@/components/layouts/BaseContainer.vue"),
+    component: () => import("@/components/layouts/HrisApp/BaseContainer.vue"),
     meta: { requiresAuth: true },
     children: [
       // Default
@@ -39,33 +90,34 @@ const routes: RouteRecordRaw[] = [
       {
         path: "dashboard",
         name: "dashboard",
-        component: () => import("@/views/Modules/Dashboard.vue"),
+        component: () => import("@/views/HrisApp/Modules/Dashboard.vue"),
       },
       {
         path: "messages",
         name: "messages",
-        component: () => import("@/views/Modules/Messages/Messages.vue"),
+        component: () =>
+          import("@/views/HrisApp/Modules/Messages/Messages.vue"),
       },
       {
         path: "notifications",
         name: "notifications",
-        component: () => import("@/views/Modules/Notifications.vue"),
+        component: () => import("@/views/HrisApp/Modules/Notifications.vue"),
       },
       {
         path: "approvals",
         name: "approval-inbox",
-        component: () => import("@/views/Modules/ApprovalInbox.vue"),
+        component: () => import("@/views/HrisApp/Modules/ApprovalInbox.vue"),
       },
       {
         path: "notes",
         name: "notes",
         meta: { permission: "view-notes", planFeature: "notes" },
-        component: () => import("@/views/Modules/Notes/Notes.vue"),
+        component: () => import("@/views/HrisApp/Modules/Notes/Notes.vue"),
       },
       {
         path: "profile",
         name: "profile",
-        component: () => import("@/views/Modules/Profile/Profile.vue"),
+        component: () => import("@/views/HrisApp/Modules/Profile/Profile.vue"),
       },
 
       // Administration
@@ -75,7 +127,7 @@ const routes: RouteRecordRaw[] = [
         name: "user-management",
         meta: { permission: "view-users" },
         component: () =>
-          import("@/views/Modules/UserManagement/UserManagement.vue"),
+          import("@/views/HrisApp/Modules/UserManagement/UserManagement.vue"),
       },
       {
         path: "administration/roles",
@@ -83,7 +135,7 @@ const routes: RouteRecordRaw[] = [
         name: "role-management",
         meta: { permission: "view-roles" },
         component: () =>
-          import("@/views/Modules/RoleManagement/RoleManagement.vue"),
+          import("@/views/HrisApp/Modules/RoleManagement/RoleManagement.vue"),
       },
       {
         path: "employees",
@@ -91,44 +143,55 @@ const routes: RouteRecordRaw[] = [
         name: "employee-management",
         meta: { permission: "view-employees" },
         component: () =>
-          import("@/views/Modules/EmployeeManagement/EmployeeManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/EmployeeManagement/EmployeeManagement.vue"
+          ),
       },
       {
         path: "attendance",
         alias: "/attendance-management",
         name: "attendance-management",
         component: () =>
-          import("@/views/Modules/AttendanceManagement/AttendanceManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/AttendanceManagement/AttendanceManagement.vue"
+          ),
       },
       {
         path: "attendance-corrections",
         name: "attendance-corrections",
-        component: () => import("@/views/Modules/AttendanceCorrections.vue"),
+        component: () =>
+          import("@/views/HrisApp/Modules/AttendanceCorrections.vue"),
       },
       {
         path: "shifts",
         name: "shift-roster-management",
         meta: { permission: "view-shifts" },
-        component: () => import("@/views/Modules/ShiftRosterManagement.vue"),
+        component: () =>
+          import("@/views/HrisApp/Modules/ShiftRosterManagement.vue"),
       },
       {
         path: "workforce-calendar",
         name: "workforce-calendar",
         meta: { permission: "view-holidays" },
         component: () =>
-          import("@/views/Modules/WorkforceCalendar/WorkforceCalendar.vue"),
+          import(
+            "@/views/HrisApp/Modules/WorkforceCalendar/WorkforceCalendar.vue"
+          ),
       },
       {
         path: "payroll",
         name: "payroll-management",
         meta: { planFeature: "payroll" },
-        component: () => import("@/views/Modules/PayrollManagement/PayrollManagement.vue"),
+        component: () =>
+          import(
+            "@/views/HrisApp/Modules/PayrollManagement/PayrollManagement.vue"
+          ),
       },
       {
         path: "reports",
         name: "reports",
         meta: { permission: "view-reports" },
-        component: () => import("@/views/Modules/Reports.vue"),
+        component: () => import("@/views/HrisApp/Modules/Reports.vue"),
       },
       {
         path: "workplace-hub",
@@ -137,7 +200,8 @@ const routes: RouteRecordRaw[] = [
           permission: "view-workplace-hub",
           planFeature: "workplace_hub",
         },
-        component: () => import("@/views/Modules/WorkplaceHub/WorkplaceHub.vue"),
+        component: () =>
+          import("@/views/HrisApp/Modules/WorkplaceHub/WorkplaceHub.vue"),
       },
       {
         path: "leave",
@@ -145,7 +209,7 @@ const routes: RouteRecordRaw[] = [
         name: "leave-management",
         meta: { permission: "view-leave-requests" },
         component: () =>
-          import("@/views/Modules/LeaveManagement/LeaveManagement.vue"),
+          import("@/views/HrisApp/Modules/LeaveManagement/LeaveManagement.vue"),
       },
       {
         path: "overtime",
@@ -153,85 +217,106 @@ const routes: RouteRecordRaw[] = [
         name: "overtime-management",
         meta: { permission: "view-overtimes" },
         component: () =>
-          import("@/views/Modules/OvertimeManagement/OvertimeManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/OvertimeManagement/OvertimeManagement.vue"
+          ),
       },
       {
         path: "announcements",
         name: "announcement-management",
         meta: { permission: "view-announcements" },
         component: () =>
-          import("@/views/Modules/AnnouncementManagement/AnnouncementManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/AnnouncementManagement/AnnouncementManagement.vue"
+          ),
       },
       {
         path: "administration/audit-logs",
         alias: "/audit-logs",
         name: "audit-log-management",
         meta: { permission: "view-audit-logs", planFeature: "audit_logs" },
-        component: () => import("@/views/Modules/AuditLog/AuditLog.vue"),
+        component: () =>
+          import("@/views/HrisApp/Modules/AuditLog/AuditLog.vue"),
       },
 
-      // SubModules (Configurations)
+      // Configuration modules
       {
         path: "configuration/employment-statuses",
         name: "employment-status-management",
         meta: { permission: "view-employment-statuses" },
         component: () =>
-          import("@/views/Modules/SubModules/EmploymentStatusManagement/EmploymentStatusManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/EmploymentStatusManagement/EmploymentStatusManagement.vue"
+          ),
       },
       {
         path: "configuration/positions",
         name: "position-management",
         meta: { permission: "view-positions" },
         component: () =>
-          import("@/views/Modules/SubModules/PositionManagement/PositionManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/PositionManagement/PositionManagement.vue"
+          ),
       },
       {
         path: "configuration/departments",
         name: "department-management",
         meta: { permission: "view-departments" },
         component: () =>
-          import("@/views/Modules/SubModules/DepartmentManagement/DepartmentManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/DepartmentManagement/DepartmentManagement.vue"
+          ),
       },
       {
         path: "configuration/job-grades",
         name: "job-grade-management",
         meta: { permission: "view-job-grades" },
         component: () =>
-          import("@/views/Modules/SubModules/JobGradeManagement/JobGradeManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/JobGradeManagement/JobGradeManagement.vue"
+          ),
       },
       {
         path: "configuration/employee-number-settings",
         name: "employee-number-settings",
         meta: { permission: "manage-employee-number-settings" },
         component: () =>
-          import("@/views/Modules/SubModules/EmployeeNumberSettings/EmployeeNumberSettings.vue"),
+          import(
+            "@/views/HrisApp/Modules/EmployeeNumberSettings/EmployeeNumberSettings.vue"
+          ),
       },
       {
         path: "administration/settings",
         alias: "/configuration/settings",
         name: "settings",
-        component: () => import("@/views/Modules/SubModules/Settings.vue"),
+        component: () => import("@/views/HrisApp/Modules/Settings.vue"),
       },
       {
         path: "configuration/leave-types",
         name: "leave-type-management",
         meta: { permission: "view-leave-types" },
         component: () =>
-          import("@/views/Modules/SubModules/LeaveTypeManagement/LeaveTypeManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/LeaveTypeManagement/LeaveTypeManagement.vue"
+          ),
       },
       {
         path: "configuration/leave-credit-settings",
         name: "leave-credit-setting-management",
         meta: { permission: "view-leave-credit-settings" },
         component: () =>
-          import("@/views/Modules/SubModules/LeaveCreditManagement/LeaveCreditManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/LeaveCreditManagement/LeaveCreditManagement.vue"
+          ),
       },
       {
         path: "configuration/overtime-policies",
         name: "overtime-policy-management",
         meta: { permission: "manage-overtimes" },
         component: () =>
-          import("@/views/Modules/SubModules/OvertimePolicyManagement/OvertimePolicyManagement.vue"),
+          import(
+            "@/views/HrisApp/Modules/OvertimePolicyManagement/OvertimePolicyManagement.vue"
+          ),
       },
     ],
   },
@@ -258,6 +343,26 @@ const router = createRouter({
 router.beforeEach((to, _from, next) => {
   const isAuthenticated = !!window.localStorage.getItem("APP_TOKEN");
   const requiresAuth = to.matched.some((record) => record.meta?.requiresAuth);
+  const requiresPlatformAuth = to.matched.some(
+    (record) => record.meta?.requiresPlatformAuth,
+  );
+
+  if (
+    requiresPlatformAuth &&
+    !window.sessionStorage.getItem("HRIS_PLATFORM_SESSION_KEY")
+  ) {
+    return next({
+      name: "platform-console-login",
+      query: { redirect: to.fullPath },
+    });
+  }
+
+  if (
+    to.name === "platform-console-login" &&
+    window.sessionStorage.getItem("HRIS_PLATFORM_SESSION_KEY")
+  ) {
+    return next({ name: "platform-overview" });
+  }
 
   if (requiresAuth && !isAuthenticated) {
     return next({ name: "login" });

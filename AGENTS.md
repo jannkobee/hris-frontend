@@ -5,7 +5,8 @@ Apply these conventions to every new or edited frontend feature.
 - Reuse the existing Vue 3 Composition API, TypeScript field definitions,
   BaseContainer navigation, shared form/table components, and Material Design
   icons before creating one-off alternatives.
-- Put a module view under `src/views/Modules/` and keep API calls in the
+- Put a tenant HRIS module view under `src/views/HrisApp/Modules/`, keep
+  Platform Console views under `src/views/PlatformConsole/`, and keep API calls in the
   established API/service layer rather than embedding HTTP details in views.
 - Navigation must declare both the permission and `planFeature` when a module
   is subscription-gated. Never use plan names (Basic/Enterprise) as RBAC
