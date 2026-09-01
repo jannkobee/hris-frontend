@@ -136,6 +136,66 @@
                     >Company</v-chip
                   >
                 </div>
+                <div class="organization-branding">
+                  <v-avatar
+                    class="organization-branding__logo"
+                    color="primary"
+                    variant="tonal"
+                    rounded="lg"
+                    size="56"
+                  >
+                    <v-img
+                      v-if="organizationLogoUrl"
+                      :src="organizationLogoUrl"
+                      cover
+                    />
+                    <span v-else>{{ organizationInitials }}</span>
+                  </v-avatar>
+                  <div class="organization-branding__copy">
+                    <strong>Workspace logo</strong>
+                    <small>
+                      Displayed in your team&apos;s navigation. PNG, JPG, or
+                      WebP up to 5 MB.
+                    </small>
+                  </div>
+                  <div class="organization-branding__actions">
+                    <input
+                      ref="organizationLogoInput"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      hidden
+                      :disabled="!canManageOrganizationSettings"
+                      @change="uploadOrganizationLogo"
+                    />
+                    <v-btn
+                      color="primary"
+                      variant="tonal"
+                      size="small"
+                      :prepend-icon="
+                        organizationLogoUrl
+                          ? 'mdi-image-edit-outline'
+                          : 'mdi-image-plus-outline'
+                      "
+                      :loading="organizationLogoUploading"
+                      :disabled="!canManageOrganizationSettings"
+                      @click="organizationLogoInput?.click()"
+                    >
+                      {{ organizationLogoUrl ? "Change" : "Upload" }}
+                    </v-btn>
+                    <v-btn
+                      v-if="organizationLogoUrl"
+                      color="error"
+                      variant="text"
+                      size="small"
+                      icon="mdi-image-remove-outline"
+                      :loading="organizationLogoRemoving"
+                      :disabled="!canManageOrganizationSettings"
+                      title="Remove workspace logo"
+                      aria-label="Remove workspace logo"
+                      @click="removeOrganizationLogo"
+                    />
+                  </div>
+                </div>
                 <div class="panel-fields">
                   <v-text-field
                     v-model="appSettingValues['organization.company_name']"
@@ -1184,6 +1244,7 @@ import { useApi } from "@/composables/useApi";
 import { usePermissions } from "@/composables/usePermissions";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { usePlanEntitlements } from "@/composables/usePlanEntitlements";
+import { useOrganizationLogo } from "@/composables/useOrganizationLogo";
 import Table from "@/components/Table.vue";
 import Form from "@/components/Form.vue";
 import { ColumnConfig } from "@/types/types";
@@ -1230,6 +1291,9 @@ const percent = (value: any) => Number(value ?? 0) * 100;
 const rate = (value: any) => Number(value ?? 0) / 100;
 const saving = ref(false);
 const savedSnapshot = ref("");
+const organizationLogoInput = ref<HTMLInputElement | null>(null);
+const organizationLogoUploading = ref(false);
+const organizationLogoRemoving = ref(false);
 
 // Removed getUser since BaseContainer handles fetching it for the global state
 const { settings, updateSettings, authUser } = useAuth();
@@ -1243,9 +1307,31 @@ const {
   loadAppSettings,
   updateAppSettings,
 } = useAppSettings();
+const {
+  logoUrl: organizationLogoUrl,
+  loadOrganizationLogo,
+  clearOrganizationLogo,
+} = useOrganizationLogo();
 const settingsReady = ref(
   Boolean(authUser.value) && appSettingsInitialized.value,
 );
+
+const organizationName = computed(() => {
+  const configuredName = String(
+    appSettingValues.value["organization.company_name"] ?? "",
+  ).trim();
+
+  return configuredName || authUser.value?.organization?.name || "Workspace";
+});
+const organizationInitials = computed(() => {
+  const words = organizationName.value.match(/[\p{L}\p{N}]+/gu) ?? [];
+  return (
+    words
+      .slice(0, 2)
+      .map((word) => word.slice(0, 1).toUpperCase())
+      .join("") || "W"
+  );
+});
 
 const canManageSetting = (key: string): boolean => {
   if (key.startsWith("payroll.") && !hasFeature("payroll")) return false;
@@ -1289,6 +1375,47 @@ const timezoneOptions = computed<string[]>(
   () =>
     appSettingDefinitions.value["organization.timezone"]?.options ?? ["UTC"],
 );
+
+const updateSharedOrganizationLogoUrl = (url: string | null) => {
+  if (authUser.value?.organization) {
+    authUser.value.organization.brand_logo_url = url;
+  }
+};
+
+const uploadOrganizationLogo = async (event: Event) => {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  if (!file) return;
+
+  organizationLogoUploading.value = true;
+  try {
+    const payload = new FormData();
+    payload.append("logo", file);
+
+    const response = await axios.post("/organization/branding/logo", payload);
+    const logoEndpoint =
+      response.data?.data?.brand_logo_url ??
+      response.data?.data?.organization?.brand_logo_url ??
+      "/organization/branding/logo";
+
+    updateSharedOrganizationLogoUrl(logoEndpoint);
+    await loadOrganizationLogo(logoEndpoint);
+  } finally {
+    organizationLogoUploading.value = false;
+    input.value = "";
+  }
+};
+
+const removeOrganizationLogo = async () => {
+  organizationLogoRemoving.value = true;
+  try {
+    await axios.delete("/organization/branding/logo");
+    updateSharedOrganizationLogoUrl(null);
+    clearOrganizationLogo();
+  } finally {
+    organizationLogoRemoving.value = false;
+  }
+};
 
 const currentSnapshot = computed(() =>
   JSON.stringify({
@@ -1589,6 +1716,10 @@ onMounted(async () => {
     theme.value = savedTheme;
     applyTheme(savedTheme);
     savedSnapshot.value = currentSnapshot.value;
+
+    if (!organizationLogoUrl.value) {
+      await loadOrganizationLogo(authUser.value?.organization?.brand_logo_url);
+    }
   } finally {
     settingsReady.value = true;
   }
@@ -1808,6 +1939,51 @@ onBeforeUnmount(() => {
   display: grid;
   grid-template-columns: minmax(180px, 0.8fr) minmax(240px, 1.2fr);
   gap: 12px;
+}
+
+.organization-branding {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+  margin-bottom: 16px;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(var(--v-theme-on-surface), 0.035);
+}
+
+.organization-branding__logo {
+  flex: 0 0 auto;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+  font-size: 0.9rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.organization-branding__copy {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  flex-direction: column;
+}
+
+.organization-branding__copy strong {
+  font-size: 0.84rem;
+  line-height: 1.35;
+}
+
+.organization-branding__copy small {
+  margin-top: 2px;
+  color: rgb(var(--v-theme-on-surface-variant));
+  font-size: 0.73rem;
+  line-height: 1.4;
+}
+
+.organization-branding__actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex: 0 0 auto;
 }
 
 .policy-list {
@@ -2093,6 +2269,20 @@ onBeforeUnmount(() => {
   .theme-choice,
   .panel-fields {
     grid-template-columns: 1fr;
+  }
+
+  .organization-branding {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .organization-branding__copy {
+    min-width: calc(100% - 68px);
+  }
+
+  .organization-branding__actions {
+    width: 100%;
+    margin-left: 68px;
   }
 
   .policy-list--modules {

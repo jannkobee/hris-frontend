@@ -9,6 +9,7 @@
         :aria-label="rail ? 'Expand navigation' : 'Collapse navigation'"
         @click="toggleRail"
       />
+      <div class="topbar-wordmark" aria-label="LexisOne">LexisOne</div>
       <v-spacer />
 
       <div class="topbar-actions">
@@ -151,16 +152,23 @@
     >
       <div class="sidebar-brand">
         <div
+          v-if="organizationLogoUrl"
           class="sidebar-brand__mark"
-          :style="{ backgroundImage: `url(${brandMark})` }"
+          :style="{ backgroundImage: `url(${organizationLogoUrl})` }"
           role="img"
-          aria-label="LexisOne"
+          :aria-label="`${organizationName} logo`"
         />
+        <div
+          v-else
+          class="sidebar-brand__mark sidebar-brand__mark--fallback"
+          role="img"
+          :aria-label="`${organizationName} initials`"
+        >
+          {{ organizationInitials }}
+        </div>
         <div v-if="!rail" class="sidebar-brand__copy">
-          <strong>LexisOne</strong
-          ><span>{{
-            authUser?.organization?.name || "Company workspace"
-          }}</span>
+          <strong>{{ organizationName }}</strong
+          ><span>Company workspace</span>
         </div>
       </div>
 
@@ -234,6 +242,7 @@ import { useAppSettings } from "@/composables/useAppSettings";
 import { usePermissions } from "@/composables/usePermissions";
 import { usePlanEntitlements } from "@/composables/usePlanEntitlements";
 import { useProfilePhoto } from "@/composables/useProfilePhoto";
+import { useOrganizationLogo } from "@/composables/useOrganizationLogo";
 import { useAppDialog } from "@/composables/useAppDialog";
 import axios from "@/plugins/axios";
 import { getEcho } from "@/plugins/echo";
@@ -241,7 +250,6 @@ import {
   initializeNotificationSound,
   playMessageNotificationSound,
 } from "@/utils/notificationSound";
-import brandMark from "@/assets/Assets.xcassets/AppIcon.appiconset/100.png";
 
 type NavItem = {
   title: string;
@@ -511,6 +519,24 @@ const { loadAppSettings, values: appSettings } = useAppSettings();
 const { checkPermissions } = usePermissions();
 const { hasFeature } = usePlanEntitlements();
 const { photoUrl: profilePhotoUrl, loadProfilePhoto } = useProfilePhoto();
+const { logoUrl: organizationLogoUrl, loadOrganizationLogo } =
+  useOrganizationLogo();
+const organizationName = computed(() => {
+  const configuredName = String(
+    appSettings.value["organization.company_name"] ?? "",
+  ).trim();
+
+  return configuredName || authUser.value?.organization?.name || "Workspace";
+});
+const organizationInitials = computed(() => {
+  const words = organizationName.value.match(/[\p{L}\p{N}]+/gu) ?? [];
+  return (
+    words
+      .slice(0, 2)
+      .map((word) => word.slice(0, 1).toUpperCase())
+      .join("") || "W"
+  );
+});
 
 const badgeFor = (item: NavItem): number =>
   item.routeName ? Number(navBadges.value[item.routeName] || 0) : 0;
@@ -610,7 +636,10 @@ const visibleNavItems = computed<NavItem[]>(() =>
 onMounted(async () => {
   initializeNotificationSound();
   await getUser();
-  await loadProfilePhoto(authUser.value?.profile_photo_url);
+  await Promise.all([
+    loadProfilePhoto(authUser.value?.profile_photo_url),
+    loadOrganizationLogo(authUser.value?.organization?.brand_logo_url),
+  ]);
   await loadNavigationBadges();
   await loadNotifications();
   await subscribeToMessageNotifications();
@@ -763,6 +792,10 @@ onBeforeUnmount(() => {
   background: rgb(var(--v-theme-surface)) !important;
 }
 
+.hris-topbar :deep(.v-toolbar__content) {
+  position: relative;
+}
+
 .topbar-nav-toggle {
   margin-inline: 4px 8px;
 }
@@ -772,6 +805,20 @@ onBeforeUnmount(() => {
   align-items: center;
   gap: 6px;
   padding-inline-end: 4px;
+}
+
+.topbar-wordmark {
+  position: absolute;
+  inset-inline-start: 50%;
+  top: 50%;
+  z-index: 1;
+  color: rgb(var(--v-theme-on-surface));
+  font-size: 0.88rem;
+  font-weight: 760;
+  letter-spacing: -0.025em;
+  line-height: 1;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
 }
 
 .topbar-icon-btn {
@@ -828,6 +875,14 @@ onBeforeUnmount(() => {
   background-position: center;
   background-repeat: no-repeat;
   background-size: cover;
+}
+
+.sidebar-brand__mark--fallback {
+  color: #e8f4ff;
+  background: rgba(var(--v-theme-primary), 0.2);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
 }
 
 .sidebar-brand__copy {

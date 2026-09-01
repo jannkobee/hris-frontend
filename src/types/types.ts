@@ -115,16 +115,14 @@ export type OrganizationPlan = {
   name: string;
   description?: string | null;
   features: string[];
-  feature_details?: Record<
-    string,
-    { name: string; description: string }
-  >;
+  feature_details?: Record<string, { name: string; description: string }>;
 };
 
 export type Organization = {
   id: string;
   slug: string;
   name: string;
+  brand_logo_url?: string | null;
   timezone: string;
   country_code?: string;
   plan_code: string;
