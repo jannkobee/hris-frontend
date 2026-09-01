@@ -33,13 +33,15 @@ withDefaults(
 
 <style scoped>
 .module-header {
+  box-sizing: border-box;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  min-height: 128px;
-  margin-bottom: 24px;
-  padding: 28px 24px;
+  min-height: 120px;
+  margin-bottom: 16px;
+  padding: 22px 24px;
   border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
   background:
     linear-gradient(

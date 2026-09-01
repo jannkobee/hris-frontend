@@ -150,9 +150,12 @@
       permanent
     >
       <div class="sidebar-brand">
-        <div class="sidebar-brand__mark">
-          <v-icon icon="mdi-domain" size="20" />
-        </div>
+        <div
+          class="sidebar-brand__mark"
+          :style="{ backgroundImage: `url(${brandMark})` }"
+          role="img"
+          aria-label="LexisOne"
+        />
         <div v-if="!rail" class="sidebar-brand__copy">
           <strong>LexisOne</strong
           ><span>{{
@@ -238,6 +241,7 @@ import {
   initializeNotificationSound,
   playMessageNotificationSound,
 } from "@/utils/notificationSound";
+import brandMark from "@/assets/Assets.xcassets/AppIcon.appiconset/100.png";
 
 type NavItem = {
   title: string;
@@ -745,11 +749,13 @@ onBeforeUnmount(() => {
 }
 
 .hris-content {
+  --hris-page-max-width: 1600px;
+  --hris-page-gutter: clamp(12px, 1.25vw, 24px);
   width: 100%;
   max-width: none;
-  min-height: 100vh;
+  min-height: calc(100dvh - 56px);
   margin: 0;
-  padding: 24px;
+  padding: 20px var(--hris-page-gutter) 32px;
 }
 
 .hris-topbar {
@@ -810,12 +816,18 @@ onBeforeUnmount(() => {
 
 .sidebar-brand__mark {
   display: grid;
-  min-width: 36px;
+  width: 36px;
+  min-width: 0;
   height: 36px;
+  flex: 0 0 36px;
   place-items: center;
+  overflow: hidden;
   border-radius: 9px;
-  color: rgb(var(--v-theme-on-primary));
-  background: rgb(var(--v-theme-primary));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: #f4f2ee;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 
 .sidebar-brand__copy {
@@ -931,21 +943,27 @@ onBeforeUnmount(() => {
   background: rgb(var(--v-theme-primary));
 }
 
-/* BaseContainer owns the application gutter. Root module containers should
-   not add Vuetify's default 16px padding on top of it. */
-.hris-content > :deep(.v-container) {
+/* BaseContainer owns the page frame. Every module gets the same readable
+   maximum width, horizontal gutter, and top alignment; module components
+   only need to describe their internal content. */
+.hris-content > :deep(.v-container),
+.hris-content > :deep(.billing-page) {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--hris-page-max-width) !important;
+  margin-inline: auto;
   padding: 0 !important;
 }
 
 @media (max-width: 960px) {
   .hris-content {
-    padding: 68px 12px 24px;
+    padding: 16px 12px 28px;
   }
 }
 
 @media (max-width: 600px) {
   .hris-content {
-    padding: 68px 16px 24px;
+    padding: 14px 12px 24px;
   }
 
   .topbar-profile {

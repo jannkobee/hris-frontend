@@ -3,7 +3,12 @@
     <div v-if="mobileOpen" class="sidebar-scrim" @click="mobileOpen = false" />
     <aside class="platform-sidebar" :class="{ open: mobileOpen }">
       <div class="platform-brand">
-        <div class="brand-mark"><img :src="appIcon" alt="LexisOne" /></div>
+        <div
+          class="brand-mark"
+          :style="{ backgroundImage: `url(${appIcon})` }"
+          role="img"
+          aria-label="LexisOne"
+        />
         <div><strong>LexisOne</strong><span>Platform operations</span></div>
         <v-btn
           class="mobile-close"
@@ -151,16 +156,15 @@ onBeforeUnmount(() => {
   width: 42px;
   height: 42px;
   display: grid;
+  flex: 0 0 42px;
   place-items: center;
   overflow: hidden;
   border: 1px solid #343b48;
   border-radius: 12px;
   background: #f4f2ee;
-}
-.brand-mark img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
 }
 .platform-brand > div:nth-child(2) {
   display: flex;

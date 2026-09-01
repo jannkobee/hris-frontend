@@ -61,6 +61,7 @@
       </template>
       <template #extra-actions="{ item }">
         <v-btn
+          class="app-table__icon-action"
           icon="mdi-eye-outline"
           size="small"
           density="comfortable"
@@ -72,6 +73,7 @@
         />
         <v-btn
           v-if="canManage && ['draft', 'processed'].includes(item.status)"
+          class="app-table__icon-action"
           icon="mdi-calculator-variant-outline"
           size="small"
           density="comfortable"
@@ -88,6 +90,7 @@
         />
         <v-btn
           v-if="canApprove && item.status === 'processed'"
+          class="app-table__icon-action"
           icon="mdi-check-circle-outline"
           size="small"
           density="comfortable"
@@ -100,6 +103,7 @@
         />
         <v-btn
           v-if="canApprove && item.status === 'approved' && !item.locked_at"
+          class="app-table__icon-action"
           icon="mdi-lock-outline"
           size="small"
           density="comfortable"
@@ -112,6 +116,7 @@
         />
         <v-btn
           v-if="canMarkPaid && item.status === 'approved' && item.locked_at"
+          class="app-table__icon-action"
           icon="mdi-bank-check"
           size="small"
           density="comfortable"
@@ -124,6 +129,7 @@
         />
         <v-btn
           v-if="canManage && item.status === 'draft'"
+          class="app-table__icon-action"
           icon="mdi-delete-outline"
           size="small"
           density="comfortable"

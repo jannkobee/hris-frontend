@@ -1,20 +1,22 @@
 <template>
-  <section class="billing-page">
-    <header class="module-header">
-      <div>
-        <p class="eyebrow">ORGANIZATION ADMINISTRATION</p>
-        <h1>Billing & subscription</h1>
-        <p>Manage invoices, payment methods, and your subscription securely.</p>
-      </div>
-      <v-btn
-        color="primary"
-        prepend-icon="mdi-open-in-new"
-        :loading="opening"
-        @click="openPortal"
-      >
-        Manage billing
-      </v-btn>
-    </header>
+  <v-container fluid class="pa-0">
+    <ModuleHeader
+      eyebrow="Organization administration"
+      title="Billing & subscription"
+      subtitle="Manage invoices, payment methods, and your subscription securely."
+      icon="mdi-credit-card-outline"
+    >
+      <template #actions>
+        <v-btn
+          color="primary"
+          prepend-icon="mdi-open-in-new"
+          :loading="opening"
+          @click="openPortal"
+        >
+          Manage billing
+        </v-btn>
+      </template>
+    </ModuleHeader>
 
     <v-alert type="info" variant="tonal" class="mb-5">
       Billing is managed in a secure provider-hosted portal. Only organization
@@ -23,11 +25,12 @@
     <v-alert v-if="errorMessage" type="error" variant="tonal">{{
       errorMessage
     }}</v-alert>
-  </section>
+  </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref } from "vue";
+import ModuleHeader from "@/components/layouts/HrisApp/ModuleHeader.vue";
 import axiosRequest from "@/plugins/axios";
 
 const opening = ref(false);
@@ -55,46 +58,3 @@ const openPortal = async () => {
   }
 };
 </script>
-
-<style scoped>
-.billing-page {
-  display: grid;
-  gap: 20px;
-}
-
-.module-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 28px;
-  border: 1px solid rgba(var(--v-border-color), var(--v-border-opacity));
-  background: linear-gradient(
-    120deg,
-    rgba(var(--v-theme-primary), 0.1),
-    transparent 45%
-  );
-}
-
-.module-header h1 {
-  margin: 4px 0 6px;
-}
-
-.module-header p {
-  margin: 0;
-}
-
-.eyebrow {
-  color: rgb(var(--v-theme-primary));
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.12em;
-}
-
-@media (max-width: 640px) {
-  .module-header {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-}
-</style>

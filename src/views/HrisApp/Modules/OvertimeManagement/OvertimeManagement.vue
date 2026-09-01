@@ -37,7 +37,9 @@
       <template #extra-actions="{ item }">
         <v-btn
           v-if="canApproveOvertime && item.status === 'pending'"
+          class="app-table__icon-action"
           size="small"
+          density="comfortable"
           color="success"
           variant="tonal"
           icon="mdi-check-circle-outline"
@@ -48,7 +50,9 @@
         />
         <v-btn
           v-if="canApproveOvertime && item.status === 'pending'"
+          class="app-table__icon-action"
           size="small"
+          density="comfortable"
           color="error"
           variant="tonal"
           icon="mdi-close-circle-outline"

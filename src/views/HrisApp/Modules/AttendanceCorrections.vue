@@ -75,32 +75,33 @@
                 </td>
                 <td>{{ request.reason }}</td>
                 <td>
-                  <v-btn
-                    size="small"
-                    color="success"
-                    variant="tonal"
-                    icon="mdi-check-circle-outline"
-                    title="Approve correction"
-                    aria-label="Approve correction"
-                    @click="openReview(request, 'approved')"
-                  />
-                  ><v-btn
-                    size="small"
-                    color="error"
-                    variant="tonal"
-                    icon="mdi-close-circle-outline"
-                    title="Reject correction"
-                    aria-label="Reject correction"
-                    @click="openReview(request, 'rejected')"
-                  />
-                  >
+                  <div class="attendance-corrections__review-actions">
+                    <v-btn
+                      class="attendance-corrections__icon-action"
+                      size="small"
+                      density="comfortable"
+                      color="success"
+                      variant="tonal"
+                      icon="mdi-check-circle-outline"
+                      title="Approve correction"
+                      aria-label="Approve correction"
+                      @click="openReview(request, 'approved')"
+                    />
+                    <v-btn
+                      class="attendance-corrections__icon-action"
+                      size="small"
+                      density="comfortable"
+                      color="error"
+                      variant="tonal"
+                      icon="mdi-close-circle-outline"
+                      title="Reject correction"
+                      aria-label="Reject correction"
+                      @click="openReview(request, 'rejected')"
+                    />
+                  </div>
                 </td>
-              </tr>
-            </tbody></v-table
-          ></v-card
-        ></v-window-item
-      ></v-window
-    >
+              </tr></tbody></v-table></v-card></v-window-item
+    ></v-window>
     <v-dialog v-model="requestDialog" max-width="600"
       ><v-card
         ><v-card-title>Request attendance correction</v-card-title
@@ -254,3 +255,19 @@ const submitReview = async () => {
 };
 onMounted(load);
 </script>
+
+<style scoped>
+.attendance-corrections__review-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.attendance-corrections__icon-action {
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  padding: 0;
+}
+</style>

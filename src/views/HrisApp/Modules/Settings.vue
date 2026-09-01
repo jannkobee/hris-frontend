@@ -1129,6 +1129,7 @@
             <template #extra-actions="{ item }">
               <v-btn
                 v-if="checkPermissions('run-scheduled-tasks')"
+                class="app-table__icon-action"
                 color="primary"
                 variant="tonal"
                 size="small"

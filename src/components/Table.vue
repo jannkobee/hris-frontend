@@ -169,6 +169,7 @@
             v-if="
               showViewAction && checkPermissions(`view-${permissionEntity}`)
             "
+            class="app-table__icon-action"
             color="primary"
             variant="tonal"
             size="small"
@@ -182,6 +183,7 @@
             v-if="
               showEditAction && checkPermissions(`update-${permissionEntity}`)
             "
+            class="app-table__icon-action"
             color="info"
             variant="tonal"
             size="small"
@@ -198,6 +200,7 @@
               item.id !== authUser?.role_id &&
               item.id !== authUser?.id
             "
+            class="app-table__icon-action"
             color="error"
             variant="tonal"
             size="small"
@@ -552,6 +555,22 @@ watch(
   width: 100%;
   gap: 6px;
   white-space: nowrap;
+}
+
+/* Icon-only actions use the view button's compact square footprint. Text
+   actions, such as document downloads, keep their natural width. */
+.app-table__row-actions :deep(.app-table__icon-action) {
+  width: 28px !important;
+  min-width: 28px !important;
+  height: 28px !important;
+  padding: 0 !important;
+}
+
+.app-table__row-actions :deep(.app-table__icon-action .v-btn__content) {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
 }
 
 .app-table__row-actions--start {

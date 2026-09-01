@@ -55,7 +55,9 @@
                 canApproveConversions &&
                 item.status === 'pending'
               "
+              class="app-table__icon-action"
               size="small"
+              density="comfortable"
               color="success"
               variant="tonal"
               icon="mdi-check-circle-outline"
@@ -70,7 +72,9 @@
                 canApproveConversions &&
                 item.status === 'pending'
               "
+              class="app-table__icon-action"
               size="small"
+              density="comfortable"
               color="error"
               variant="tonal"
               icon="mdi-close-circle-outline"
@@ -97,7 +101,9 @@
                 canApproveLeaveRequests &&
                 item.status === 'pending'
               "
+              class="app-table__icon-action"
               size="small"
+              density="comfortable"
               color="success"
               variant="tonal"
               icon="mdi-check-circle-outline"
@@ -112,7 +118,9 @@
                 canApproveLeaveRequests &&
                 item.status === 'pending'
               "
+              class="app-table__icon-action"
               size="small"
+              density="comfortable"
               color="error"
               variant="tonal"
               icon="mdi-close-circle-outline"
@@ -128,7 +136,9 @@
                 (canManageAllLeaveRequests ||
                   item.employee_id === authUser?.employee?.id)
               "
+              class="app-table__icon-action"
               size="small"
+              density="comfortable"
               color="warning"
               variant="tonal"
               icon="mdi-cancel"

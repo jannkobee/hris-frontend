@@ -301,6 +301,7 @@
             >
             <v-btn
               v-if="item.has_time_in_photo"
+              class="app-table__icon-action"
               icon="mdi-camera-outline"
               color="secondary"
               variant="tonal"
@@ -311,6 +312,7 @@
             />
             <v-btn
               v-if="item.has_time_out_photo"
+              class="app-table__icon-action"
               icon="mdi-camera-timer"
               color="secondary"
               variant="tonal"
@@ -321,6 +323,7 @@
             />
             <v-btn
               v-if="item.time_in_latitude && item.time_in_longitude"
+              class="app-table__icon-action"
               icon="mdi-map-marker-outline"
               color="success"
               variant="tonal"
