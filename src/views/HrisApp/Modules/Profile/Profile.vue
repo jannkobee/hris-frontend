@@ -600,7 +600,8 @@ onMounted(async () => {
 
 <style scoped>
 .profile-page {
-  max-width: 1360px;
+  width: 100%;
+  max-width: none;
 }
 .profile-hero {
   display: grid;

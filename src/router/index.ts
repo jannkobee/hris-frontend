@@ -1,4 +1,4 @@
-﻿import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
+import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 
 const routes: RouteRecordRaw[] = [
   {
@@ -29,6 +29,12 @@ const routes: RouteRecordRaw[] = [
     path: "/reset-password",
     name: "reset-password",
     component: () => import("@/views/ResetPassword.vue"),
+    meta: { requiresAuth: false },
+  },
+  {
+    path: "/accept-invite",
+    name: "accept-organization-invite",
+    component: () => import("@/views/AcceptOrganizationInvite.vue"),
     meta: { requiresAuth: false },
   },
   { path: "/platform", redirect: { name: "platform-console-login" } },
@@ -188,6 +194,11 @@ const routes: RouteRecordRaw[] = [
           ),
       },
       {
+        path: "benefits-expenses",
+        name: "benefits-expenses",
+        component: () => import("@/views/HrisApp/Modules/BenefitsExpenses.vue"),
+      },
+      {
         path: "reports",
         name: "reports",
         meta: { permission: "view-reports" },
@@ -292,6 +303,12 @@ const routes: RouteRecordRaw[] = [
         component: () => import("@/views/HrisApp/Modules/Settings.vue"),
       },
       {
+        path: "administration/billing",
+        name: "billing",
+        meta: { permission: "manage-organization-settings" },
+        component: () => import("@/views/HrisApp/Modules/Billing.vue"),
+      },
+      {
         path: "configuration/leave-types",
         name: "leave-type-management",
         meta: { permission: "view-leave-types" },
@@ -373,6 +390,16 @@ router.beforeEach((to, _from, next) => {
   }
 
   return next();
+});
+
+const titleCase = (value: string): string =>
+  value
+    .replace(/[-_]+/g, " ")
+    .replace(/\b\w/g, (character) => character.toUpperCase());
+
+router.afterEach((to) => {
+  const pageTitle = titleCase(String(to.meta.title || to.name || "HRISFlow"));
+  document.title = pageTitle === "HRISFlow" ? pageTitle : `${pageTitle}`;
 });
 
 export default router;

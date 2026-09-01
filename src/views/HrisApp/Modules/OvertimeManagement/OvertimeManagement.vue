@@ -39,22 +39,24 @@
           v-if="canApproveOvertime && item.status === 'pending'"
           size="small"
           color="success"
-          variant="text"
+          variant="tonal"
+          icon="mdi-check-circle-outline"
+          title="Approve overtime"
+          aria-label="Approve overtime"
           :loading="actionLoading === item.id"
           @click="approveOvertime(item)"
-        >
-          Approve
-        </v-btn>
+        />
         <v-btn
           v-if="canApproveOvertime && item.status === 'pending'"
           size="small"
           color="error"
-          variant="text"
+          variant="tonal"
+          icon="mdi-close-circle-outline"
+          title="Reject overtime"
+          aria-label="Reject overtime"
           :loading="actionLoading === item.id"
           @click="rejectOvertime(item)"
-        >
-          Reject
-        </v-btn>
+        />
       </template>
     </Table>
   </v-container>

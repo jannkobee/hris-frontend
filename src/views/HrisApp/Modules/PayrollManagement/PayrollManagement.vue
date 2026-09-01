@@ -88,11 +88,11 @@
         />
         <v-btn
           v-if="canApprove && item.status === 'processed'"
-          icon="mdi-check-decagram-outline"
+          icon="mdi-check-circle-outline"
           size="small"
           density="comfortable"
           variant="tonal"
-          color="primary"
+          color="success"
           title="Approve payroll"
           aria-label="Approve payroll"
           :loading="actingId === item.id"

@@ -354,7 +354,7 @@
         ><v-divider /><v-card-text
           ><div
             class="announcement-content"
-            v-html="selectedAnnouncement.content" /></v-card-text
+            v-html="sanitizedAnnouncementContent" /></v-card-text
       ></v-card>
     </v-dialog>
 
@@ -406,6 +406,7 @@ import MonthlyCalendar, {
   CalendarEvent,
 } from "@/components/MonthlyCalendar.vue";
 import UserAvatar from "@/components/UserAvatar.vue";
+import { sanitizeHtml } from "@/utils/sanitizeHtml";
 import { useAuth } from "@/composables/useAuth";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { usePermissions } from "@/composables/usePermissions";
@@ -456,6 +457,9 @@ const dailyQuote = ref({ text: "", theme: "" });
 const announcementDialog = ref(false);
 const eventDialog = ref(false);
 const selectedAnnouncement = ref<any>(null);
+const sanitizedAnnouncementContent = computed(() =>
+  sanitizeHtml(selectedAnnouncement.value?.content ?? ""),
+);
 const selectedCalendarEvent = ref<CalendarEvent | null>(null);
 const today = computed(() =>
   dateKeyInTimeZone(new Date(), companyTimezone.value),

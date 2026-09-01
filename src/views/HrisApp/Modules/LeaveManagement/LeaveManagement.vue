@@ -57,12 +57,13 @@
               "
               size="small"
               color="success"
-              variant="text"
+              variant="tonal"
+              icon="mdi-check-circle-outline"
+              title="Approve conversion"
+              aria-label="Approve conversion"
               :loading="conversionActionLoading === item.id"
               @click="approveConversion(item)"
-            >
-              Approve
-            </v-btn>
+            />
             <v-btn
               v-if="
                 key === 'conversions' &&
@@ -71,12 +72,13 @@
               "
               size="small"
               color="error"
-              variant="text"
+              variant="tonal"
+              icon="mdi-close-circle-outline"
+              title="Reject conversion"
+              aria-label="Reject conversion"
               :loading="conversionActionLoading === item.id"
               @click="rejectConversion(item)"
-            >
-              Reject
-            </v-btn>
+            />
             <v-btn
               v-for="attachment in key === 'requests'
                 ? (item.attachments ?? [])
@@ -84,7 +86,7 @@
               :key="attachment.id"
               size="small"
               color="primary"
-              variant="text"
+              variant="tonal"
               @click="downloadAttachment(item, attachment)"
             >
               {{ attachment.original_name }}
@@ -97,12 +99,13 @@
               "
               size="small"
               color="success"
-              variant="text"
+              variant="tonal"
+              icon="mdi-check-circle-outline"
+              title="Approve leave request"
+              aria-label="Approve leave request"
               :loading="leaveActionLoading === item.id"
               @click="actionLeave(item, 'approve')"
-            >
-              Approve
-            </v-btn>
+            />
             <v-btn
               v-if="
                 key === 'requests' &&
@@ -111,12 +114,13 @@
               "
               size="small"
               color="error"
-              variant="text"
+              variant="tonal"
+              icon="mdi-close-circle-outline"
+              title="Reject leave request"
+              aria-label="Reject leave request"
               :loading="leaveActionLoading === item.id"
               @click="actionLeave(item, 'reject')"
-            >
-              Reject
-            </v-btn>
+            />
             <v-btn
               v-if="
                 key === 'requests' &&
@@ -126,12 +130,13 @@
               "
               size="small"
               color="warning"
-              variant="text"
+              variant="tonal"
+              icon="mdi-cancel"
+              title="Cancel leave request"
+              aria-label="Cancel leave request"
               :loading="leaveActionLoading === item.id"
               @click="actionLeave(item, 'cancel')"
-            >
-              Cancel
-            </v-btn>
+            />
           </template>
         </Table>
       </v-window-item>

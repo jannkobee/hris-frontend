@@ -78,14 +78,21 @@
                   <v-btn
                     size="small"
                     color="success"
+                    variant="tonal"
+                    icon="mdi-check-circle-outline"
+                    title="Approve correction"
+                    aria-label="Approve correction"
                     @click="openReview(request, 'approved')"
-                    >Approve</v-btn
+                  />
                   ><v-btn
                     size="small"
                     color="error"
-                    variant="text"
+                    variant="tonal"
+                    icon="mdi-close-circle-outline"
+                    title="Reject correction"
+                    aria-label="Reject correction"
                     @click="openReview(request, 'rejected')"
-                    >Reject</v-btn
+                  />
                   >
                 </td>
               </tr>
