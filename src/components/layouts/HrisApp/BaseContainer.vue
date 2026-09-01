@@ -154,7 +154,7 @@
           <v-icon icon="mdi-domain" size="20" />
         </div>
         <div v-if="!rail" class="sidebar-brand__copy">
-          <strong>HRISFlow</strong
+          <strong>LexisOne</strong
           ><span>{{
             authUser?.organization?.name || "Company workspace"
           }}</span>

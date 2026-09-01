@@ -2,9 +2,9 @@
   <v-container class="trial-page" fluid
     ><v-sheet class="trial-card" rounded="xl" border>
       <div class="text-center mb-6">
-        <RouterLink class="brand-link" to="/saas">HRISFlow</RouterLink>
+        <RouterLink class="brand-link" to="/saas">LexisOne</RouterLink>
         <div class="text-overline text-primary mt-3">14-day free trial</div>
-        <h1 class="text-h5 font-weight-bold">Set up your HRIS workspace</h1>
+        <h1 class="text-h5 font-weight-bold">Set up your LexisOne workspace</h1>
         <p class="text-body-2 text-medium-emphasis">
           No payment details required. Your workspace is ready in minutes.
         </p>

@@ -398,8 +398,8 @@ const titleCase = (value: string): string =>
     .replace(/\b\w/g, (character) => character.toUpperCase());
 
 router.afterEach((to) => {
-  const pageTitle = titleCase(String(to.meta.title || to.name || "HRISFlow"));
-  document.title = pageTitle === "HRISFlow" ? pageTitle : `${pageTitle}`;
+  const pageTitle = titleCase(String(to.meta.title || to.name || "LexisOne"));
+  document.title = pageTitle === "LexisOne" ? pageTitle : `${pageTitle}`;
 });
 
 export default router;

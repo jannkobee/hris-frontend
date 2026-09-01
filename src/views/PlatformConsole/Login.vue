@@ -4,8 +4,8 @@
       <div class="login-shell">
         <section class="login-intro">
           <div class="brand">
-            <div><img :src="appIcon" alt="HRISFlow" /></div>
-            <span>HRISFlow</span>
+            <div><img :src="appIcon" alt="LexisOne" /></div>
+            <span>LexisOne</span>
           </div>
           <div class="intro-copy">
             <v-chip size="small" variant="tonal" color="white"
@@ -15,7 +15,7 @@
             <p>
               Provision organizations, monitor subscriptions, review billing
               health, and resolve access issues without entering the tenant
-              HRIS.
+              workspace.
             </p>
           </div>
           <div class="security-note">

@@ -5,7 +5,8 @@
       <p class="eyebrow">ORGANIZATION SETUP</p>
       <h1>Claim your workspace</h1>
       <p class="subtitle">
-        Create a secure owner account to finish setting up your HRIS workspace.
+        Create a secure owner account to finish setting up your LexisOne
+        workspace.
       </p>
 
       <v-alert

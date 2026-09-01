@@ -2,7 +2,7 @@
   <v-app class="showcase">
     <header class="site-header">
       <div class="site-nav">
-        <RouterLink class="brand" to="/saas">HRIS<span>Flow</span></RouterLink>
+        <RouterLink class="brand" to="/saas">Lexis<span>One</span></RouterLink>
         <nav class="nav-links">
           <a href="#features">Features</a><a href="#solutions">Solutions</a
           ><a href="#security">Security</a><a href="#pricing">Pricing</a>
@@ -20,7 +20,7 @@
         >
         <h1>Run your workforce with clarity, from clock-in to payroll.</h1>
         <p>
-          HRISFlow connects employee records, schedules, attendance, approvals,
+          LexisOne connects employee records, schedules, attendance, approvals,
           leave, overtime, and payroll in one policy-aware workspace.
         </p>
         <div class="d-flex justify-center flex-wrap ga-3">
@@ -218,7 +218,7 @@
     <footer>
       <div class="section-shell footer-grid">
         <div>
-          <div class="brand">HRIS<span>Flow</span></div>
+          <div class="brand">Lexis<span>One</span></div>
           <p>Practical workforce management for growing organizations.</p>
         </div>
         <div>
@@ -238,7 +238,7 @@
         </div>
       </div>
       <div class="section-shell footer-bottom">
-        © {{ new Date().getFullYear() }} HRISFlow. All rights reserved.
+        © {{ new Date().getFullYear() }} LexisOne. All rights reserved.
       </div>
     </footer>
   </v-app>
