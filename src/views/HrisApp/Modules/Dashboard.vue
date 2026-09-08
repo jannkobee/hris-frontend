@@ -19,6 +19,11 @@
       </div>
     </section>
 
+    <AdminSetupChecklist
+      v-if="canManageSettings"
+      :headcount="presence.length"
+    />
+
     <div class="metric-grid">
       <article class="metric-card">
         <v-avatar color="primary" variant="tonal"
@@ -406,6 +411,7 @@ import MonthlyCalendar, {
   CalendarEvent,
 } from "@/components/MonthlyCalendar.vue";
 import UserAvatar from "@/components/UserAvatar.vue";
+import AdminSetupChecklist from "@/components/HrisApp/AdminSetupChecklist.vue";
 import { sanitizeHtml } from "@/utils/sanitizeHtml";
 import { useAuth } from "@/composables/useAuth";
 import { useAppSettings } from "@/composables/useAppSettings";
@@ -419,6 +425,11 @@ const { hasFeature } = usePlanEntitlements();
 const canViewReports = computed(() => checkPermissions("view-reports"));
 const canUseNotes = computed(
   () => checkPermissions("view-notes") && hasFeature("notes"),
+);
+const canManageSettings = computed(
+  () =>
+    checkPermissions("manage-organization-settings") ||
+    authUser.value?.role?.name === "Admin",
 );
 const analytics = ref<any>({
   headcount: 0,

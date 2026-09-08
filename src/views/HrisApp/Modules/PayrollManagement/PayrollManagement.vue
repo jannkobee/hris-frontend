@@ -50,7 +50,7 @@
       <template #toolbar-actions>
         <v-btn
           v-if="canManage"
-          color="success"
+          color="primary"
           prepend-icon="mdi-calendar-plus"
           variant="flat"
           class="text-none"

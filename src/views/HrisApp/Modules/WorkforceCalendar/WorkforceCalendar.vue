@@ -13,7 +13,7 @@
   />
 
   <v-dialog v-model="importDialog" max-width="620" :persistent="importing">
-    <v-card class="holiday-import" rounded="lg">
+    <v-card class="holiday-import" rounded="0">
       <header class="holiday-import__header">
         <div class="holiday-import__icon">
           <v-icon
@@ -215,7 +215,7 @@
         <v-btn
           v-if="canManageHolidays"
           variant="tonal"
-          color="secondary"
+          color="primary"
           prepend-icon="mdi-cloud-download-outline"
           class="text-none"
           @click="openImportDialog"
@@ -507,13 +507,13 @@ onMounted(async () => {
   gap: 12px;
   padding: 14px 16px;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.09);
-  border-radius: 14px;
+  border-radius: 0 !important;
   background: rgb(var(--v-theme-surface));
 }
 .calendar-metric__icon {
   width: 38px;
   height: 38px;
-  border-radius: 11px;
+  border-radius: 0 !important;
 }
 .calendar-metric__icon--warning {
   color: rgb(var(--v-theme-warning));
@@ -582,7 +582,7 @@ onMounted(async () => {
   width: 48px;
   height: 48px;
   place-items: center;
-  border-radius: 13px;
+  border-radius: 0 !important;
   color: rgb(var(--v-theme-primary));
   background: rgba(var(--v-theme-primary), 0.12);
 }
@@ -596,7 +596,7 @@ onMounted(async () => {
   align-items: center;
   padding: 18px;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
-  border-radius: 12px;
+  border-radius: 0 !important;
   background: rgba(var(--v-theme-on-surface), 0.025);
 }
 .import-source > div {
@@ -647,7 +647,7 @@ onMounted(async () => {
   flex-direction: column;
   padding: 18px;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
-  border-radius: 12px;
+  border-radius: 0 !important;
   background: rgba(var(--v-theme-on-surface), 0.025);
 }
 .result-metric strong {
@@ -666,7 +666,7 @@ onMounted(async () => {
   gap: 11px;
   margin-top: 4px;
   padding: 15px;
-  border-radius: 10px;
+  border-radius: 0 !important;
   background: rgba(var(--v-theme-primary), 0.07);
 }
 .result-summary p {

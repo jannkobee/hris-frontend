@@ -98,12 +98,103 @@ const remainingDetailCount = computed(() =>
   --app-dialog-radius: 0;
 }
 
-/* Square-corner design system: applies to Vuetify and custom components,
-   including overlays that are mounted outside .v-application. */
-html *,
-html *::before,
-html *::after {
+/* Strict zero border-radius design system across entire application */
+*,
+*::before,
+*::after,
+html,
+body,
+.v-application,
+.v-application *,
+.v-btn,
+.v-btn *,
+.v-field,
+.v-field *,
+.v-field__outline,
+.v-field__outline *,
+.v-input,
+.v-input *,
+.v-card,
+.v-card *,
+.v-sheet,
+.v-sheet *,
+.v-chip,
+.v-chip *,
+.v-dialog,
+.v-dialog *,
+.v-overlay__content,
+.v-overlay__content *,
+.v-menu,
+.v-list,
+.v-list-item,
+.v-alert,
+.v-table,
+.v-data-table,
+.v-navigation-drawer,
+.v-avatar,
+.v-badge,
+.v-tabs,
+.v-tab,
+.v-pagination,
+.app-table,
+.app-table *,
+.panel,
+.panel *,
+.metric-card,
+.platform-card,
+[class*="rounded"],
+.rounded-0,
+.rounded-xs,
+.rounded-sm,
+.rounded-md,
+.rounded-lg,
+.rounded-xl,
+.rounded-xxl,
+.rounded-pill,
+.rounded-circle {
   border-radius: 0 !important;
+}
+
+/* Unified button standards across the app */
+.v-btn {
+  text-transform: none !important;
+  letter-spacing: 0.01em !important;
+  font-weight: 600 !important;
+}
+
+/* Default standard toolbar and action button heights */
+.v-btn:not(.v-btn--icon):not(.v-btn--block):not([size="x-small"]):not(
+    [size="large"]
+  ):not([size="x-large"]):not(.v-btn--size-x-small):not(.v-btn--size-large):not(
+    .v-btn--size-x-large
+  ) {
+  height: 36px !important;
+  min-height: 36px !important;
+}
+
+/* Dialog actions button height */
+.v-card-actions .v-btn {
+  height: 36px !important;
+  min-height: 36px !important;
+  padding: 0 16px !important;
+}
+
+/* Unified square icon button dimensions */
+.v-btn--icon:not(.v-btn--size-small):not([size="small"]):not(
+    .v-btn--size-x-small
+  ):not([size="x-small"]) {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+}
+
+.v-btn--icon.v-btn--size-small,
+.v-btn--icon[size="small"] {
+  width: 32px !important;
+  height: 32px !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
 }
 
 /* Keep every application modal on the same corner system. */

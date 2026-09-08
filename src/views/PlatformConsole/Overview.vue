@@ -787,31 +787,33 @@ onMounted(load);
 .panel {
   min-height: 360px;
   padding: 24px;
-  border: 1px solid #e4e8f0;
+  border: 1px solid var(--line);
   border-radius: 14px;
-  background: #fff;
+  background: var(--panel-raised);
+  color: var(--text);
 }
 .panel-heading {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
   padding-bottom: 18px;
-  border-bottom: 1px solid #edf0f5;
+  border-bottom: 1px solid var(--line);
 }
 .panel-heading h2 {
   font-size: 1rem;
+  color: var(--text);
 }
 .organization-list > a {
   display: flex;
   align-items: center;
   gap: 13px;
   padding: 14px 4px;
-  border-bottom: 1px solid #f0f2f6;
+  border-bottom: 1px solid var(--line-soft);
   color: inherit;
   text-decoration: none;
 }
 .organization-list > a:hover {
-  background: #fafbfe;
+  background: var(--line-soft);
 }
 .org-avatar {
   width: 38px;
@@ -819,8 +821,9 @@ onMounted(load);
   display: grid;
   place-items: center;
   border-radius: 10px;
-  color: #5367d8;
-  background: #eef0ff;
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+  border: 1px solid rgba(201, 154, 75, 0.3);
   font-size: 0.75rem;
   font-weight: 800;
 }
@@ -832,18 +835,19 @@ onMounted(load);
 }
 .org-copy strong {
   font-size: 0.87rem;
+  color: var(--text);
 }
 .org-copy span,
 .attention-list span {
   font-size: 0.72rem;
-  color: #8a94a7;
+  color: var(--text-muted);
 }
 .attention-list > a {
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 15px 3px;
-  border-bottom: 1px solid #f0f2f6;
+  border-bottom: 1px solid var(--line-soft);
   color: inherit;
   text-decoration: none;
 }
@@ -853,6 +857,7 @@ onMounted(load);
 }
 .attention-list strong {
   font-size: 0.84rem;
+  color: var(--text);
 }
 .healthy-state,
 .empty-state {
@@ -862,7 +867,7 @@ onMounted(load);
   align-items: center;
   justify-content: center;
   text-align: center;
-  color: #8c96a8;
+  color: var(--text-muted);
 }
 .healthy-state > div {
   width: 46px;
@@ -871,16 +876,18 @@ onMounted(load);
   place-items: center;
   margin-bottom: 12px;
   border-radius: 50%;
-  background: #e9f8f1;
+  background: var(--signal-soft);
+  color: var(--signal);
 }
 .healthy-state strong,
 .empty-state strong {
-  color: #313b4e;
+  color: var(--text);
 }
 .healthy-state span,
 .empty-state span {
   margin-top: 4px;
   font-size: 0.78rem;
+  color: var(--text-muted);
 }
 @media (max-width: 1100px) {
   .metric-grid {

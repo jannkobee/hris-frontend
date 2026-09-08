@@ -107,6 +107,15 @@ withDefaults(
   gap: 8px;
 }
 
+.module-header__actions :deep(.v-btn) {
+  height: 36px !important;
+  min-height: 36px !important;
+  border-radius: 0 !important;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
 @media (max-width: 700px) {
   .module-header {
     align-items: stretch;

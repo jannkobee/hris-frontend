@@ -5,21 +5,18 @@
         <RouterLink class="brand-link" to="/"
           ><LexisOneLogo /> LexisOne</RouterLink
         >
-        <div class="text-overline text-primary mt-3">
-          {{
-            form.plan_code === "basic_free"
-              ? "Free for up to 10 active employees"
-              : "14-day free trial"
-          }}
+        <div class="text-overline text-primary mt-3 font-weight-bold">
+          Free Basic · Up to 10 active employees · No expiry
         </div>
         <h1 class="text-h5 font-weight-bold">Set up your LexisOne workspace</h1>
         <p class="text-body-2 text-medium-emphasis">
-          No payment details required. Your workspace is ready in minutes.
+          No credit card required. Your workspace is ready instantly with Free
+          Basic.
         </p>
       </div>
-      <v-alert v-if="success" type="success" variant="tonal"
+      <v-alert v-if="success" type="success" variant="tonal" class="mb-4"
         ><div>{{ success }}</div>
-        <v-btn class="mt-3" color="success" variant="flat" to="/login"
+        <v-btn class="mt-4" color="success" variant="flat" to="/login"
           >Sign in to your workspace</v-btn
         ></v-alert
       >

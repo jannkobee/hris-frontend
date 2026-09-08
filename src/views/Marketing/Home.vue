@@ -152,14 +152,16 @@
           </p>
         </div>
         <div class="pricing-notice" role="note">
-          <v-icon icon="mdi-information-outline" />
+          <v-icon icon="mdi-check-decagram" color="primary" />
           <p>
             <strong
-              >Free Basic is available. Growth pricing is coming soon.</strong
+              >Free Basic is live. Growth billing scales automatically.</strong
             >
             Choose Basic at signup for {{ pricing.free_employee_limit }} active
-            employees with no expiry. Growth estimates do not replace the
-            existing checkout prices or change current subscriptions.
+            employees with no expiry and automatic workspace creation. When your
+            team expands, Growth charges only
+            {{ formatPhp(pricing.growth_price_per_employee / 100) }}/mo per
+            employee above your free allowance.
           </p>
         </div>
         <v-row

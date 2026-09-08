@@ -1,13 +1,25 @@
 <template>
   <section class="app-table">
     <header class="app-table__toolbar">
-      <div class="app-table__title-row">
+      <div
+        v-if="showTitle && (title || subtitle || icon)"
+        class="app-table__title-row"
+      >
         <div class="app-table__heading">
           <div v-if="icon" class="app-table__icon" aria-hidden="true">
             <v-icon :icon="icon" size="21" />
           </div>
           <div class="app-table__copy">
-            <h1>{{ title }}</h1>
+            <div class="d-flex align-center ga-2">
+              <h1 v-if="title">{{ title }}</h1>
+              <span
+                v-if="props.pagination?.total !== undefined"
+                class="app-table__count-pill"
+                :title="`${Number(props.pagination.total).toLocaleString()} total records`"
+              >
+                {{ Number(props.pagination.total).toLocaleString() }}
+              </span>
+            </div>
             <p v-if="subtitle">{{ subtitle }}</p>
           </div>
         </div>
@@ -15,25 +27,65 @@
 
       <div class="app-table__utility-row">
         <div class="app-table__actions">
+          <!-- Bulk selection actions slot -->
+          <template v-if="selectedCount > 0">
+            <slot
+              name="bulk-actions"
+              :selected="selectedItems"
+              :count="selectedCount"
+            >
+              <span class="app-table__selected-pill">
+                <v-icon icon="mdi-checkbox-marked" size="14" class="mr-1" />
+                {{ selectedCount }} selected
+              </span>
+            </slot>
+          </template>
+
           <slot name="toolbar-actions" />
 
+          <!-- Create Action -->
           <v-btn
-            v-if="
-              showCreateAction && checkPermissions(`create-${permissionEntity}`)
-            "
+            v-if="canCreate"
             class="text-none"
-            color="success"
-            prepend-icon="mdi-plus"
+            color="primary"
+            :prepend-icon="createIcon"
             variant="flat"
             @click="emit('create')"
           >
-            Create
+            {{ createLabel }}
           </v-btn>
 
+          <!-- Refresh Action -->
+          <v-btn
+            v-if="showRefresh"
+            class="text-none"
+            color="primary"
+            variant="tonal"
+            prepend-icon="mdi-refresh"
+            :loading="props.loading"
+            title="Refresh records"
+            @click="handleRefresh"
+          >
+            Refresh
+          </v-btn>
+
+          <!-- Export Action -->
+          <v-btn
+            v-if="showExport"
+            class="text-none"
+            color="primary"
+            variant="tonal"
+            prepend-icon="mdi-export-variant"
+            @click="emit('export')"
+          >
+            Export
+          </v-btn>
+
+          <!-- Import Action -->
           <v-btn
             v-if="showImport && checkPermissions(`manage-${permissionEntity}`)"
             class="text-none"
-            color="info"
+            color="primary"
             prepend-icon="mdi-upload-outline"
             variant="tonal"
             @click="triggerFileInput"
@@ -41,13 +93,14 @@
             Import
           </v-btn>
 
+          <!-- Template Action -->
           <v-btn
             v-if="
               showDownloadTemplate &&
               checkPermissions(`manage-${permissionEntity}`)
             "
             class="text-none"
-            color="secondary"
+            color="primary"
             prepend-icon="mdi-download-outline"
             variant="tonal"
             @click="emit('download-template')"
@@ -79,6 +132,7 @@
             clearable
             aria-label="Search table"
             @update:model-value="handleSearchChange"
+            @click:clear="handleSearchClear"
           />
         </div>
       </div>
@@ -87,6 +141,7 @@
     <v-divider />
 
     <v-data-table-server
+      v-model="selectedItems"
       class="app-table__data"
       :headers="tableHeaders"
       :items="props.data"
@@ -95,13 +150,32 @@
       :loading-text="loadingText"
       :loading="props.loading"
       :item-value="itemValue"
+      :show-select="showSelect"
+      :density="density"
       hover
       @update:options="handleTableChange"
+      @click:row="handleRowClick"
     >
+      <!-- Forward custom item cell slots -->
       <template
-        v-for="header in props.headers.filter(
-          (column) => column.displayAs === 'chip',
-        )"
+        v-for="header in customItemHeaders"
+        :key="`item.${header.key}`"
+        v-slot:[`item.${header.key}`]="slotProps"
+      >
+        <slot :name="`item.${header.key}`" v-bind="slotProps" />
+      </template>
+
+      <!-- Optional top and bottom slots -->
+      <template v-if="$slots.top" #top>
+        <slot name="top" />
+      </template>
+      <template v-if="$slots.bottom" #bottom>
+        <slot name="bottom" />
+      </template>
+
+      <!-- Standard chip display -->
+      <template
+        v-for="header in chipHeaders"
         :key="`item.${header.key}`"
         v-slot:[`item.${header.key}`]="{ item }"
       >
@@ -118,10 +192,9 @@
         <span v-else class="app-table__empty-value">—</span>
       </template>
 
+      <!-- Standard chips array display -->
       <template
-        v-for="header in props.headers.filter(
-          (column) => column.displayAs === 'chips',
-        )"
+        v-for="header in chipsHeaders"
         :key="`item.${header.key}`"
         v-slot:[`item.${header.key}`]="{ item }"
       >
@@ -145,13 +218,9 @@
         </div>
       </template>
 
+      <!-- Standard formatted or temporal cell display -->
       <template
-        v-for="header in props.headers.filter(
-          (column) =>
-            (column.formatter || isTemporalColumn(column)) &&
-            column.displayAs !== 'chip' &&
-            column.displayAs !== 'chips',
-        )"
+        v-for="header in formattedHeaders"
         :key="`item.${header.key}`"
         v-slot:[`item.${header.key}`]="{ item }"
       >
@@ -160,6 +229,7 @@
         </span>
       </template>
 
+      <!-- Action column -->
       <template #item.action="{ item }">
         <div
           class="app-table__row-actions"
@@ -180,9 +250,7 @@
             @click="emit('view', item)"
           />
           <v-btn
-            v-if="
-              showEditAction && checkPermissions(`update-${permissionEntity}`)
-            "
+            v-if="canEdit(item)"
             class="app-table__icon-action"
             color="info"
             variant="tonal"
@@ -194,12 +262,7 @@
             @click="emit('edit', item)"
           />
           <v-btn
-            v-if="
-              showDeleteAction &&
-              checkPermissions(`delete-${permissionEntity}`) &&
-              item.id !== authUser?.role_id &&
-              item.id !== authUser?.id
-            "
+            v-if="canDelete(item)"
             class="app-table__icon-action"
             color="error"
             variant="tonal"
@@ -214,14 +277,40 @@
         </div>
       </template>
 
+      <!-- Enhanced Empty state -->
       <template #no-data>
         <slot name="empty">
           <div class="app-table__empty">
             <div class="app-table__empty-icon">
-              <v-icon icon="mdi-table-search" size="28" />
+              <v-icon
+                :icon="
+                  form.search
+                    ? 'mdi-magnify-remove-outline'
+                    : 'mdi-table-search'
+                "
+                size="28"
+              />
             </div>
-            <strong>{{ emptyTitle }}</strong>
-            <span>{{ emptyText }}</span>
+            <strong>{{
+              form.search ? "No matching records found" : emptyTitle
+            }}</strong>
+            <span>
+              {{
+                form.search
+                  ? `No records found matching "${form.search}".`
+                  : emptyText
+              }}
+            </span>
+            <v-btn
+              v-if="form.search"
+              variant="tonal"
+              size="small"
+              class="mt-2 text-none"
+              prepend-icon="mdi-close"
+              @click="handleSearchClear"
+            >
+              Clear search filter
+            </v-btn>
           </div>
         </slot>
       </template>
@@ -231,7 +320,14 @@
 
 <script lang="ts" setup>
 import type { ColumnConfig, Data } from "@/types/types";
-import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
+import {
+  computed,
+  onBeforeUnmount,
+  onMounted,
+  ref,
+  useSlots,
+  watch,
+} from "vue";
 import { useAuth } from "@/composables/useAuth";
 import { usePermissions } from "@/composables/usePermissions";
 import debounce from "lodash/debounce";
@@ -256,15 +352,31 @@ const props = defineProps({
   showDeleteAction: { type: Boolean, default: true },
   showImport: { type: Boolean, default: false },
   showDownloadTemplate: { type: Boolean, default: false },
+  showExport: { type: Boolean, default: false },
+  showRefresh: { type: Boolean, default: false },
+  showSelect: { type: Boolean, default: false },
   showSearch: { type: Boolean, default: true },
   searchPlaceholder: { type: String, default: "Search records..." },
   emptyTitle: { type: String, default: "No records found" },
   emptyText: { type: String, default: "Try changing your search or filters." },
   loadingText: { type: String, default: "Loading records..." },
   itemValue: { type: String, default: "id" },
+  density: {
+    type: String as () => "default" | "comfortable" | "compact",
+    default: "default",
+  },
+  showTitle: { type: Boolean, default: true },
+  createLabel: { type: String, default: "Create" },
+  createIcon: { type: String, default: "mdi-plus" },
+  permission: { type: String, default: "" },
+  ignorePermissions: { type: Boolean, default: false },
   itemsPerPageOptions: {
     type: Array as () => number[],
     default: () => [5, 10, 20, 50, 100],
+  },
+  modelValue: {
+    type: Array as () => any[],
+    default: () => [],
   },
 });
 
@@ -276,8 +388,13 @@ const emit = defineEmits([
   "remove",
   "import",
   "download-template",
+  "export",
+  "refresh",
+  "update:modelValue",
+  "click:row",
 ]);
 
+const slots = useSlots();
 const { authUser, getUser } = useAuth();
 const { checkPermissions } = usePermissions();
 const fileInput = ref<HTMLInputElement | null>(null);
@@ -287,6 +404,13 @@ const form = ref<Record<string, any>>({
   sortBy: [],
   search: "",
 });
+
+const selectedItems = computed({
+  get: () => props.modelValue,
+  set: (val) => emit("update:modelValue", val),
+});
+
+const selectedCount = computed(() => selectedItems.value.length);
 
 const tableHeaders = computed(() =>
   props.headers
@@ -303,6 +427,33 @@ const actionAlignment = computed(
     props.headers.find((header) => header.key === "action")?.align ?? "center",
 );
 
+// Custom item cell slots provided by parent component
+const customItemHeaders = computed(() =>
+  props.headers.filter(
+    (h) =>
+      Boolean(slots[`item.${h.key}`]) &&
+      h.displayAs !== "chip" &&
+      h.displayAs !== "chips",
+  ),
+);
+
+const chipHeaders = computed(() =>
+  props.headers.filter((col) => col.displayAs === "chip"),
+);
+
+const chipsHeaders = computed(() =>
+  props.headers.filter((col) => col.displayAs === "chips"),
+);
+
+const formattedHeaders = computed(() =>
+  props.headers.filter(
+    (col) =>
+      (col.formatter || isTemporalColumn(col)) &&
+      col.displayAs !== "chip" &&
+      col.displayAs !== "chips",
+  ),
+);
+
 const permissionEntity = computed(() => {
   const raw = props.entity.toString().trim();
   const withSpaces = raw.replace(/([a-z0-9])([A-Z])/g, "$1 $2");
@@ -313,6 +464,33 @@ const permissionEntity = computed(() => {
   if (kebab.endsWith("status")) return `${kebab}es`;
   return `${kebab}s`;
 });
+
+const canCreate = computed(() => {
+  if (!props.showCreateAction) return false;
+  if (props.ignorePermissions) return true;
+  if (props.permission) return checkPermissions(props.permission);
+  return checkPermissions(`create-${permissionEntity.value}`);
+});
+
+const canEdit = (item?: any) => {
+  if (!props.showEditAction) return false;
+  if (props.ignorePermissions) return true;
+  if (props.permission) return checkPermissions(props.permission);
+  return checkPermissions(`update-${permissionEntity.value}`);
+};
+
+const canDelete = (item?: any) => {
+  if (!props.showDeleteAction) return false;
+  if (
+    item &&
+    (item.id === authUser.value?.role_id || item.id === authUser.value?.id)
+  ) {
+    return false;
+  }
+  if (props.ignorePermissions) return true;
+  if (props.permission) return checkPermissions(props.permission);
+  return checkPermissions(`delete-${permissionEntity.value}`);
+};
 
 const getNestedValue = (object: any, path: string): any =>
   path.split(".").reduce((current, key) => current?.[key], object);
@@ -369,6 +547,17 @@ const handleSearchChange = () => {
   emitFilter();
 };
 
+const handleSearchClear = () => {
+  form.value.search = "";
+  form.value.page = 1;
+  emitFilter();
+};
+
+const handleRefresh = () => {
+  emit("refresh");
+  emitFilter();
+};
+
 const handleTableChange = (options: any) => {
   form.value = {
     ...form.value,
@@ -376,6 +565,10 @@ const handleTableChange = (options: any) => {
     limit: options.itemsPerPage ?? form.value.limit,
   };
   emitFilter();
+};
+
+const handleRowClick = (event: any, row: any) => {
+  emit("click:row", event, row);
 };
 
 const triggerFileInput = () => fileInput.value?.click();
@@ -407,8 +600,9 @@ watch(
   width: 100%;
   overflow: hidden;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.09);
-  border-radius: 16px;
+  border-radius: 0 !important;
   background: rgb(var(--v-theme-surface));
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
 }
 
 .app-table__toolbar {
@@ -425,7 +619,7 @@ watch(
 .app-table__title-row {
   min-height: 76px;
   align-items: center;
-  padding: 16px 18px;
+  padding: 16px 20px;
   background: linear-gradient(
     135deg,
     rgba(var(--v-theme-primary), 0.045),
@@ -435,12 +629,19 @@ watch(
 
 .app-table__utility-row {
   min-height: 64px;
+  min-height: 56px;
   align-items: center;
   justify-content: space-between;
   gap: 16px;
-  padding: 11px 18px;
+  padding: 11px 20px;
   border-top: 1px solid rgba(var(--v-theme-on-surface), 0.07);
+  gap: 12px;
+  padding: 10px 18px;
   background: rgba(var(--v-theme-on-surface), 0.012);
+}
+
+.app-table__toolbar > .app-table__utility-row:not(:first-child) {
+  border-top: 1px solid rgba(var(--v-theme-on-surface), 0.07);
 }
 
 .app-table__heading,
@@ -454,7 +655,25 @@ watch(
 
 .app-table__heading {
   min-width: 190px;
-  gap: 12px;
+  gap: 14px;
+}
+
+.app-table__actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.app-table__actions :deep(.v-btn),
+.app-table__filters :deep(.v-btn) {
+  height: 36px !important;
+  min-height: 36px !important;
+  border-radius: 0 !important;
+  font-weight: 600 !important;
+  font-size: 0.8125rem !important;
+  letter-spacing: 0.01em !important;
+  padding: 0 14px !important;
 }
 
 .app-table__icon,
@@ -466,10 +685,11 @@ watch(
 }
 
 .app-table__icon {
-  width: 40px;
-  height: 40px;
+  width: 42px;
+  height: 42px;
   flex: 0 0 auto;
-  border-radius: 12px;
+  border-radius: 0 !important;
+  border: 1px solid rgba(var(--v-theme-primary), 0.2);
 }
 
 .app-table__copy {
@@ -478,9 +698,34 @@ watch(
 
 .app-table__copy h1 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.1rem;
   font-weight: 750;
   line-height: 1.3;
+}
+
+.app-table__count-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 0 !important;
+  font-size: 0.72rem;
+  font-weight: 700;
+  background: rgba(var(--v-theme-primary), 0.12);
+  color: rgb(var(--v-theme-primary));
+  border: 1px solid rgba(var(--v-theme-primary), 0.2);
+  line-height: 1.2;
+}
+
+.app-table__selected-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 0 !important;
+  font-size: 0.76rem;
+  font-weight: 650;
+  background: rgba(var(--v-theme-primary), 0.14);
+  color: rgb(var(--v-theme-primary));
+  border: 1px solid rgba(var(--v-theme-primary), 0.28);
 }
 
 .app-table__copy p {
@@ -492,24 +737,52 @@ watch(
 
 .app-table__actions,
 .app-table__filters {
-  gap: 9px;
+  gap: 8px;
 }
 
 .app-table__filters {
   min-width: 0;
   flex: 1 1 auto;
   justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .app-table__search {
   width: clamp(280px, 30vw, 420px);
   min-width: 280px;
   flex: 0 1 420px;
+  width: clamp(260px, 28vw, 380px);
+  min-width: 240px;
+  flex: 0 1 380px;
 }
 
-.app-table__search :deep(.v-field) {
-  border-radius: 10px;
+.app-table__search :deep(.v-field),
+.app-table__filters :deep(.v-field) {
+  border-radius: 0 !important;
+  height: 36px !important;
+  min-height: 36px !important;
   background: rgba(var(--v-theme-surface), 0.72);
+}
+
+.app-table__search :deep(.v-field__input),
+.app-table__filters :deep(.v-field__input) {
+  min-height: 36px !important;
+  height: 36px !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  font-size: 0.8125rem !important;
+  display: flex !important;
+  align-items: center !important;
+}
+
+.app-table__search :deep(.v-field__prepend-inner),
+.app-table__filters :deep(.v-field__prepend-inner),
+.app-table__search :deep(.v-field__append-inner),
+.app-table__filters :deep(.v-field__append-inner),
+.app-table__search :deep(.v-field__clearable),
+.app-table__filters :deep(.v-field__clearable) {
+  padding-top: 0 !important;
+  align-items: center !important;
 }
 
 .app-table__data {
@@ -522,9 +795,9 @@ watch(
 
 .app-table__data :deep(thead th) {
   height: 48px !important;
-  color: rgba(var(--v-theme-on-surface), 0.67) !important;
+  color: rgba(var(--v-theme-on-surface), 0.7) !important;
   background: rgba(var(--v-theme-on-surface), 0.035) !important;
-  font-size: 0.7rem !important;
+  font-size: 0.72rem !important;
   font-weight: 750 !important;
   letter-spacing: 0.045em !important;
   text-transform: uppercase;
@@ -534,7 +807,7 @@ watch(
 .app-table__data :deep(tbody td) {
   height: 58px !important;
   border-bottom-color: rgba(var(--v-theme-on-surface), 0.065) !important;
-  font-size: 0.82rem;
+  font-size: 0.83rem;
 }
 
 .app-table__data :deep(tbody tr) {
@@ -557,13 +830,13 @@ watch(
   white-space: nowrap;
 }
 
-/* Icon-only actions use the view button's compact square footprint. Text
-   actions, such as document downloads, keep their natural width. */
+/* Icon-only actions use compact square footprint with zero radius */
 .app-table__row-actions :deep(.app-table__icon-action) {
   width: 28px !important;
   min-width: 28px !important;
   height: 28px !important;
   padding: 0 !important;
+  border-radius: 0 !important;
 }
 
 .app-table__row-actions :deep(.app-table__icon-action .v-btn__content) {
@@ -591,6 +864,7 @@ watch(
 
 .app-table__chip {
   font-weight: 650;
+  border-radius: 0 !important;
 }
 
 .app-table__empty-value {
@@ -599,29 +873,33 @@ watch(
 
 .app-table__empty {
   display: flex;
-  min-height: 220px;
+  min-height: 240px;
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  gap: 7px;
-  padding: 28px;
+  gap: 8px;
+  padding: 32px;
   color: rgba(var(--v-theme-on-surface), 0.68);
+  text-align: center;
 }
 
 .app-table__empty-icon {
-  width: 52px;
-  height: 52px;
-  margin-bottom: 3px;
-  border-radius: 15px;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 4px;
+  border-radius: 0 !important;
+  border: 1px solid rgba(var(--v-theme-primary), 0.2);
 }
 
 .app-table__empty strong {
   color: rgb(var(--v-theme-on-surface));
-  font-size: 0.92rem;
+  font-size: 0.95rem;
 }
 
 .app-table__empty span {
-  font-size: 0.78rem;
+  font-size: 0.8rem;
+  max-width: 360px;
+  line-height: 1.4;
 }
 
 @media (max-width: 960px) {
@@ -647,7 +925,7 @@ watch(
 
 @media (max-width: 600px) {
   .app-table {
-    border-radius: 13px;
+    border-radius: 0 !important;
   }
 
   .app-table__title-row,
