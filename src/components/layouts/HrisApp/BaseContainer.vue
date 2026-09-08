@@ -9,7 +9,10 @@
         :aria-label="rail ? 'Expand navigation' : 'Collapse navigation'"
         @click="toggleRail"
       />
-      <div class="topbar-wordmark" aria-label="LexisOne">LexisOne</div>
+      <div class="topbar-wordmark" aria-label="LexisOne">
+        <LexisOneLogo class="topbar-logo" />
+        <span>Lexis<span>One</span></span>
+      </div>
       <v-spacer />
 
       <div class="topbar-actions">
@@ -238,6 +241,7 @@ import { computed, ref, onMounted, onBeforeUnmount, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTheme } from "vuetify";
 import { useAuth } from "@/composables/useAuth";
+import LexisOneLogo from "@/components/LexisOneLogo.vue";
 import { useAppSettings } from "@/composables/useAppSettings";
 import { usePermissions } from "@/composables/usePermissions";
 import { usePlanEntitlements } from "@/composables/usePlanEntitlements";
@@ -812,13 +816,25 @@ onBeforeUnmount(() => {
   inset-inline-start: 50%;
   top: 50%;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
   color: rgb(var(--v-theme-on-surface));
-  font-size: 0.88rem;
+  font-size: 0.8rem;
   font-weight: 760;
   letter-spacing: -0.025em;
   line-height: 1;
   pointer-events: none;
   transform: translate(-50%, -50%);
+}
+.topbar-wordmark > span > span {
+  color: rgb(var(--v-theme-primary));
+}
+:deep(.topbar-logo) {
+  width: 20px;
+  height: 20px;
+  flex-basis: 20px;
+  border-radius: 4px;
 }
 
 .topbar-icon-btn {

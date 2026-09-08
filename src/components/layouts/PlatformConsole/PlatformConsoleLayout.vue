@@ -37,7 +37,7 @@
         <div><strong>Platform API</strong><small>Connected session</small></div>
       </div>
       <div class="sidebar-footer">
-        <RouterLink to="/saas"
+        <RouterLink to="/"
           ><v-icon icon="mdi-open-in-new" size="18" />Public website</RouterLink
         >
         <button type="button" @click="logout">
@@ -82,7 +82,7 @@ import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useTheme } from "vuetify";
 import { clearPlatformSession } from "@/composables/PlatformConsole/usePlatformAuth";
-import appIcon from "@/assets/Assets.xcassets/AppIcon.appiconset/100.png";
+import appIcon from "@/assets/lexisone-logo.png";
 
 const route = useRoute();
 const router = useRouter();
@@ -90,6 +90,7 @@ const theme = useTheme();
 const mobileOpen = ref(false);
 const previousTheme = theme.global.name.value;
 const navigation = [
+  { name: "platform-pricing", label: "Pricing", icon: "mdi-cash-multiple" },
   {
     name: "platform-overview",
     label: "Overview",
@@ -164,7 +165,7 @@ onBeforeUnmount(() => {
   background: #f4f2ee;
   background-position: center;
   background-repeat: no-repeat;
-  background-size: cover;
+  background-size: contain;
 }
 .platform-brand > div:nth-child(2) {
   display: flex;

@@ -2,8 +2,16 @@
   <v-container class="trial-page" fluid
     ><v-sheet class="trial-card" rounded="xl" border>
       <div class="text-center mb-6">
-        <RouterLink class="brand-link" to="/saas">LexisOne</RouterLink>
-        <div class="text-overline text-primary mt-3">14-day free trial</div>
+        <RouterLink class="brand-link" to="/"
+          ><LexisOneLogo /> LexisOne</RouterLink
+        >
+        <div class="text-overline text-primary mt-3">
+          {{
+            form.plan_code === "basic_free"
+              ? "Free for up to 10 active employees"
+              : "14-day free trial"
+          }}
+        </div>
         <h1 class="text-h5 font-weight-bold">Set up your LexisOne workspace</h1>
         <p class="text-body-2 text-medium-emphasis">
           No payment details required. Your workspace is ready in minutes.
@@ -22,16 +30,20 @@
               v-model="form.organization_name"
               label="Organization name"
               variant="outlined"
-              :rules="required" /></v-col
-          ><v-col cols="12" md="6"
-            ><v-text-field
-              v-model="form.slug"
-              label="Workspace slug"
-              hint="Lowercase letters, numbers, and hyphens"
-              persistent-hint
-              variant="outlined"
               :rules="required"
-              @update:model-value="form.slug = normalize(form.slug)" /></v-col
+              hint="We’ll create a simple workspace address from this name."
+              persistent-hint /></v-col
+          ><v-col cols="12" md="6" class="d-flex align-center"
+            ><v-alert
+              class="workspace-address"
+              density="compact"
+              variant="tonal"
+              type="info"
+              aria-live="polite"
+              ><strong>Your workspace address</strong>
+              <span>{{ workspacePreview }}</span>
+              <small>We’ll choose a unique address if this one is taken.</small>
+            </v-alert></v-col
           ><v-col cols="12" md="6"
             ><v-select
               v-model="form.plan_code"
@@ -94,7 +106,7 @@
           ><v-col cols="12"
             ><v-checkbox
               v-model="form.terms_accepted"
-              label="I agree to create an organization trial workspace."
+              label="I agree to create an organization workspace."
               :rules="[
                 (value: boolean) => value || 'You must accept to continue',
               ]" /></v-col></v-row
@@ -104,7 +116,11 @@
           block
           size="large"
           :loading="submitting"
-          >Create my free trial</v-btn
+          >{{
+            form.plan_code === "basic_free"
+              ? "Create my free workspace"
+              : "Create my free trial"
+          }}</v-btn
         >
         <div class="text-center mt-4">
           <RouterLink to="/login">Already have a workspace? Sign in</RouterLink>
@@ -114,22 +130,22 @@
   >
 </template>
 <script setup lang="ts">
-import { ref } from "vue";
+import LexisOneLogo from "@/components/LexisOneLogo.vue";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import axios from "@/plugins/axios";
 const route = useRoute();
-const selectablePlans = ["starter", "growth", "business"];
-const requestedPlan = String(route.query.plan ?? "growth");
+const selectablePlans = ["basic_free", "starter", "growth", "business"];
+const requestedPlan = String(route.query.plan ?? "basic_free");
 const initialPlan = selectablePlans.includes(requestedPlan)
   ? requestedPlan
-  : "growth";
+  : "basic_free";
 const formRef = ref();
 const valid = ref(false);
 const submitting = ref(false);
 const success = ref("");
 const form = ref({
   organization_name: "",
-  slug: "",
   plan_code: initialPlan,
   country_code: "PH",
   timezone: "Asia/Manila",
@@ -141,6 +157,10 @@ const form = ref({
   terms_accepted: false,
 });
 const plans = [
+  {
+    title: "Basic · free · 10 active employees · no expiry",
+    value: "basic_free",
+  },
   { title: "Starter · up to 25 employees", value: "starter" },
   { title: "Growth · up to 100 employees", value: "growth" },
   { title: "Business · up to 500 employees", value: "business" },
@@ -166,12 +186,18 @@ const passwordRules = [
       /[^A-Za-z0-9]/.test(value)) ||
     "Use upper/lowercase, number, and symbol",
 ];
-const normalize = (value: string) =>
+const slugify = (value: string) =>
   value
     .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
     .replace(/-+/g, "-")
     .slice(0, 63);
+const workspacePreview = computed(() => {
+  const slug = slugify(form.value.organization_name);
+
+  return slug || "Your organization workspace";
+});
 const submit = async () => {
   const result = await formRef.value.validate();
   if (!result.valid) return;
@@ -182,7 +208,11 @@ const submit = async () => {
       form.value,
       { headers: { "X-Suppress-Success-Notification": "true" } },
     );
-    success.value = `${response.data.data.organization.name} is ready. Your 14-day trial has started—sign in with your new administrator account.`;
+    const organization = response.data.data.organization;
+    success.value =
+      organization.plan_code === "basic_free"
+        ? `${organization.name} is ready on Free Basic. No expiry. Your workspace ID is ${organization.slug}. Sign in with your administrator account.`
+        : `${organization.name} is ready. Your 14-day trial has started. Your workspace ID is ${organization.slug}. Sign in with your administrator account.`;
   } finally {
     submitting.value = false;
   }
@@ -213,6 +243,20 @@ const submit = async () => {
   font-weight: 800;
   color: inherit;
   text-decoration: none;
+}
+.workspace-address {
+  width: 100%;
+}
+.workspace-address :deep(.v-alert__content) {
+  display: grid;
+  gap: 4px;
+}
+.workspace-address span {
+  overflow-wrap: anywhere;
+  font-weight: 700;
+}
+.workspace-address small {
+  color: rgba(var(--v-theme-on-surface), 0.72);
 }
 @media (max-width: 600px) {
   .trial-card {

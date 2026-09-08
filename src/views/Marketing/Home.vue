@@ -2,14 +2,16 @@
   <v-app class="showcase">
     <header class="site-header">
       <div class="site-nav">
-        <RouterLink class="brand" to="/saas">Lexis<span>One</span></RouterLink>
+        <RouterLink class="brand" to="/"
+          ><LexisOneLogo /> Lexis<span>One</span></RouterLink
+        >
         <nav class="nav-links">
           <a href="#features">Features</a><a href="#solutions">Solutions</a
           ><a href="#security">Security</a><a href="#pricing">Pricing</a>
         </nav>
         <div class="nav-actions">
           <v-btn variant="text" to="/login">Sign in</v-btn
-          ><v-btn color="primary" to="/start-trial">Start free trial</v-btn>
+          ><v-btn color="primary" to="/start-trial">Start free</v-btn>
         </div>
       </div>
     </header>
@@ -18,14 +20,14 @@
         <v-chip color="primary" variant="tonal" class="mb-5"
           >Built for Philippine teams, ready for global operations</v-chip
         >
-        <h1>Run your workforce with clarity, from clock-in to payroll.</h1>
+        <h1>Less HR paperwork.<br />More time for your people.</h1>
         <p>
-          LexisOne connects employee records, schedules, attendance, approvals,
-          leave, overtime, and payroll in one policy-aware workspace.
+          Keep employee records, attendance, leave, and approvals together. Give
+          your team one place to request, review, and keep work moving.
         </p>
         <div class="d-flex justify-center flex-wrap ga-3">
           <v-btn color="primary" size="x-large" to="/start-trial"
-            >Start your 14-day trial</v-btn
+            >Create your free workspace</v-btn
           ><v-btn size="x-large" variant="tonal" href="#workflow"
             >See how it works</v-btn
           >
@@ -45,10 +47,10 @@
       <section id="features" class="section-shell section-block">
         <div class="section-heading">
           <span>Everything HR needs</span>
-          <h2>A connected operating system for your workforce</h2>
+          <h2>Everyday HR, in one place.</h2>
           <p>
-            Replace fragmented tools with workflows that preserve context,
-            approvals, and audit history.
+            Spend less time chasing spreadsheets and chat messages. Explore the
+            capabilities below; availability varies by plan.
           </p>
         </div>
         <div class="feature-grid">
@@ -68,14 +70,15 @@
           <div>
             <div class="section-heading align-left">
               <span>One reliable workflow</span>
-              <h2>Capture, approve, calculate, and report</h2>
+              <h2>Try it without a sales meeting.</h2>
               <p>
-                Every step carries the original record, policy decision,
-                approver, and resulting payroll impact.
+                Create a free workspace online, set up your team, and try an
+                everyday workflow. Your organization stays in control of its
+                decisions.
               </p>
             </div>
             <v-btn color="primary" variant="tonal" to="/start-trial"
-              >Explore with a free trial</v-btn
+              >Get started free</v-btn
             >
           </div>
           <div class="workflow-list">
@@ -117,7 +120,7 @@
         <div class="section-shell security-grid">
           <div>
             <v-chip color="primary" variant="tonal"
-              >Enterprise-ready foundation</v-chip
+              >Built around responsible access</v-chip
             >
             <h2>Security and governance are part of the workflow.</h2>
             <p>
@@ -138,15 +141,29 @@
       </section>
       <section id="pricing" class="section-shell section-block">
         <div class="section-heading">
-          <span>Philippines launch pricing</span>
-          <h2>Plans that grow with your workforce</h2>
+          <span>Free Basic · Upcoming Growth pricing</span>
+          <h2>Start small. Grow affordably.</h2>
           <p>
-            Prices are shown in PHP. Regional pricing is applied from your
-            organization country.
+            Basic: free for up to {{ pricing.free_employee_limit }} active
+            employees. Growth:
+            {{ formatPhp(pricing.growth_price_per_employee / 100) }} per
+            additional employee per month, with your first
+            {{ pricing.free_employee_limit }} places free.
+          </p>
+        </div>
+        <div class="pricing-notice" role="note">
+          <v-icon icon="mdi-information-outline" />
+          <p>
+            <strong
+              >Free Basic is available. Growth pricing is coming soon.</strong
+            >
+            Choose Basic at signup for {{ pricing.free_employee_limit }} active
+            employees with no expiry. Growth estimates do not replace the
+            existing checkout prices or change current subscriptions.
           </p>
         </div>
         <v-row
-          ><v-col v-for="plan in plans" :key="plan.name" cols="12" sm="6" lg="3"
+          ><v-col v-for="plan in launchPlans" :key="plan.name" cols="12" md="6"
             ><v-card
               height="100%"
               rounded="lg"
@@ -157,7 +174,7 @@
                   color="primary"
                   size="small"
                   class="mb-3"
-                  >Most popular</v-chip
+                  >For growing teams</v-chip
                 >
                 <h3>{{ plan.name }}</h3>
                 <div class="price">
@@ -178,30 +195,106 @@
                   block
                   :color="plan.featured ? 'primary' : undefined"
                   :variant="plan.featured ? 'flat' : 'tonal'"
-                  :to="
-                    plan.code === 'enterprise'
-                      ? '/start-trial'
-                      : { path: '/start-trial', query: { plan: plan.code } }
-                  "
-                  >{{
-                    plan.code === "enterprise"
-                      ? "Contact sales"
-                      : `Start ${plan.name} trial`
-                  }}</v-btn
+                  href="#pricing-estimate"
+                  >Estimate your team’s cost</v-btn
                 ></v-card-actions
               ></v-card
             ></v-col
           ></v-row
         >
+        <div id="pricing-estimate" class="pricing-calculator">
+          <div>
+            <h3>What would your team pay?</h3>
+            <label for="employee-count">Active employees</label>
+            <input
+              id="employee-count"
+              v-model="headcount"
+              type="number"
+              min="1"
+              max="100000"
+              step="1"
+              inputmode="numeric"
+              :aria-invalid="estimate === null"
+              aria-describedby="employee-count-help"
+            />
+            <p id="employee-count-help" class="estimate-note">
+              Enter a whole number from 1 to 100,000. Archived employees are
+              excluded from this proposed model.
+            </p>
+            <div class="example-counts">
+              <button
+                v-for="count in [10, 25, 50, 100]"
+                :key="count"
+                type="button"
+                :aria-pressed="Number(headcount) === count"
+                @click="headcount = String(count)"
+              >
+                {{ count }} people
+              </button>
+            </div>
+          </div>
+          <div class="estimate-result" aria-live="polite" aria-atomic="true">
+            <template v-if="estimate">
+              <p>
+                {{
+                  estimate.billableEmployees
+                    ? "Growth estimate"
+                    : "Basic estimate"
+                }}
+              </p>
+              <strong
+                >{{ formatPhp(estimate.monthlyPesos)
+                }}<small>/ month</small></strong
+              >
+              <p>
+                {{
+                  estimate.billableEmployees
+                    ? `${estimate.billableEmployees} additional employees × ${formatPhp(pricing.growth_price_per_employee / 100)}`
+                    : `Your team fits within the ${pricing.free_employee_limit} free places.`
+                }}
+              </p>
+              <p class="estimate-note">
+                {{
+                  estimate.billableEmployees
+                    ? `First ${pricing.free_employee_limit} employee places: ₱0.`
+                    : "Growth-only features are not included in Basic."
+                }}
+                Indicative subscription subtotal; tax treatment will be
+                confirmed before checkout launches.
+              </p>
+            </template>
+            <p v-else>Enter a valid employee count to see your estimate.</p>
+          </div>
+        </div>
+        <p class="estimate-note">
+          Payroll belongs to Business, not Growth. Revised Business pricing and
+          paid Growth access for teams of 10 or fewer are still being finalized.
+        </p>
       </section>
-      <section class="section-shell faq section-block">
+      <section class="section-shell automation-note">
+        <v-icon icon="mdi-autorenew" color="primary" size="32" />
+        <div>
+          <h2>Automate the routine. Keep control of the decisions.</h2>
+          <p>
+            Employees submit requests and managers review them in the app.
+            Notifications keep updates visible. Your organization still reviews
+            payroll and decides its policies.
+          </p>
+          <p class="estimate-note">
+            Self-service billing and account lifecycle automation remain release
+            work. Fully hands-off operation is our goal, not a guarantee of the
+            current release.
+          </p>
+        </div>
+      </section>
+      <section id="questions" class="section-shell faq section-block">
         <div class="section-heading">
           <span>Frequently asked questions</span>
           <h2>Start with confidence</h2>
         </div>
         <v-expansion-panels variant="accordion"
           ><v-expansion-panel
-            v-for="item in faqs"
+            v-for="item in launchFaqs"
             :key="item.question"
             :title="item.question"
             :text="item.answer"
@@ -211,7 +304,7 @@
         <h2>Move your HR operations into one reliable workspace.</h2>
         <p>Start with your team today. No payment details required.</p>
         <v-btn color="primary" size="x-large" to="/start-trial"
-          >Create your free trial</v-btn
+          >Create your free workspace</v-btn
         >
       </section>
     </main>
@@ -229,7 +322,7 @@
         <div>
           <strong>Company</strong><a href="#solutions">Solutions</a
           ><a href="#security">Security</a
-          ><RouterLink to="/start-trial">Start a trial</RouterLink>
+          ><RouterLink to="/start-trial">Start free</RouterLink>
         </div>
         <div>
           <strong>Staff</strong
@@ -244,6 +337,96 @@
   </v-app>
 </template>
 <script setup lang="ts">
+import LexisOneLogo from "@/components/LexisOneLogo.vue";
+import { computed, ref, onMounted } from "vue";
+import { fetchPricing } from "@/composables/PlatformConsole/usePlatformPricing";
+import { estimateGrowthPricing, formatPhp } from "@/utils/growthPricing";
+
+const headcount = ref("25");
+const pricing = ref({
+  free_employee_limit: 10,
+  growth_price_per_employee: 1900,
+});
+const pricingError = ref("");
+onMounted(async () => {
+  try {
+    pricing.value = await fetchPricing();
+  } catch {
+    pricingError.value = "Pricing is temporarily unavailable.";
+  }
+});
+const estimate = computed(() =>
+  pricingError.value
+    ? null
+    : estimateGrowthPricing(
+        headcount.value,
+        pricing.value.free_employee_limit,
+        pricing.value.growth_price_per_employee / 100,
+      ),
+);
+const launchPlans = computed(() => [
+  {
+    name: "Basic",
+    price: "₱0",
+    unit: "/ month",
+    limit: `Available now · Up to ${pricing.value.free_employee_limit} active employees`,
+    featured: false,
+    description: "The essentials for a small team. Free with no expiry.",
+    features: [
+      "Employee directory",
+      "Attendance and corrections",
+      "Leave and overtime requests",
+      "Approvals and workforce calendar",
+    ],
+  },
+  {
+    name: "Growth",
+    price: formatPhp(pricing.value.growth_price_per_employee / 100),
+    unit: "/ additional employee / month",
+    limit: `Coming soon · Your first ${pricing.value.free_employee_limit} employee places stay free`,
+    featured: true,
+    description:
+      "Grow without jumping to a large fixed monthly bill. Payroll is separate.",
+    features: [
+      "Everything in Basic",
+      "Shift scheduling",
+      "Employee documents",
+      "Operational reports",
+    ],
+  },
+]);
+const launchFaqs = [
+  {
+    question: "Can I get the free Basic plan today?",
+    answer:
+      "Yes. Choose Basic at signup to create your free workspace within the published free allowance, with no expiry or credit card. Employees count through their last day of employment; future hires reserve a place. Other plan selections start a 14-day trial.",
+  },
+  {
+    question: "How does per-employee pricing work?",
+    answer:
+      "Growth is calculated from active employees above the free allowance multiplied by the published monthly rate. Use the calculator for your team size. Growth-only features for smaller teams are not priced here yet.",
+  },
+  {
+    question: "Does Growth include payroll?",
+    answer:
+      "No. Payroll and advanced controls belong to Business. Revised Business pricing is being finalized; this calculator is not a payroll quote.",
+  },
+  {
+    question: "Will starting a trial charge my card?",
+    answer:
+      "No credit card is required to create a trial. The upcoming prices shown here do not replace existing checkout offers.",
+  },
+  {
+    question: "Is everything fully automated?",
+    answer:
+      "Not yet. Trial signup is self-service, and employee requests and manager reviews happen in the app. Billing and account lifecycle automation still need release verification. Your organization remains responsible for policies, approvals, and reviewing payroll.",
+  },
+  {
+    question: "Are these prices available in other countries?",
+    answer:
+      "This upcoming offer is in Philippine pesos for Philippine organizations. Other regions are not covered by this pricing preview.",
+  },
+];
 const assurances = [
   {
     icon: "mdi-domain",
@@ -279,8 +462,8 @@ const features = [
   },
   {
     icon: "mdi-cash-multiple",
-    title: "Payroll confidence",
-    text: "Policy-aware calculations, locked payroll runs, statutory versioning, and payslip snapshots.",
+    title: "Philippine payroll",
+    text: "Payroll is available only for Philippine organizations on eligible plans. Core HR is available elsewhere; other countries' payroll and taxes are not supported.",
   },
   {
     icon: "mdi-bell-check-outline",
@@ -295,20 +478,20 @@ const features = [
 ];
 const workflow = [
   {
-    title: "Capture the source record",
-    text: "Import schedules and holidays, then collect attendance, leave, overtime, and employee changes.",
+    title: "Create your workspace",
+    text: "Register your organization and administrator through the online signup form.",
   },
   {
-    title: "Route the right approval",
-    text: "Send requests to managers or active delegates with notes, history, and notification reminders.",
+    title: "Set up your team",
+    text: "Review organization settings, add employees, and assign the right access.",
   },
   {
-    title: "Apply policy consistently",
-    text: "Evaluate balances, blackout dates, rest days, premiums, and effective-dated statutory rules.",
+    title: "Try a real request",
+    text: "Record attendance or submit a leave request, then review it as a manager.",
   },
   {
-    title: "Lock and report",
-    text: "Create immutable payroll snapshots and export the operational evidence behind every result.",
+    title: "Keep the outcome visible",
+    text: "Check the decision and its notification in the employee workspace.",
   },
 ];
 const solutions = [
@@ -363,78 +546,104 @@ const security = [
     text: "Employee limits and product capabilities enforced from subscription entitlements.",
   },
 ];
-const plans = [
-  {
-    name: "Starter",
-    code: "starter",
-    price: "₱1,990",
-    unit: "/month",
-    limit: "Up to 25 employees",
-    description: "Essential HR operations for small teams.",
-    features: ["Core HR", "Attendance and leave", "Overtime and calendar"],
-  },
-  {
-    name: "Growth",
-    code: "growth",
-    price: "₱4,990",
-    unit: "/month",
-    limit: "Up to 100 employees",
-    featured: true,
-    description: "Manager workflows and visibility for growing companies.",
-    features: [
-      "Shift rosters",
-      "Corrections and approvals",
-      "Documents and reports",
-    ],
-  },
-  {
-    name: "Business",
-    code: "business",
-    price: "₱11,990",
-    unit: "/month",
-    limit: "Up to 500 employees",
-    description: "Payroll, automation, and governance for complex operations.",
-    features: ["Payroll and audit logs", "Scheduled reports", "Workplace Hub"],
-  },
-  {
-    name: "Enterprise",
-    code: "enterprise",
-    price: "Custom",
-    unit: "",
-    limit: "Custom workforce size",
-    description:
-      "Identity, integrations, and tailored controls for larger organizations.",
-    features: [
-      "OIDC and SCIM",
-      "APIs and webhooks",
-      "Custom scale and support",
-    ],
-  },
-];
-const faqs = [
-  {
-    question: "Is a credit card required for the trial?",
-    answer:
-      "No. You can create a 14-day workspace without entering payment details.",
-  },
-  {
-    question: "Can we import Philippine holidays?",
-    answer:
-      "Yes. Your organization country determines the holiday source and regional behavior used by the workforce calendar.",
-  },
-  {
-    question: "Can plans change as our headcount grows?",
-    answer:
-      "Yes. Plans and employee limits are managed through subscription entitlements and can be upgraded as your organization grows.",
-  },
-  {
-    question: "Is the Platform Console part of the customer HRIS?",
-    answer:
-      "No. It is a separate, staff-only operations area used to provision and support customer organizations.",
-  },
-];
 </script>
 <style scoped>
+.pricing-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  margin-bottom: 28px;
+  background: rgba(var(--v-theme-primary), 0.08);
+  border-radius: 12px;
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+.pricing-calculator {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  padding: 32px;
+  margin-top: 28px;
+  border: 1px solid rgba(var(--v-border-color), 0.2);
+  border-radius: 16px;
+  scroll-margin-top: 90px;
+}
+.pricing-calculator label {
+  display: block;
+  margin: 20px 0 8px;
+  font-size: 0.85rem;
+}
+.pricing-calculator input {
+  padding: 12px;
+  width: 100%;
+  max-width: 260px;
+  border: 1px solid rgba(var(--v-border-color), 0.4);
+  border-radius: 6px;
+  color: inherit;
+  background: rgb(var(--v-theme-surface));
+}
+.estimate-note {
+  font-size: 0.8rem;
+  line-height: 1.7;
+  opacity: 0.75;
+  margin-top: 16px;
+}
+.estimate-result {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  background: rgba(var(--v-theme-primary), 0.06);
+  border-radius: 12px;
+  padding: 24px;
+}
+.estimate-result strong {
+  font-size: clamp(2rem, 4vw, 3.3rem);
+  margin-block: 12px;
+  overflow-wrap: anywhere;
+}
+.estimate-result small {
+  font-size: 0.8rem;
+  font-weight: 400;
+  margin-left: 8px;
+}
+.example-counts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+.example-counts button {
+  border: 1px solid rgba(var(--v-border-color), 0.2);
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+}
+.example-counts button[aria-pressed="true"] {
+  background: rgba(var(--v-theme-primary), 0.15);
+  border-color: rgb(var(--v-theme-primary));
+}
+.automation-note {
+  display: flex;
+  gap: 24px;
+  padding: 32px;
+  border-radius: 16px;
+  background: rgba(var(--v-theme-primary), 0.06);
+}
+.automation-note h2 {
+  font-size: 1.5rem;
+  margin-bottom: 12px;
+}
+.automation-note p {
+  line-height: 1.8;
+}
+:is(a, input, button):focus-visible {
+  outline: 2px solid rgb(var(--v-theme-primary));
+  outline-offset: 4px;
+}
+section[id] {
+  scroll-margin-top: 90px;
+}
 .showcase {
   background:
     radial-gradient(
@@ -723,6 +932,14 @@ footer {
   }
 }
 @media (max-width: 600px) {
+  .pricing-calculator {
+    grid-template-columns: 1fr;
+    padding: 20px;
+  }
+  .automation-note {
+    flex-direction: column;
+    padding: 24px;
+  }
   .nav-actions .v-btn:first-child {
     display: none;
   }

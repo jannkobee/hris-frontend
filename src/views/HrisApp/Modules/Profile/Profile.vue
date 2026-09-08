@@ -2,9 +2,14 @@
   <v-container fluid class="profile-page">
     <section class="profile-hero">
       <div class="profile-photo">
-        <v-img v-if="photoUrl" :src="photoUrl" cover />
-        <span v-else class="text-h4 font-weight-bold">{{
-          profile?.initials
+        <v-img
+          v-if="photoUrl"
+          class="profile-photo__image"
+          :src="photoUrl"
+          cover
+        />
+        <span v-else class="profile-photo__initials">{{
+          profileInitials
         }}</span>
         <input
           ref="photoInput"
@@ -459,6 +464,17 @@ const { values } = useAppSettings();
 const { hasFeature } = usePlanEntitlements();
 const { photoUrl, loadProfilePhoto, clearProfilePhoto } = useProfilePhoto();
 const employee = computed(() => profile.value?.employee);
+const profileInitials = computed(() => {
+  if (profile.value?.initials) return profile.value.initials;
+
+  return (
+    [profile.value?.first_name, profile.value?.last_name]
+      .filter(Boolean)
+      .map((name) => String(name).charAt(0))
+      .join("")
+      .toUpperCase() || "U"
+  );
+});
 const hasChanges = computed(() =>
   Object.entries(form.value).some(
     ([key, value]) => value !== initialForm.value[key as keyof ProfileForm],
@@ -621,6 +637,15 @@ onMounted(async () => {
   border: 1px solid rgba(var(--v-theme-primary), 0.55);
   color: rgb(var(--v-theme-primary));
   background: rgba(var(--v-theme-primary), 0.08);
+}
+.profile-photo__image {
+  width: 100%;
+  height: 100%;
+}
+.profile-photo__initials {
+  font-size: 1.8rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
 }
 .profile-identity {
   min-width: 0;

@@ -31,6 +31,14 @@ export const fields: ColumnConfig[] = [
     formatter: formatDate,
   },
   {
+    title: "Last Day of Employment",
+    key: "employment_effective_to",
+    inputField: "date",
+    nullable: true,
+    required: false,
+    formatter: formatDate,
+  },
+  {
     title: "Employment Status",
     key: "employment_status.name",
     inputField: "select",

@@ -55,7 +55,7 @@
               :disabled="!key"
               >Open Platform Console</v-btn
             ></v-form
-          ><RouterLink class="back-link" to="/saas"
+          ><RouterLink class="back-link" to="/"
             ><v-icon icon="mdi-arrow-left" size="16" />Return to public
             website</RouterLink
           >
@@ -68,7 +68,7 @@
 import { ref } from "vue";
 import { useRouter } from "vue-router";
 import { establishPlatformSession } from "@/composables/PlatformConsole/usePlatformAuth";
-import appIcon from "@/assets/Assets.xcassets/AppIcon.appiconset/100.png";
+import appIcon from "@/assets/lexisone-logo.png";
 const router = useRouter();
 const key = ref("");
 const show = ref(false);
@@ -139,7 +139,7 @@ const login = async () => {
 .brand img {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
 }
 .intro-copy {
   margin: auto 0;

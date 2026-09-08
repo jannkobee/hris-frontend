@@ -1,11 +1,16 @@
 <template>
   <v-container class="container" fluid>
     <v-sheet class="sheet" rounded="lg" elevation="4">
-      <div class="text-center mb-6">
-        <h1 class="text-h5 font-weight-bold text-high-emphasis mb-1">
-          Portal Login
-        </h1>
-        <p class="text-body-2 text-medium-emphasis mb-0">Sign in to continue</p>
+      <div class="login-heading">
+        <RouterLink class="login-brand" to="/" aria-label="LexisOne home">
+          <LexisOneLogo />
+          <span>Lexis<span>One</span></span>
+        </RouterLink>
+        <div class="login-heading__copy">
+          <p class="login-eyebrow">Your workspace</p>
+          <h1>Welcome back</h1>
+          <p>Sign in to continue to your team’s workspace.</p>
+        </div>
       </div>
 
       <v-alert
@@ -20,7 +25,12 @@
         {{ errorMessage }}
       </v-alert>
 
-      <v-form v-if="!mfaChallenge" ref="formRef" v-model="isFormValid" @submit.prevent="handleLogin">
+      <v-form
+        v-if="!mfaChallenge"
+        ref="formRef"
+        v-model="isFormValid"
+        @submit.prevent="handleLogin"
+      >
         <v-text-field
           v-model="form.email"
           label="Email"
@@ -53,7 +63,7 @@
           :loading="loggingIn"
           :disabled="loggingIn"
         >
-          Login
+          Sign in
         </v-btn>
         <div class="text-center mt-4">
           <RouterLink class="text-body-2" :to="{ name: 'forgot-password' }">
@@ -62,15 +72,26 @@
         </div>
 
         <v-divider class="my-5" />
-        <v-btn variant="tonal" block :disabled="loggingIn" @click="ssoDialog = true">
+        <v-btn
+          variant="tonal"
+          block
+          :disabled="loggingIn"
+          @click="ssoDialog = true"
+        >
           <v-icon start icon="mdi-domain" />
-          Sign in with Enterprise SSO
+          Continue with Enterprise SSO
         </v-btn>
       </v-form>
 
-      <v-form v-else ref="mfaFormRef" v-model="isMfaFormValid" @submit.prevent="handleMfaChallenge">
+      <v-form
+        v-else
+        ref="mfaFormRef"
+        v-model="isMfaFormValid"
+        @submit.prevent="handleMfaChallenge"
+      >
         <p class="text-body-2 text-medium-emphasis mb-4">
-          Enter the six-digit code from your authenticator app, or a recovery code.
+          Enter the six-digit code from your authenticator app, or a recovery
+          code.
         </p>
         <v-text-field
           v-model="mfaCode"
@@ -92,7 +113,13 @@
         >
           Verify and sign in
         </v-btn>
-        <v-btn class="mt-2" variant="text" block :disabled="loggingIn" @click="resetMfa">
+        <v-btn
+          class="mt-2"
+          variant="text"
+          block
+          :disabled="loggingIn"
+          @click="resetMfa"
+        >
           Use another account
         </v-btn>
       </v-form>
@@ -102,7 +129,8 @@
           <v-card-title>Enterprise SSO</v-card-title>
           <v-card-text>
             <p class="text-body-2 text-medium-emphasis mb-4">
-              Enter your organization slug to continue with your company identity provider.
+              Enter your organization slug to continue with your company
+              identity provider.
             </p>
             <v-text-field
               v-model="organizationSlug"
@@ -117,7 +145,11 @@
           <v-card-actions class="px-6 pb-5">
             <v-spacer />
             <v-btn variant="text" @click="ssoDialog = false">Cancel</v-btn>
-            <v-btn color="primary" :disabled="!organizationSlug.trim()" @click="startOidcLogin">
+            <v-btn
+              color="primary"
+              :disabled="!organizationSlug.trim()"
+              @click="startOidcLogin"
+            >
               Continue
             </v-btn>
           </v-card-actions>
@@ -128,6 +160,7 @@
 </template>
 
 <script lang="ts" setup>
+import LexisOneLogo from "@/components/LexisOneLogo.vue";
 import { onMounted, reactive, ref } from "vue";
 import { useRoute } from "vue-router";
 import { useAuth } from "@/composables/useAuth";
@@ -188,10 +221,15 @@ const handleMfaChallenge = async () => {
   errorMessage.value = "";
   loggingIn.value = true;
   try {
-    await verifyMfaChallenge({ challenge: mfaChallenge.value, code: mfaCode.value });
+    await verifyMfaChallenge({
+      challenge: mfaChallenge.value,
+      code: mfaCode.value,
+    });
   } catch (err) {
     errorMessage.value =
-      err instanceof Error ? err.message : "Unable to verify that code. Please try again.";
+      err instanceof Error
+        ? err.message
+        : "Unable to verify that code. Please try again.";
   } finally {
     loggingIn.value = false;
   }
@@ -207,8 +245,11 @@ const startOidcLogin = () => {
   const slug = organizationSlug.value.trim().toLowerCase();
   if (!slug) return;
 
-  const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:8000/backend/api/v1";
-  window.location.assign(`${apiUrl}/auth/oidc/${encodeURIComponent(slug)}/redirect`);
+  const apiUrl =
+    import.meta.env.VITE_API_URL || "http://localhost:8000/backend/api/v1";
+  window.location.assign(
+    `${apiUrl}/auth/oidc/${encodeURIComponent(slug)}/redirect`,
+  );
 };
 
 onMounted(async () => {
@@ -224,7 +265,9 @@ onMounted(async () => {
     }
   } catch (err) {
     errorMessage.value =
-      err instanceof Error ? err.message : "Unable to complete your SSO sign-in. Please try again.";
+      err instanceof Error
+        ? err.message
+        : "Unable to complete your SSO sign-in. Please try again.";
   } finally {
     loggingIn.value = false;
   }
@@ -237,22 +280,95 @@ onMounted(async () => {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 16px;
+  padding: 24px 16px;
   /* Falls back to the current theme's background token in case this view
      ever renders outside a themed v-main (e.g. during SSR/first paint). */
-  background-color: rgb(var(--v-theme-background));
+  background:
+    radial-gradient(
+      circle at 50% 0,
+      rgba(var(--v-theme-primary), 0.14),
+      transparent 42%
+    ),
+    rgb(var(--v-theme-background));
 }
 
 .sheet {
   width: 100%;
   max-width: 420px;
-  padding: 32px;
-  background-color: rgb(var(--v-theme-surface));
+  padding: 36px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.16);
+  background: rgb(var(--v-theme-surface));
+}
+
+.login-heading {
+  display: grid;
+  justify-items: center;
+  gap: 24px;
+  margin-bottom: 30px;
+  text-align: center;
+}
+
+.login-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: rgb(var(--v-theme-on-surface));
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  text-decoration: none;
+}
+
+.login-brand :deep(.lexisone-logo) {
+  width: 34px;
+  height: 34px;
+  flex-basis: 34px;
+  border-radius: 7px;
+}
+
+.login-brand > span > span {
+  color: rgb(var(--v-theme-primary));
+}
+
+.login-heading__copy {
+  display: grid;
+  gap: 6px;
+}
+
+.login-heading h1 {
+  color: rgb(var(--v-theme-on-surface));
+  font-size: 1.5rem;
+  letter-spacing: -0.035em;
+  line-height: 1.15;
+}
+
+.login-heading__copy > p:last-child {
+  color: rgba(var(--v-theme-on-surface), 0.7);
+  font-size: 0.88rem;
+}
+
+.login-eyebrow {
+  color: rgb(var(--v-theme-primary));
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.sheet :deep(.v-field) {
+  border-radius: 8px;
+}
+
+.sheet :deep(.v-btn) {
+  min-height: 46px;
+  letter-spacing: 0.04em;
+  text-transform: none;
 }
 
 @media (max-width: 400px) {
   .sheet {
-    padding: 24px;
+    padding: 28px 22px;
   }
 }
 </style>
