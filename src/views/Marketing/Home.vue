@@ -140,138 +140,156 @@
         </div>
       </section>
       <section id="pricing" class="section-shell section-block">
-        <div class="section-heading">
-          <span>Free Basic · Upcoming Growth pricing</span>
-          <h2>Start small. Grow affordably.</h2>
-          <p>
-            Basic: free for up to {{ pricing.free_employee_limit }} active
-            employees. Growth:
-            {{ formatPhp(pricing.growth_price_per_employee / 100) }} per
-            additional employee per month, with your first
-            {{ pricing.free_employee_limit }} places free.
-          </p>
-        </div>
-        <div class="pricing-notice" role="note">
-          <v-icon icon="mdi-check-decagram" color="primary" />
-          <p>
-            <strong
-              >Free Basic is live. Growth billing scales automatically.</strong
-            >
-            Choose Basic at signup for {{ pricing.free_employee_limit }} active
-            employees with no expiry and automatic workspace creation. When your
-            team expands, Growth charges only
-            {{ formatPhp(pricing.growth_price_per_employee / 100) }}/mo per
-            employee above your free allowance.
-          </p>
-        </div>
-        <v-row
-          ><v-col v-for="plan in launchPlans" :key="plan.name" cols="12" md="6"
-            ><v-card
-              height="100%"
-              rounded="lg"
-              :class="{ featured: plan.featured }"
-              ><v-card-text
-                ><v-chip
-                  v-if="plan.featured"
-                  color="primary"
-                  size="small"
-                  class="mb-3"
-                  >For growing teams</v-chip
-                >
-                <h3>{{ plan.name }}</h3>
-                <div class="price">
-                  {{ plan.price }}<small>{{ plan.unit }}</small>
-                </div>
-                <div class="text-caption text-medium-emphasis mb-4">
-                  {{ plan.limit }}
-                </div>
-                <p>{{ plan.description }}</p>
-                <v-list density="compact" bg-color="transparent"
-                  ><v-list-item
-                    v-for="feature in plan.features"
-                    :key="feature"
-                    prepend-icon="mdi-check"
-                    :title="feature" /></v-list></v-card-text
-              ><v-card-actions class="pa-4"
-                ><v-btn
-                  block
-                  :color="plan.featured ? 'primary' : undefined"
-                  :variant="plan.featured ? 'flat' : 'tonal'"
-                  href="#pricing-estimate"
-                  >Estimate your team’s cost</v-btn
-                ></v-card-actions
-              ></v-card
-            ></v-col
-          ></v-row
+        <v-alert v-if="pricingError" type="error" role="alert"
+          >{{ pricingError }} Please reload to try again.</v-alert
         >
-        <div id="pricing-estimate" class="pricing-calculator">
-          <div>
-            <h3>What would your team pay?</h3>
-            <label for="employee-count">Active employees</label>
-            <input
-              id="employee-count"
-              v-model="headcount"
-              type="number"
-              min="1"
-              max="100000"
-              step="1"
-              inputmode="numeric"
-              :aria-invalid="estimate === null"
-              aria-describedby="employee-count-help"
-            />
-            <p id="employee-count-help" class="estimate-note">
-              Enter a whole number from 1 to 100,000. Archived employees are
-              excluded from this proposed model.
+        <p v-else-if="!pricingLoaded" role="status">Loading current pricing…</p>
+        <template v-else>
+          <div class="section-heading">
+            <span>Free Basic · Upcoming Growth pricing</span>
+            <h2>Start small. Grow affordably.</h2>
+            <p>
+              Basic: free for up to {{ pricing.free_employee_limit }} active
+              employees. Growth:
+              {{ formatPhp(pricing.growth_price_per_employee / 100) }} per
+              additional employee per month, with your first
+              {{ pricing.free_employee_limit }} places free.
             </p>
-            <div class="example-counts">
-              <button
-                v-for="count in [10, 25, 50, 100]"
-                :key="count"
-                type="button"
-                :aria-pressed="Number(headcount) === count"
-                @click="headcount = String(count)"
+          </div>
+          <div class="pricing-notice" role="note">
+            <v-icon icon="mdi-check-decagram" color="primary" />
+            <p>
+              <strong
+                >Free Basic is live. Growth billing scales
+                automatically.</strong
               >
-                {{ count }} people
-              </button>
+              Choose Basic at signup for
+              {{ pricing.free_employee_limit }} active employees with no expiry
+              and automatic workspace creation. When your team expands, Growth
+              charges only
+              {{ formatPhp(pricing.growth_price_per_employee / 100) }}/mo per
+              employee above your free allowance.
+            </p>
+          </div>
+          <v-row
+            ><v-col
+              v-for="plan in launchPlans"
+              :key="plan.name"
+              cols="12"
+              md="6"
+              ><v-card
+                height="100%"
+                rounded="lg"
+                :class="{ featured: plan.featured }"
+                ><v-card-text
+                  ><v-chip
+                    v-if="plan.featured"
+                    color="primary"
+                    size="small"
+                    class="mb-3"
+                    >For growing teams</v-chip
+                  >
+                  <h3>{{ plan.name }}</h3>
+                  <div class="price">
+                    {{ plan.price }}<small>{{ plan.unit }}</small>
+                  </div>
+                  <div class="text-caption text-medium-emphasis mb-4">
+                    {{ plan.limit }}
+                  </div>
+                  <p>{{ plan.description }}</p>
+                  <v-list density="compact" bg-color="transparent"
+                    ><v-list-item
+                      v-for="feature in plan.features"
+                      :key="feature"
+                      prepend-icon="mdi-check"
+                      :title="feature" /></v-list></v-card-text
+                ><v-card-actions class="pa-4"
+                  ><v-btn
+                    block
+                    :color="plan.featured ? 'primary' : undefined"
+                    :variant="plan.featured ? 'flat' : 'tonal'"
+                    href="#pricing-estimate"
+                    >Estimate your team’s cost</v-btn
+                  ></v-card-actions
+                ></v-card
+              ></v-col
+            ></v-row
+          >
+          <div id="pricing-estimate" class="pricing-calculator">
+            <div>
+              <h3>What would your team pay?</h3>
+              <label for="employee-count">Active employees</label>
+              <input
+                id="employee-count"
+                v-model="headcount"
+                type="number"
+                min="1"
+                max="100000"
+                step="1"
+                inputmode="numeric"
+                :aria-invalid="estimate === null"
+                aria-describedby="employee-count-help"
+              />
+              <p id="employee-count-help" class="estimate-note">
+                Enter a whole number from 1 to 100,000. Archived employees are
+                excluded from this proposed model.
+              </p>
+              <div class="example-counts">
+                <button
+                  v-for="count in [10, 25, 50, 100]"
+                  :key="count"
+                  type="button"
+                  :aria-pressed="Number(headcount) === count"
+                  @click="headcount = String(count)"
+                >
+                  {{ count }} people
+                </button>
+              </div>
+            </div>
+            <div class="estimate-result" aria-live="polite" aria-atomic="true">
+              <template v-if="estimate">
+                <p>
+                  {{
+                    estimate.billableEmployees
+                      ? "Growth estimate"
+                      : "Basic estimate"
+                  }}
+                </p>
+                <strong
+                  >{{ formatPhp(estimate.monthlyPesos)
+                  }}<small>/ month</small></strong
+                >
+                <p>
+                  {{
+                    estimate.billableEmployees
+                      ? `${estimate.billableEmployees} additional employees × ${formatPhp(pricing.growth_price_per_employee / 100)}`
+                      : `Your team fits within the ${pricing.free_employee_limit} free places.`
+                  }}
+                </p>
+                <p class="estimate-note">
+                  {{
+                    estimate.billableEmployees
+                      ? `First ${pricing.free_employee_limit} employee places: ₱0.`
+                      : "Growth-only features are not included in Basic."
+                  }}
+                  Indicative subscription subtotal; tax treatment will be
+                  confirmed before checkout launches.
+                </p>
+              </template>
+              <p v-else>Enter a valid employee count to see your estimate.</p>
             </div>
           </div>
-          <div class="estimate-result" aria-live="polite" aria-atomic="true">
-            <template v-if="estimate">
-              <p>
-                {{
-                  estimate.billableEmployees
-                    ? "Growth estimate"
-                    : "Basic estimate"
-                }}
-              </p>
-              <strong
-                >{{ formatPhp(estimate.monthlyPesos)
-                }}<small>/ month</small></strong
-              >
-              <p>
-                {{
-                  estimate.billableEmployees
-                    ? `${estimate.billableEmployees} additional employees × ${formatPhp(pricing.growth_price_per_employee / 100)}`
-                    : `Your team fits within the ${pricing.free_employee_limit} free places.`
-                }}
-              </p>
-              <p class="estimate-note">
-                {{
-                  estimate.billableEmployees
-                    ? `First ${pricing.free_employee_limit} employee places: ₱0.`
-                    : "Growth-only features are not included in Basic."
-                }}
-                Indicative subscription subtotal; tax treatment will be
-                confirmed before checkout launches.
-              </p>
-            </template>
-            <p v-else>Enter a valid employee count to see your estimate.</p>
-          </div>
-        </div>
-        <p class="estimate-note">
-          Payroll belongs to Business, not Growth. Revised Business pricing and
-          paid Growth access for teams of 10 or fewer are still being finalized.
-        </p>
+          <p class="estimate-note">
+            Payroll belongs to Business. Growth minimum monthly charge:
+            {{
+              formatPhp(
+                ((pricing.minimum_billable_employees ?? 0) *
+                  pricing.growth_price_per_employee) /
+                  100,
+              )
+            }}.
+          </p>
+        </template>
       </section>
       <section class="section-shell automation-note">
         <v-icon icon="mdi-autorenew" color="primary" size="32" />
@@ -347,12 +365,15 @@ import { estimateGrowthPricing, formatPhp } from "@/utils/growthPricing";
 const headcount = ref("25");
 const pricing = ref({
   free_employee_limit: 10,
+  minimum_billable_employees: 0,
   growth_price_per_employee: 1900,
 });
 const pricingError = ref("");
+const pricingLoaded = ref(false);
 onMounted(async () => {
   try {
     pricing.value = await fetchPricing();
+    pricingLoaded.value = true;
   } catch {
     pricingError.value = "Pricing is temporarily unavailable.";
   }
@@ -364,6 +385,7 @@ const estimate = computed(() =>
         headcount.value,
         pricing.value.free_employee_limit,
         pricing.value.growth_price_per_employee / 100,
+        pricing.value.minimum_billable_employees ?? 0,
       ),
 );
 const launchPlans = computed(() => [

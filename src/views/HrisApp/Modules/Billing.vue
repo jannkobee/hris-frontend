@@ -278,12 +278,21 @@
                 <v-col cols="12" md="6" class="text-md-right">
                   <div class="simulated-result">
                     <span class="text-caption text-medium-emphasis">
-                      {{ Math.max(0, simulatedEmployees - 10) }} billable seats
+                      {{
+                        Math.max(
+                          summary.minimum_billable_employees ?? 0,
+                          simulatedEmployees - summary.free_employee_limit,
+                        )
+                      }}
+                      billable seats
                     </span>
                     <div class="text-h4 font-weight-bold text-primary">
                       {{
                         formatPhp(
-                          Math.max(0, simulatedEmployees - 10) *
+                          Math.max(
+                            summary.minimum_billable_employees ?? 0,
+                            simulatedEmployees - summary.free_employee_limit,
+                          ) *
                             (summary.growth_price_per_employee / 100),
                         )
                       }}
@@ -321,6 +330,7 @@ interface BillingSummary {
   has_stripe_customer?: boolean;
   active_employee_count: number;
   free_employee_limit: number;
+  minimum_billable_employees: number;
   billable_employee_count: number;
   growth_price_per_employee: number;
   growth_currency: string;

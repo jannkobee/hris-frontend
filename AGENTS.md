@@ -1,5 +1,10 @@
 # Frontend coding baseline
 
+- After each implementation task, update both backend roadmap documents:
+  `../hris-backend/docs/industry-readiness-roadmap.md` and
+  `../hris-backend/docs/saas-launch-roadmap.md`. Record delivered scope,
+  verification evidence, open issues, and the next step.
+
 Apply these conventions to every new or edited frontend feature.
 
 - Reuse the existing Vue 3 Composition API, TypeScript field definitions,

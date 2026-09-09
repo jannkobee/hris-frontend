@@ -128,6 +128,15 @@
             />
 
             <v-text-field
+              v-model.number="minimum"
+              label="Minimum billable employees"
+              type="number"
+              min="0"
+              max="10000"
+              hint="0 = no minimum charge. 1 = at least one employee rate. Applies to new subscriptions."
+              persistent-hint
+            />
+            <v-text-field
               v-model="effective"
               label="Effective date (local time, optional)"
               type="datetime-local"
@@ -176,14 +185,17 @@
                 <div class="calc-row">
                   <span>Billable additional seats:</span>
                   <strong :class="{ 'text-accent': employees > allowance }">
-                    {{ Math.max(0, employees - allowance) }} seats
+                    {{ Math.max(minimum, employees - allowance) }} seats
                   </strong>
                 </div>
                 <v-divider class="my-2" />
                 <div class="calc-total-row">
                   <span>Estimated Monthly Charge:</span>
                   <strong class="total-amount">
-                    {{ formatPhp(Math.max(0, employees - allowance) * rate)
+                    {{
+                      formatPhp(
+                        Math.max(minimum, employees - allowance) * rate,
+                      )
                     }}<small>/mo</small>
                   </strong>
                 </div>
@@ -246,6 +258,7 @@
                 <th>Effective Date</th>
                 <th>Free Allowance</th>
                 <th>Monthly Rate</th>
+                <th>Minimum billed employees</th>
                 <th>Status</th>
               </tr>
             </thead>
@@ -282,6 +295,7 @@
                   }}</strong>
                   <span class="text-caption text-grey"> / seat</span>
                 </td>
+                <td>{{ item.minimum_billable_employees ?? 0 }}</td>
                 <td>
                   <v-chip
                     v-if="new Date(item.effective_at) <= new Date()"
@@ -314,6 +328,7 @@ import {
 import { formatPhp } from "@/utils/growthPricing";
 
 const allowance = ref(10);
+const minimum = ref(0);
 const rate = ref(19);
 const employees = ref(25);
 const effective = ref("");
@@ -332,6 +347,7 @@ async function loadData() {
       fetchPricingHistory(),
     ]);
     allowance.value = pricing.free_employee_limit;
+    minimum.value = pricing.minimum_billable_employees ?? 0;
     rate.value = pricing.growth_price_per_employee / 100;
     history.value = versions;
   } catch {
@@ -353,6 +369,7 @@ async function save() {
   try {
     await savePricing({
       free_employee_limit: allowance.value,
+      minimum_billable_employees: minimum.value,
       growth_price_per_employee: Math.round(rate.value * 100),
       currency: "php",
       ...(effective.value

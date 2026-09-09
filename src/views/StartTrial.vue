@@ -6,7 +6,13 @@
           ><LexisOneLogo /> LexisOne</RouterLink
         >
         <div class="text-overline text-primary mt-3 font-weight-bold">
-          Free Basic · Up to 10 active employees · No expiry
+          Free Basic ·
+          {{
+            freeAllowance === null
+              ? "Loading allowance…"
+              : `Up to ${freeAllowance} active employees`
+          }}
+          · No expiry
         </div>
         <h1 class="text-h5 font-weight-bold">Set up your LexisOne workspace</h1>
         <p class="text-body-2 text-medium-emphasis">
@@ -128,10 +134,19 @@
 </template>
 <script setup lang="ts">
 import LexisOneLogo from "@/components/LexisOneLogo.vue";
-import { computed, ref } from "vue";
+import { computed, ref, onMounted } from "vue";
+import { fetchPricing } from "@/composables/PlatformConsole/usePlatformPricing";
 import { useRoute } from "vue-router";
 import axios from "@/plugins/axios";
 const route = useRoute();
+const freeAllowance = ref<number | null>(null);
+onMounted(async () => {
+  try {
+    freeAllowance.value = (await fetchPricing()).free_employee_limit;
+  } catch {
+    /* Signup remains available; do not display an unverified limit. */
+  }
+});
 const selectablePlans = ["basic_free", "starter", "growth", "business"];
 const requestedPlan = String(route.query.plan ?? "basic_free");
 const initialPlan = selectablePlans.includes(requestedPlan)
@@ -153,15 +168,15 @@ const form = ref({
   password_confirmation: "",
   terms_accepted: false,
 });
-const plans = [
+const plans = computed(() => [
   {
-    title: "Basic · free · 10 active employees · no expiry",
+    title: `Basic · free${freeAllowance.value === null ? "" : ` · ${freeAllowance.value} active employees`} · no expiry`,
     value: "basic_free",
   },
   { title: "Starter · up to 25 employees", value: "starter" },
   { title: "Growth · up to 100 employees", value: "growth" },
   { title: "Business · up to 500 employees", value: "business" },
-];
+]);
 const timezones = [
   "Asia/Manila",
   "UTC",
